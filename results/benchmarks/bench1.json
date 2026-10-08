@@ -1,0 +1,128 @@
+[
+  {
+    "constraint_pos": "early",
+    "strength": "hard",
+    "turn_index": 5,
+    "retention": 1,
+    "trials": 5
+  },
+  {
+    "constraint_pos": "early",
+    "strength": "hard",
+    "turn_index": 15,
+    "retention": 1,
+    "trials": 5
+  },
+  {
+    "constraint_pos": "early",
+    "strength": "hard",
+    "turn_index": 30,
+    "retention": 0,
+    "trials": 5
+  },
+  {
+    "constraint_pos": "early",
+    "strength": "soft",
+    "turn_index": 5,
+    "retention": 1,
+    "trials": 5
+  },
+  {
+    "constraint_pos": "early",
+    "strength": "soft",
+    "turn_index": 15,
+    "retention": 1,
+    "trials": 5
+  },
+  {
+    "constraint_pos": "early",
+    "strength": "soft",
+    "turn_index": 30,
+    "retention": 0,
+    "trials": 5
+  },
+  {
+    "constraint_pos": "middle",
+    "strength": "hard",
+    "turn_index": 5,
+    "retention": 1,
+    "trials": 5
+  },
+  {
+    "constraint_pos": "middle",
+    "strength": "hard",
+    "turn_index": 15,
+    "retention": 1,
+    "trials": 5
+  },
+  {
+    "constraint_pos": "middle",
+    "strength": "hard",
+    "turn_index": 30,
+    "retention": 1,
+    "trials": 5
+  },
+  {
+    "constraint_pos": "middle",
+    "strength": "soft",
+    "turn_index": 5,
+    "retention": 1,
+    "trials": 5
+  },
+  {
+    "constraint_pos": "middle",
+    "strength": "soft",
+    "turn_index": 15,
+    "retention": 1,
+    "trials": 5
+  },
+  {
+    "constraint_pos": "middle",
+    "strength": "soft",
+    "turn_index": 30,
+    "retention": 0,
+    "trials": 5
+  },
+  {
+    "constraint_pos": "late",
+    "strength": "hard",
+    "turn_index": 5,
+    "retention": 1,
+    "trials": 5
+  },
+  {
+    "constraint_pos": "late",
+    "strength": "hard",
+    "turn_index": 15,
+    "retention": 1,
+    "trials": 5
+  },
+  {
+    "constraint_pos": "late",
+    "strength": "hard",
+    "turn_index": 30,
+    "retention": 1,
+    "trials": 5
+  },
+  {
+    "constraint_pos": "late",
+    "strength": "soft",
+    "turn_index": 5,
+    "retention": 1,
+    "trials": 5
+  },
+  {
+    "constraint_pos": "late",
+    "strength": "soft",
+    "turn_index": 15,
+    "retention": 1,
+    "trials": 5
+  },
+  {
+    "constraint_pos": "late",
+    "strength": "soft",
+    "turn_index": 30,
+    "retention": 0,
+    "trials": 5
+  }
+]

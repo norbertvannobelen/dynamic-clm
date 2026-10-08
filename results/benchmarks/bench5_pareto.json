@@ -1,0 +1,26 @@
+[
+  {
+    "arm": "dynclm",
+    "accuracy": 100,
+    "tokens": 17415,
+    "flops_proxy": 17415000000000,
+    "wall_clock_s": 6,
+    "peak_mem_mb": 0
+  },
+  {
+    "arm": "immediate-rewrite",
+    "accuracy": 100,
+    "tokens": 28363,
+    "flops_proxy": 28363000000000,
+    "wall_clock_s": 13,
+    "peak_mem_mb": 0
+  },
+  {
+    "arm": "baseline",
+    "accuracy": 100,
+    "tokens": 0,
+    "flops_proxy": 0,
+    "wall_clock_s": 0,
+    "peak_mem_mb": 0
+  }
+]

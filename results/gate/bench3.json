@@ -1,0 +1,62 @@
+[
+  {
+    "marker_position": "tail",
+    "turns_since_marker": 1,
+    "compliance": 1,
+    "trials": 5
+  },
+  {
+    "marker_position": "tail",
+    "turns_since_marker": 3,
+    "compliance": 1,
+    "trials": 5
+  },
+  {
+    "marker_position": "tail",
+    "turns_since_marker": 5,
+    "compliance": 1,
+    "trials": 5
+  },
+  {
+    "marker_position": "tail",
+    "turns_since_marker": 10,
+    "compliance": 1,
+    "trials": 5
+  },
+  {
+    "marker_position": "tail",
+    "turns_since_marker": 20,
+    "compliance": 1,
+    "trials": 5
+  },
+  {
+    "marker_position": "middle",
+    "turns_since_marker": 1,
+    "compliance": 1,
+    "trials": 5
+  },
+  {
+    "marker_position": "middle",
+    "turns_since_marker": 3,
+    "compliance": 1,
+    "trials": 5
+  },
+  {
+    "marker_position": "middle",
+    "turns_since_marker": 5,
+    "compliance": 1,
+    "trials": 5
+  },
+  {
+    "marker_position": "middle",
+    "turns_since_marker": 10,
+    "compliance": 0,
+    "trials": 5
+  },
+  {
+    "marker_position": "middle",
+    "turns_since_marker": 20,
+    "compliance": 0,
+    "trials": 5
+  }
+]

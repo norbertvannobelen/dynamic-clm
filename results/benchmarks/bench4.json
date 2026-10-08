@@ -1,0 +1,5 @@
+{
+  "trials": 10,
+  "revocation_success_rate": 1,
+  "quality_delta_note": "CLM cannot recover structurally; DynCLM can if unmark succeeds"
+}

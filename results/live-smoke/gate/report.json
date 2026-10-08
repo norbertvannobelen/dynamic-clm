@@ -1,0 +1,85 @@
+{
+  "generated_at": "2026-10-08T23:20:05.31198Z",
+  "model_id": "Qwen3.8-27B-4bit",
+  "hardware_id": "apple-m5-max",
+  "calibration": {
+    "hardware_id": "apple-m5-max",
+    "model_id": "Qwen3.8-27B-4bit",
+    "r_ms_per_token": 2.787109375,
+    "kd_ms_per_token_per_turn": 0.0376129150390625,
+    "c_fixed_ms": 1111,
+    "rho": 29537.726572008112,
+    "measured_at": "2026-10-08T23:11:21.90359Z",
+    "notes": "microbenchmark via oMLX chat completions wall-clock"
+  },
+  "arm_stats": {
+    "baseline": {
+      "sessions": 2,
+      "success_rate": 100,
+      "avg_prefill_tokens": 0,
+      "avg_rewrites": 0,
+      "avg_parse_rate": 1,
+      "avg_compliance": 100,
+      "avg_shrink_err_pct": 0,
+      "sessions_with_ge2_edits": 2
+    },
+    "dynclm": {
+      "sessions": 2,
+      "success_rate": 100,
+      "avg_prefill_tokens": 131,
+      "avg_rewrites": 1,
+      "avg_parse_rate": 1,
+      "avg_compliance": 100,
+      "avg_shrink_err_pct": 0,
+      "sessions_with_ge2_edits": 2
+    },
+    "immediate-rewrite": {
+      "sessions": 2,
+      "success_rate": 100,
+      "avg_prefill_tokens": 1156,
+      "avg_rewrites": 6.5,
+      "avg_parse_rate": 1,
+      "avg_compliance": 100,
+      "avg_shrink_err_pct": 0,
+      "sessions_with_ge2_edits": 2
+    }
+  },
+  "criteria": [
+    {
+      "id": "G1",
+      "name": "mechanism",
+      "pass": true,
+      "value": 1,
+      "threshold": 0.95,
+      "detail": "parse_rate=1.000 rewrites=1.00 shrink_err=0.0%"
+    },
+    {
+      "id": "G2",
+      "name": "compliance",
+      "pass": true,
+      "value": 100,
+      "threshold": 80,
+      "detail": "tail_marker_compliance=100.0%"
+    },
+    {
+      "id": "G3",
+      "name": "quality",
+      "pass": true,
+      "value": 100,
+      "threshold": 97,
+      "detail": "dyn=100.0% baseline=100.0% immediate=100.0%"
+    },
+    {
+      "id": "G4",
+      "name": "cost",
+      "pass": true,
+      "value": 88.66782006920415,
+      "threshold": 30,
+      "detail": "prefill_reduction=88.7% dyn_avg=131 imm_avg=1156"
+    }
+  ],
+  "passed": true,
+  "sessions_per_arm": 2,
+  "max_turns": 8,
+  "live_model": true
+}

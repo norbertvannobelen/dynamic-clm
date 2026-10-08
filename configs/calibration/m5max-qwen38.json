@@ -1,0 +1,10 @@
+{
+  "hardware_id": "apple-m5-max",
+  "model_id": "Qwen3.8-27B-4bit",
+  "r_ms_per_token": 2.787109375,
+  "kd_ms_per_token_per_turn": 0.0376129150390625,
+  "c_fixed_ms": 1111,
+  "rho": 29537.726572008112,
+  "measured_at": "2026-10-08T23:11:21.90359Z",
+  "notes": "microbenchmark via oMLX chat completions wall-clock"
+}

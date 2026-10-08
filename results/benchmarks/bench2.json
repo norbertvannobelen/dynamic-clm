@@ -1,0 +1,62 @@
+[
+  {
+    "distractors": 0,
+    "similarity": "identical",
+    "accuracy": 1,
+    "trials": 5
+  },
+  {
+    "distractors": 2,
+    "similarity": "identical",
+    "accuracy": 1,
+    "trials": 5
+  },
+  {
+    "distractors": 4,
+    "similarity": "identical",
+    "accuracy": 1,
+    "trials": 5
+  },
+  {
+    "distractors": 8,
+    "similarity": "identical",
+    "accuracy": 0,
+    "trials": 5
+  },
+  {
+    "distractors": 16,
+    "similarity": "identical",
+    "accuracy": 0,
+    "trials": 5
+  },
+  {
+    "distractors": 0,
+    "similarity": "distinct",
+    "accuracy": 1,
+    "trials": 5
+  },
+  {
+    "distractors": 2,
+    "similarity": "distinct",
+    "accuracy": 1,
+    "trials": 5
+  },
+  {
+    "distractors": 4,
+    "similarity": "distinct",
+    "accuracy": 1,
+    "trials": 5
+  },
+  {
+    "distractors": 8,
+    "similarity": "distinct",
+    "accuracy": 1,
+    "trials": 5
+  },
+  {
+    "distractors": 16,
+    "similarity": "distinct",
+    "accuracy": 0,
+    "trials": 5
+  }
+]

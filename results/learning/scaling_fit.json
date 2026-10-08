@@ -1,0 +1,9 @@
+{
+  "hardware": "apple-m5-max",
+  "hybrid_gap": true,
+  "optimal_garbage": 486.1088484856709,
+  "rho": 29537.726572008112,
+  "skipped_hardware": [
+    "datacenter-gpu"
+  ]
+}

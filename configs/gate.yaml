@@ -1,0 +1,14 @@
+hardware_id: apple-m5-max
+model_id: Qwen3.8-27B-4bit
+sessions: 20
+max_turns: 50
+# Sized so β·max_context is reachable within 50-turn gate sessions.
+max_context: 4096
+use_live_model: true
+results_dir: results
+calibration_path: configs/calibration/m5max-qwen38.json
+policy:
+  name: dynclm-default
+  beta: 0.6
+  gamma: 0.5
+  delta: 3

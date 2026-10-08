@@ -1,0 +1,36 @@
+hardware_id: apple-m5-max
+results_dir: results
+max_turns: 50
+max_context: 32768
+use_live_model: true
+sessions_per_cell: 20
+# Datacenter GPU cells: skipped (local-only run)
+models:
+  - Qwen3.8-27B-4bit
+  - Qwen3.6-35B-A3B-4bit
+  - North-Mini-Code-1.0-4bit
+task_types:
+  - coding
+  - search
+  - multi-agent
+policies:
+  - name: beta04
+    beta: 0.4
+    gamma: 0.5
+    delta: 3
+  - name: beta06
+    beta: 0.6
+    gamma: 0.5
+    delta: 3
+  - name: beta08
+    beta: 0.8
+    gamma: 0.5
+    delta: 3
+  - name: gamma03
+    beta: 0.7
+    gamma: 0.3
+    delta: 3
+  - name: gamma06
+    beta: 0.7
+    gamma: 0.6
+    delta: 3

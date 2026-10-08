@@ -1,0 +1,8 @@
+{
+  "ship": true,
+  "reasons": [
+    "quality within 5pts of baseline and meaningful re-prefill reduction vs immediate rewrite"
+  ],
+  "quality_margin_vs_baseline": 0,
+  "token_reduction_vs_immediate": 0.3859958396502486
+}
