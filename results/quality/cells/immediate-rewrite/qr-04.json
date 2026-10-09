@@ -5,9 +5,14 @@
   "correct": true,
   "expected": "BANANA",
   "got": "BANANA",
+  "context_tokens": 126,
+  "live_tokens": 18,
+  "dead_tokens": 108,
+  "post_rewrite_context_tokens": 18,
   "prefill_tokens": 0,
   "rewrite_count": 1,
-  "wall_clock_s": 1.437667166,
   "prompt_tokens": 409,
-  "completion_tokens": 2
+  "completion_tokens": 2,
+  "total_usage_tokens": 411,
+  "wall_clock_s": 0.963773042
 }

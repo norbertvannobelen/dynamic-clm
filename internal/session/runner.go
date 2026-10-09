@@ -35,26 +35,41 @@ type Config struct {
 	UseLiveModel bool // if false, synthetic agent (no oMLX calls)
 }
 
-// Result summarizes a finished session.
+// Result summarizes a finished session with full efficiency metrics.
 type Result struct {
-	SessionID           string  `json:"session_id"`
-	Arm                 string  `json:"arm"`
-	ModelID             string  `json:"model_id"`
-	TaskType            string  `json:"task_type"`
-	Turns               int     `json:"turns"`
-	Success             bool    `json:"success"`
-	WallClockS          float64 `json:"wall_clock_s"`
-	TotalPrefillTokens  int     `json:"total_prefill_tokens"`
-	TotalNaivePrefill   int     `json:"total_naive_prefill_tokens"`
-	RewriteCount        int     `json:"rewrite_count"`
-	EditEvents          int     `json:"edit_events"`
-	MarkerParseRate     float64 `json:"marker_parse_rate"`
-	FinalContextTokens  int     `json:"final_context_tokens"`
-	DeadCarriedTurnSum  int     `json:"dead_carried_turn_sum"`
-	ComplianceHits      int     `json:"compliance_hits"`
-	ComplianceChecks    int     `json:"compliance_checks"`
-	ShrinkErrorPct      float64 `json:"shrink_error_pct"`
-	RewritesFired       int     `json:"rewrites_fired"`
+	SessionID string `json:"session_id"`
+	Arm       string `json:"arm"`
+	ModelID   string `json:"model_id"`
+	TaskType  string `json:"task_type"`
+	Turns     int    `json:"turns"`
+	Success   bool   `json:"success"`
+
+	// Time
+	WallClockS float64 `json:"wall_clock_s"`
+
+	// Context length
+	PeakContextTokens  int     `json:"peak_context_tokens"`
+	FinalContextTokens int     `json:"final_context_tokens"`
+	AvgContextTokens   float64 `json:"avg_context_tokens"`
+	FinalLiveTokens    int     `json:"final_live_tokens"`
+	FinalDeadTokens    int     `json:"final_dead_tokens"`
+	DeadCarriedTurnSum int     `json:"dead_carried_turn_sum"`
+
+	// Tokens
+	TotalPrefillTokens    int `json:"total_prefill_tokens"`
+	TotalNaivePrefill     int `json:"total_naive_prefill_tokens"`
+	TotalPromptTokens     int `json:"total_prompt_tokens"`
+	TotalGeneratedTokens  int `json:"total_generated_tokens"`
+	TotalUsageTokens      int `json:"total_usage_tokens"`
+
+	// Rewrites / markers
+	RewriteCount      int     `json:"rewrite_count"`
+	RewritesFired     int     `json:"rewrites_fired"`
+	EditEvents        int     `json:"edit_events"`
+	MarkerParseRate   float64 `json:"marker_parse_rate"`
+	ComplianceHits    int     `json:"compliance_hits"`
+	ComplianceChecks  int     `json:"compliance_checks"`
+	ShrinkErrorPct    float64 `json:"shrink_error_pct"`
 }
 
 // Runner executes one multi-turn coding session under a given arm.
@@ -111,6 +126,8 @@ Final answer for the bugfix must contain the token SUCCESS_FIX.`
 		lastShrinkErr                                  float64
 		secret                                         = "ANSWER_KEY_42"
 		success                                        bool
+		ctxSum, peakCtx                                int
+		totalPrompt, totalGen                          int
 	)
 
 	for turn := 1; turn <= cfg.MaxTurns; turn++ {
@@ -139,7 +156,6 @@ Final answer for the bugfix must contain the token SUCCESS_FIX.`
 		messages = append(messages, omlx.Message{Role: "user", Content: user})
 
 		var assistant string
-		var promptTokens int
 		if cfg.UseLiveModel && r.Client != nil {
 			// Send compressed context: live spans + markers for dead.
 			ctx := r.Track.ContextText(true)
@@ -152,10 +168,14 @@ Final answer for the bugfix must contain the token SUCCESS_FIX.`
 				return Result{}, fmt.Errorf("turn %d: %w", turn, err)
 			}
 			assistant = res.Text
-			promptTokens = res.Response.Usage.PromptTokens
-			_ = promptTokens
+			totalPrompt += res.Response.Usage.PromptTokens
+			totalGen += res.Response.Usage.CompletionTokens
 		} else {
 			assistant = syntheticAssistant(cfg.Arm, turn, cfg.MaxTurns, sp.ID)
+			// Synthetic usage estimate from heuristic token counts.
+			_, _, cLen, _ := r.Track.Stats()
+			totalPrompt += cLen + contextmgr.EstimateTokens(user)
+			totalGen += contextmgr.EstimateTokens(assistant)
 		}
 
 		messages = append(messages, omlx.Message{Role: "assistant", Content: assistant})
@@ -184,6 +204,10 @@ Final answer for the bugfix must contain the token SUCCESS_FIX.`
 
 		live, dead, total, parseRate := r.Track.Stats()
 		deadCarried += dead
+		ctxSum += total
+		if total > peakCtx {
+			peakCtx = total
+		}
 		_ = parseRate
 
 		st := scheduler.State{
@@ -251,33 +275,44 @@ Final answer for the bugfix must contain the token SUCCESS_FIX.`
 		}
 	}
 
-	_, _, finalTotal, parseRate := r.Track.Stats()
+	finalLive, finalDead, finalTotal, parseRate := r.Track.Stats()
 	if !success && cfg.Arm != "" {
 		// Synthetic sessions always succeed if they reached the end with markers applied.
 		if !cfg.UseLiveModel {
 			success = true
 		}
 	}
+	avgCtx := 0.0
+	if cfg.MaxTurns > 0 {
+		avgCtx = float64(ctxSum) / float64(cfg.MaxTurns)
+	}
 
 	return Result{
-		SessionID:          cfg.SessionID,
-		Arm:                string(cfg.Arm),
-		ModelID:            cfg.ModelID,
-		TaskType:           cfg.TaskType,
-		Turns:              cfg.MaxTurns,
-		Success:            success,
-		WallClockS:         time.Since(start).Seconds(),
-		TotalPrefillTokens: totalPrefill,
-		TotalNaivePrefill:  totalNaive,
-		RewriteCount:       rewrites,
-		EditEvents:         editEvents,
-		MarkerParseRate:    parseRate,
-		FinalContextTokens: finalTotal,
-		DeadCarriedTurnSum: deadCarried,
-		ComplianceHits:     complianceHits,
-		ComplianceChecks:   complianceChecks,
-		ShrinkErrorPct:     lastShrinkErr,
-		RewritesFired:      rewrites,
+		SessionID:            cfg.SessionID,
+		Arm:                  string(cfg.Arm),
+		ModelID:              cfg.ModelID,
+		TaskType:             cfg.TaskType,
+		Turns:                cfg.MaxTurns,
+		Success:              success,
+		WallClockS:           time.Since(start).Seconds(),
+		PeakContextTokens:    peakCtx,
+		FinalContextTokens:   finalTotal,
+		AvgContextTokens:     avgCtx,
+		FinalLiveTokens:      finalLive,
+		FinalDeadTokens:      finalDead,
+		DeadCarriedTurnSum:   deadCarried,
+		TotalPrefillTokens:   totalPrefill,
+		TotalNaivePrefill:    totalNaive,
+		TotalPromptTokens:    totalPrompt,
+		TotalGeneratedTokens: totalGen,
+		TotalUsageTokens:     totalPrompt + totalGen,
+		RewriteCount:         rewrites,
+		RewritesFired:        rewrites,
+		EditEvents:           editEvents,
+		MarkerParseRate:      parseRate,
+		ComplianceHits:       complianceHits,
+		ComplianceChecks:     complianceChecks,
+		ShrinkErrorPct:       lastShrinkErr,
 	}, nil
 }
 

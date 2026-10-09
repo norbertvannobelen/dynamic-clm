@@ -5,9 +5,14 @@
   "correct": true,
   "expected": "REGION_us-west-2",
   "got": "REGION_us-west-2",
+  "context_tokens": 240,
+  "live_tokens": 20,
+  "dead_tokens": 220,
+  "post_rewrite_context_tokens": 20,
   "prefill_tokens": 0,
   "rewrite_count": 1,
-  "wall_clock_s": 2.224723,
   "prompt_tokens": 696,
-  "completion_tokens": 5
+  "completion_tokens": 5,
+  "total_usage_tokens": 701,
+  "wall_clock_s": 1.573917875
 }

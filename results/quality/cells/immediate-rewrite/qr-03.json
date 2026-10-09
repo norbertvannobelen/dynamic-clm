@@ -5,9 +5,14 @@
   "correct": true,
   "expected": "PORT_8443",
   "got": "PORT_8443",
+  "context_tokens": 260,
+  "live_tokens": 20,
+  "dead_tokens": 240,
+  "post_rewrite_context_tokens": 20,
   "prefill_tokens": 0,
   "rewrite_count": 1,
-  "wall_clock_s": 2.334968292,
   "prompt_tokens": 709,
-  "completion_tokens": 6
+  "completion_tokens": 6,
+  "total_usage_tokens": 715,
+  "wall_clock_s": 1.521964875
 }

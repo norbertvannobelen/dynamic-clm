@@ -5,9 +5,14 @@
   "correct": true,
   "expected": "errors.Is(err, context.Canceled)",
   "got": "errors.Is(err, context.Canceled)",
+  "context_tokens": 111,
+  "live_tokens": 111,
+  "dead_tokens": 0,
+  "post_rewrite_context_tokens": 111,
   "prefill_tokens": 0,
   "rewrite_count": 0,
-  "wall_clock_s": 1.400819291,
   "prompt_tokens": 327,
-  "completion_tokens": 8
+  "completion_tokens": 8,
+  "total_usage_tokens": 335,
+  "wall_clock_s": 1.023073209
 }

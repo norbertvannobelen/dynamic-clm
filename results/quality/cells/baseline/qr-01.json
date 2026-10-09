@@ -5,9 +5,14 @@
   "correct": true,
   "expected": "NEPTUNIA",
   "got": "NEPTUNIA",
+  "context_tokens": 157,
+  "live_tokens": 157,
+  "dead_tokens": 0,
+  "post_rewrite_context_tokens": 157,
   "prefill_tokens": 0,
   "rewrite_count": 0,
-  "wall_clock_s": 0.984358708,
   "prompt_tokens": 375,
-  "completion_tokens": 4
+  "completion_tokens": 4,
+  "total_usage_tokens": 379,
+  "wall_clock_s": 0.840985625
 }

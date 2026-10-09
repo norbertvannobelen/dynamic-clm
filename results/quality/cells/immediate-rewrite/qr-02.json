@@ -5,9 +5,14 @@
   "correct": true,
   "expected": "ZEBRA99",
   "got": "ZEBRA99",
+  "context_tokens": 202,
+  "live_tokens": 18,
+  "dead_tokens": 184,
+  "post_rewrite_context_tokens": 18,
   "prefill_tokens": 0,
   "rewrite_count": 1,
-  "wall_clock_s": 1.8867032080000001,
   "prompt_tokens": 584,
-  "completion_tokens": 5
+  "completion_tokens": 5,
+  "total_usage_tokens": 589,
+  "wall_clock_s": 1.449531334
 }

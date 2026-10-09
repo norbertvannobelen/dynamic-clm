@@ -5,9 +5,14 @@
   "correct": false,
   "expected": "KIWI",
   "got": "PEACH",
+  "context_tokens": 110,
+  "live_tokens": 110,
+  "dead_tokens": 0,
+  "post_rewrite_context_tokens": 110,
   "prefill_tokens": 0,
   "rewrite_count": 0,
-  "wall_clock_s": 1.2734432500000001,
   "prompt_tokens": 335,
-  "completion_tokens": 2
+  "completion_tokens": 2,
+  "total_usage_tokens": 337,
+  "wall_clock_s": 0.804754125
 }

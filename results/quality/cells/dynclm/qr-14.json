@@ -5,9 +5,14 @@
   "correct": true,
   "expected": "BUILD_4421",
   "got": "BUILD_4421",
+  "context_tokens": 154,
+  "live_tokens": 14,
+  "dead_tokens": 140,
+  "post_rewrite_context_tokens": 154,
   "prefill_tokens": 0,
   "rewrite_count": 0,
-  "wall_clock_s": 1.837012833,
   "prompt_tokens": 570,
-  "completion_tokens": 6
+  "completion_tokens": 6,
+  "total_usage_tokens": 576,
+  "wall_clock_s": 1.431832375
 }

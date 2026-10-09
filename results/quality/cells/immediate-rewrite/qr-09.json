@@ -5,9 +5,14 @@
   "correct": true,
   "expected": "VIOLET7",
   "got": "VIOLET7",
+  "context_tokens": 89,
+  "live_tokens": 0,
+  "dead_tokens": 89,
+  "post_rewrite_context_tokens": 0,
   "prefill_tokens": 0,
   "rewrite_count": 1,
-  "wall_clock_s": 2.710771042,
   "prompt_tokens": 535,
-  "completion_tokens": 19
+  "completion_tokens": 19,
+  "total_usage_tokens": 554,
+  "wall_clock_s": 1.813532792
 }

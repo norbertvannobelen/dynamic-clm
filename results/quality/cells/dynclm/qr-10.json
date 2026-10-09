@@ -5,9 +5,14 @@
   "correct": true,
   "expected": "COMMIT_a1b2c3",
   "got": "COMMIT_a1b2c3",
+  "context_tokens": 298,
+  "live_tokens": 20,
+  "dead_tokens": 278,
+  "post_rewrite_context_tokens": 298,
   "prefill_tokens": 0,
   "rewrite_count": 0,
-  "wall_clock_s": 3.016581792,
   "prompt_tokens": 846,
-  "completion_tokens": 8
+  "completion_tokens": 8,
+  "total_usage_tokens": 854,
+  "wall_clock_s": 2.0022735
 }

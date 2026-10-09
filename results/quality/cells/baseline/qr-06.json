@@ -5,9 +5,14 @@
   "correct": true,
   "expected": "use sync.Once",
   "got": "use sync.Once",
+  "context_tokens": 132,
+  "live_tokens": 132,
+  "dead_tokens": 0,
+  "post_rewrite_context_tokens": 132,
   "prefill_tokens": 0,
   "rewrite_count": 0,
-  "wall_clock_s": 1.243915458,
   "prompt_tokens": 327,
-  "completion_tokens": 3
+  "completion_tokens": 3,
+  "total_usage_tokens": 330,
+  "wall_clock_s": 0.718028541
 }

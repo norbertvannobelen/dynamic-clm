@@ -5,9 +5,14 @@
   "correct": true,
   "expected": "ORANGE42",
   "got": "ORANGE42",
+  "context_tokens": 69,
+  "live_tokens": 69,
+  "dead_tokens": 0,
+  "post_rewrite_context_tokens": 69,
   "prefill_tokens": 0,
   "rewrite_count": 0,
-  "wall_clock_s": 1.6248219160000001,
   "prompt_tokens": 314,
-  "completion_tokens": 19
+  "completion_tokens": 19,
+  "total_usage_tokens": 333,
+  "wall_clock_s": 1.206917959
 }

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-08T23:11:21.966295Z",
+  "generated_at": "2026-10-09T00:54:03.999977Z",
   "model_id": "Qwen3.8-27B-4bit",
   "hardware_id": "apple-m5-max",
   "calibration": {
@@ -21,7 +21,18 @@
       "avg_parse_rate": 1,
       "avg_compliance": 100,
       "avg_shrink_err_pct": 0,
-      "sessions_with_ge2_edits": 20
+      "sessions_with_ge2_edits": 20,
+      "avg_context_tokens": 13475.640000000005,
+      "peak_context_tokens": 26385,
+      "final_context_tokens": 26385,
+      "avg_dead_tokens": 23141,
+      "avg_live_tokens": 3244,
+      "avg_prompt_tokens": 676050,
+      "avg_generated_tokens": 454,
+      "avg_total_usage_tokens": 676504,
+      "avg_wall_clock_s": 0.00049553125,
+      "total_wall_clock_s": 0.009910625,
+      "avg_dead_carried_turn_sum": 589911
     },
     "dynclm": {
       "sessions": 20,
@@ -31,7 +42,18 @@
       "avg_parse_rate": 1,
       "avg_compliance": 100,
       "avg_shrink_err_pct": 0,
-      "sessions_with_ge2_edits": 20
+      "sessions_with_ge2_edits": 20,
+      "avg_context_tokens": 2852.9400000000005,
+      "peak_context_tokens": 4830,
+      "final_context_tokens": 3707,
+      "avg_dead_tokens": 463,
+      "avg_live_tokens": 3244,
+      "avg_prompt_tokens": 144915,
+      "avg_generated_tokens": 454,
+      "avg_total_usage_tokens": 145369,
+      "avg_wall_clock_s": 0.0004300208999999999,
+      "total_wall_clock_s": 0.008600417999999999,
+      "avg_dead_carried_turn_sum": 58776
     },
     "immediate-rewrite": {
       "sessions": 20,
@@ -41,8 +63,483 @@
       "avg_parse_rate": 1,
       "avg_compliance": 100,
       "avg_shrink_err_pct": 0,
-      "sessions_with_ge2_edits": 20
+      "sessions_with_ge2_edits": 20,
+      "avg_context_tokens": 2408.760000000001,
+      "peak_context_tokens": 4633,
+      "final_context_tokens": 3244,
+      "avg_dead_tokens": 0,
+      "avg_live_tokens": 3244,
+      "avg_prompt_tokens": 122706,
+      "avg_generated_tokens": 454,
+      "avg_total_usage_tokens": 123160,
+      "avg_wall_clock_s": 0.00044585405,
+      "total_wall_clock_s": 0.008917081,
+      "avg_dead_carried_turn_sum": 36567
     }
+  },
+  "vs_baseline": {
+    "baseline": [
+      {
+        "metric": "accuracy_pct",
+        "baseline": 100,
+        "value": 100,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": false,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_context_tokens",
+        "baseline": 13475.640000000005,
+        "value": 13475.640000000005,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "peak_context_tokens",
+        "baseline": 26385,
+        "value": 26385,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "final_context_tokens",
+        "baseline": 26385,
+        "value": 26385,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_dead_tokens",
+        "baseline": 23141,
+        "value": 23141,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_live_tokens",
+        "baseline": 3244,
+        "value": 3244,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_prefill_tokens",
+        "baseline": 0,
+        "value": 0,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true
+      },
+      {
+        "metric": "avg_prompt_tokens",
+        "baseline": 676050,
+        "value": 676050,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_generated_tokens",
+        "baseline": 454,
+        "value": 454,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_total_tokens",
+        "baseline": 676504,
+        "value": 676504,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_rewrites",
+        "baseline": 0,
+        "value": 0,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true
+      },
+      {
+        "metric": "avg_dead_carried_turn_sum",
+        "baseline": 589911,
+        "value": 589911,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_wall_clock_s",
+        "baseline": 0.00049553125,
+        "value": 0.00049553125,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "total_wall_clock_s",
+        "baseline": 0.009910625,
+        "value": 0.009910625,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "wall_clock_per_correct_s",
+        "baseline": 0.00049553125,
+        "value": 0.00049553125,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "generated_tokens_per_correct",
+        "baseline": 454,
+        "value": 454,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "prefill_tokens_per_correct",
+        "baseline": 0,
+        "value": 0,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true
+      }
+    ],
+    "dynclm": [
+      {
+        "metric": "accuracy_pct",
+        "baseline": 100,
+        "value": 100,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": false,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_context_tokens",
+        "baseline": 13475.640000000005,
+        "value": 2852.9400000000005,
+        "delta": -10622.700000000004,
+        "pct_change": -78.82890905367019,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "peak_context_tokens",
+        "baseline": 26385,
+        "value": 4830,
+        "delta": -21555,
+        "pct_change": -81.6941444002274,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "final_context_tokens",
+        "baseline": 26385,
+        "value": 3707,
+        "delta": -22678,
+        "pct_change": -85.95035057797992,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_dead_tokens",
+        "baseline": 23141,
+        "value": 463,
+        "delta": -22678,
+        "pct_change": -97.99922215980294,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_live_tokens",
+        "baseline": 3244,
+        "value": 3244,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_prefill_tokens",
+        "baseline": 0,
+        "value": 17415,
+        "delta": 17415,
+        "pct_change": 100,
+        "lower_is_better": true,
+        "better_than_baseline": false
+      },
+      {
+        "metric": "avg_prompt_tokens",
+        "baseline": 676050,
+        "value": 144915,
+        "delta": -531135,
+        "pct_change": -78.56445529176835,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_generated_tokens",
+        "baseline": 454,
+        "value": 454,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_total_tokens",
+        "baseline": 676504,
+        "value": 145369,
+        "delta": -531135,
+        "pct_change": -78.51173089885647,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_rewrites",
+        "baseline": 0,
+        "value": 12,
+        "delta": 12,
+        "pct_change": 100,
+        "lower_is_better": true,
+        "better_than_baseline": false
+      },
+      {
+        "metric": "avg_dead_carried_turn_sum",
+        "baseline": 589911,
+        "value": 58776,
+        "delta": -531135,
+        "pct_change": -90.03646312748872,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_wall_clock_s",
+        "baseline": 0.00049553125,
+        "value": 0.0004300208999999999,
+        "delta": -0.00006551035000000008,
+        "pct_change": -13.220225767799727,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "total_wall_clock_s",
+        "baseline": 0.009910625,
+        "value": 0.008600417999999999,
+        "delta": -0.0013102070000000007,
+        "pct_change": -13.220225767799718,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "wall_clock_per_correct_s",
+        "baseline": 0.00049553125,
+        "value": 0.0004300208999999999,
+        "delta": -0.00006551035000000008,
+        "pct_change": -13.220225767799727,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "generated_tokens_per_correct",
+        "baseline": 454,
+        "value": 454,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "prefill_tokens_per_correct",
+        "baseline": 0,
+        "value": 17415,
+        "delta": 17415,
+        "pct_change": 100,
+        "lower_is_better": true,
+        "better_than_baseline": false
+      }
+    ],
+    "immediate-rewrite": [
+      {
+        "metric": "accuracy_pct",
+        "baseline": 100,
+        "value": 100,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": false,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_context_tokens",
+        "baseline": 13475.640000000005,
+        "value": 2408.760000000001,
+        "delta": -11066.880000000005,
+        "pct_change": -82.12507903149684,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "peak_context_tokens",
+        "baseline": 26385,
+        "value": 4633,
+        "delta": -21752,
+        "pct_change": -82.44078074663635,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "final_context_tokens",
+        "baseline": 26385,
+        "value": 3244,
+        "delta": -23141,
+        "pct_change": -87.7051354936517,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_dead_tokens",
+        "baseline": 23141,
+        "value": 0,
+        "delta": -23141,
+        "pct_change": -100,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_live_tokens",
+        "baseline": 3244,
+        "value": 3244,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_prefill_tokens",
+        "baseline": 0,
+        "value": 28363,
+        "delta": 28363,
+        "pct_change": 100,
+        "lower_is_better": true,
+        "better_than_baseline": false
+      },
+      {
+        "metric": "avg_prompt_tokens",
+        "baseline": 676050,
+        "value": 122706,
+        "delta": -553344,
+        "pct_change": -81.8495673396938,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_generated_tokens",
+        "baseline": 454,
+        "value": 454,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_total_tokens",
+        "baseline": 676504,
+        "value": 123160,
+        "delta": -553344,
+        "pct_change": -81.79463831699444,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_rewrites",
+        "baseline": 0,
+        "value": 26,
+        "delta": 26,
+        "pct_change": 100,
+        "lower_is_better": true,
+        "better_than_baseline": false
+      },
+      {
+        "metric": "avg_dead_carried_turn_sum",
+        "baseline": 589911,
+        "value": 36567,
+        "delta": -553344,
+        "pct_change": -93.80126832691711,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "avg_wall_clock_s",
+        "baseline": 0.00049553125,
+        "value": 0.00044585405,
+        "delta": -0.00004967719999999999,
+        "pct_change": -10.025038784133189,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "total_wall_clock_s",
+        "baseline": 0.009910625,
+        "value": 0.008917081,
+        "delta": -0.000993543999999999,
+        "pct_change": -10.02503878413318,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "wall_clock_per_correct_s",
+        "baseline": 0.00049553125,
+        "value": 0.00044585405,
+        "delta": -0.00004967719999999999,
+        "pct_change": -10.025038784133189,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "generated_tokens_per_correct",
+        "baseline": 454,
+        "value": 454,
+        "delta": 0,
+        "pct_change": 0,
+        "lower_is_better": true,
+        "better_than_baseline": true
+      },
+      {
+        "metric": "prefill_tokens_per_correct",
+        "baseline": 0,
+        "value": 28363,
+        "delta": 28363,
+        "pct_change": 100,
+        "lower_is_better": true,
+        "better_than_baseline": false
+      }
+    ]
   },
   "criteria": [
     {

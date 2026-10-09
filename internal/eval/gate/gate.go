@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/norbertvannobelen/dynamic-clm/internal/backend/omlx"
+	"github.com/norbertvannobelen/dynamic-clm/internal/metrics"
 	"github.com/norbertvannobelen/dynamic-clm/internal/scheduler"
 	"github.com/norbertvannobelen/dynamic-clm/internal/session"
 	"github.com/norbertvannobelen/dynamic-clm/internal/tracing"
@@ -38,16 +39,17 @@ type CriterionVerdict struct {
 
 // Report is the gate summary used for the interim report and auto-continue.
 type Report struct {
-	GeneratedAt time.Time                    `json:"generated_at"`
-	ModelID     string                       `json:"model_id"`
-	HardwareID  string                       `json:"hardware_id"`
-	Calibration scheduler.CalibrationResult  `json:"calibration"`
-	ArmStats    map[string]ArmStats          `json:"arm_stats"`
-	Criteria    []CriterionVerdict           `json:"criteria"`
-	Passed      bool                         `json:"passed"`
-	Sessions    int                          `json:"sessions_per_arm"`
-	MaxTurns    int                          `json:"max_turns"`
-	LiveModel   bool                         `json:"live_model"`
+	GeneratedAt       time.Time                           `json:"generated_at"`
+	ModelID           string                              `json:"model_id"`
+	HardwareID        string                              `json:"hardware_id"`
+	Calibration       scheduler.CalibrationResult         `json:"calibration"`
+	ArmStats          map[string]ArmStats                 `json:"arm_stats"`
+	VsBaseline        map[string][]metrics.VsBaseline     `json:"vs_baseline"`
+	Criteria          []CriterionVerdict                  `json:"criteria"`
+	Passed            bool                                `json:"passed"`
+	Sessions          int                                 `json:"sessions_per_arm"`
+	MaxTurns          int                                 `json:"max_turns"`
+	LiveModel         bool                                `json:"live_model"`
 }
 
 // ArmStats aggregates one treatment arm.
@@ -60,6 +62,18 @@ type ArmStats struct {
 	AvgCompliance      float64 `json:"avg_compliance"`
 	AvgShrinkErrPct    float64 `json:"avg_shrink_err_pct"`
 	SessionsWithEdits2 int     `json:"sessions_with_ge2_edits"`
+
+	AvgContextTokens     float64 `json:"avg_context_tokens"`
+	PeakContextTokens    float64 `json:"peak_context_tokens"`
+	FinalContextTokens   float64 `json:"final_context_tokens"`
+	AvgDeadTokens        float64 `json:"avg_dead_tokens"`
+	AvgLiveTokens        float64 `json:"avg_live_tokens"`
+	AvgPromptTokens      float64 `json:"avg_prompt_tokens"`
+	AvgGeneratedTokens   float64 `json:"avg_generated_tokens"`
+	AvgTotalUsageTokens  float64 `json:"avg_total_usage_tokens"`
+	AvgWallClockS        float64 `json:"avg_wall_clock_s"`
+	TotalWallClockS      float64 `json:"total_wall_clock_s"`
+	AvgDeadCarriedTurnSum float64 `json:"avg_dead_carried_turn_sum"`
 }
 
 // Run executes the 3-arm gate and evaluates G1–G4.
@@ -161,6 +175,11 @@ func Run(cfg Config) (Report, error) {
 	for k, rs := range armResults {
 		stats[k] = aggregate(rs)
 	}
+	vsBase := map[string][]metrics.VsBaseline{}
+	baseSnap := statsToSnapshot("baseline", stats["baseline"])
+	for name, st := range stats {
+		vsBase[name] = metrics.CompareToBaseline(statsToSnapshot(name, st), baseSnap)
+	}
 
 	criteria := evaluate(stats)
 	passed := true
@@ -177,6 +196,7 @@ func Run(cfg Config) (Report, error) {
 		HardwareID:  cfg.HardwareID,
 		Calibration: cfg.Calibration,
 		ArmStats:    stats,
+		VsBaseline:  vsBase,
 		Criteria:    criteria,
 		Passed:      passed,
 		Sessions:    cfg.Sessions,
@@ -195,6 +215,8 @@ func aggregate(rs []session.Result) ArmStats {
 	}
 	var succ, pref, rew, parse, comp, shrink float64
 	var compDenom float64
+	var avgCtx, peakCtx, finalCtx, deadTok, liveTok float64
+	var prompt, gen, wall, deadCarry float64
 	for _, r := range rs {
 		if r.Success {
 			succ++
@@ -203,6 +225,15 @@ func aggregate(rs []session.Result) ArmStats {
 		rew += float64(r.RewriteCount)
 		parse += r.MarkerParseRate
 		shrink += r.ShrinkErrorPct
+		avgCtx += r.AvgContextTokens
+		peakCtx += float64(r.PeakContextTokens)
+		finalCtx += float64(r.FinalContextTokens)
+		deadTok += float64(r.FinalDeadTokens)
+		liveTok += float64(r.FinalLiveTokens)
+		prompt += float64(r.TotalPromptTokens)
+		gen += float64(r.TotalGeneratedTokens)
+		wall += r.WallClockS
+		deadCarry += float64(r.DeadCarriedTurnSum)
 		if r.EditEvents >= 2 {
 			a.SessionsWithEdits2++
 		}
@@ -217,10 +248,44 @@ func aggregate(rs []session.Result) ArmStats {
 	a.AvgRewrites = rew / n
 	a.AvgParseRate = parse / n
 	a.AvgShrinkErrPct = shrink / n
+	a.AvgContextTokens = avgCtx / n
+	a.PeakContextTokens = peakCtx / n
+	a.FinalContextTokens = finalCtx / n
+	a.AvgDeadTokens = deadTok / n
+	a.AvgLiveTokens = liveTok / n
+	a.AvgPromptTokens = prompt / n
+	a.AvgGeneratedTokens = gen / n
+	a.AvgTotalUsageTokens = (prompt + gen) / n
+	a.AvgWallClockS = wall / n
+	a.TotalWallClockS = wall
+	a.AvgDeadCarriedTurnSum = deadCarry / n
 	if compDenom > 0 {
 		a.AvgCompliance = 100 * comp / compDenom
 	}
 	return a
+}
+
+func statsToSnapshot(name string, a ArmStats) metrics.Snapshot {
+	s := metrics.Snapshot{
+		Arm:                   name,
+		AccuracyPct:           a.SuccessRate,
+		N:                     a.Sessions,
+		Correct:               int(a.SuccessRate / 100 * float64(a.Sessions) + 0.5),
+		AvgContextTokens:      a.AvgContextTokens,
+		PeakContextTokens:     a.PeakContextTokens,
+		FinalContextTokens:    a.FinalContextTokens,
+		AvgDeadTokens:         a.AvgDeadTokens,
+		AvgLiveTokens:         a.AvgLiveTokens,
+		AvgPrefillTokens:      a.AvgPrefillTokens,
+		AvgPromptTokens:       a.AvgPromptTokens,
+		AvgGeneratedTokens:    a.AvgGeneratedTokens,
+		AvgRewrites:           a.AvgRewrites,
+		AvgDeadCarriedTurnSum: a.AvgDeadCarriedTurnSum,
+		AvgWallClockS:         a.AvgWallClockS,
+		TotalWallClockS:       a.TotalWallClockS,
+	}
+	s.FinalizeDerived()
+	return s
 }
 
 func evaluate(stats map[string]ArmStats) []CriterionVerdict {
@@ -298,12 +363,30 @@ func WriteInterimMarkdown(path string, rep Report, cacheProbe map[string]string)
 	_, _ = fmt.Fprintf(f, "| Notes | %s |\n\n", rep.Calibration.Notes)
 
 	_, _ = fmt.Fprintf(f, "## Per-arm results\n\n")
-	_, _ = fmt.Fprintf(f, "| Arm | Success%% | Avg re-prefill | Avg rewrites | Parse rate | Compliance%% |\n|---|---|---|---|---|---|\n")
+	_, _ = fmt.Fprintf(f, "| Arm | Success%% | Avg ctx | Peak ctx | Final ctx | Prefill | Prompt | Generated | Wall-s | Rewrites |\n")
+	_, _ = fmt.Fprintf(f, "|---|---|---|---|---|---|---|---|---|---|\n")
 	for _, name := range []string{"baseline", "immediate-rewrite", "dynclm"} {
 		a := rep.ArmStats[name]
-		_, _ = fmt.Fprintf(f, "| %s | %.1f | %.0f | %.2f | %.3f | %.1f |\n",
-			name, a.SuccessRate, a.AvgPrefillTokens, a.AvgRewrites, a.AvgParseRate, a.AvgCompliance)
+		_, _ = fmt.Fprintf(f, "| %s | %.1f | %.0f | %.0f | %.0f | %.0f | %.0f | %.0f | %.2f | %.2f |\n",
+			name, a.SuccessRate, a.AvgContextTokens, a.PeakContextTokens, a.FinalContextTokens,
+			a.AvgPrefillTokens, a.AvgPromptTokens, a.AvgGeneratedTokens, a.AvgWallClockS, a.AvgRewrites)
 	}
+
+	_, _ = fmt.Fprintf(f, "\n## DynCLM vs raw baseline (primary comparison)\n\n")
+	_, _ = fmt.Fprintf(f, "| Metric | Baseline | DynCLM | Δ | %% change | Better? |\n|---|---|---|---|---|---|\n")
+	for _, row := range rep.VsBaseline["dynclm"] {
+		better := "—"
+		if row.BetterThanBase != nil {
+			if *row.BetterThanBase {
+				better = "yes"
+			} else {
+				better = "no"
+			}
+		}
+		_, _ = fmt.Fprintf(f, "| %s | %.2f | %.2f | %s | %s | %s |\n",
+			row.Metric, row.Baseline, row.Value, metrics.FormatDelta(row.Delta), metrics.FormatPct(row.PctChange), better)
+	}
+
 	_, _ = fmt.Fprintf(f, "\n## Gate criteria G1–G4\n\n")
 	for _, c := range rep.Criteria {
 		mark := "FAIL"

@@ -5,9 +5,14 @@
   "correct": true,
   "expected": "return fmt.Errorf",
   "got": "return fmt.Errorf",
+  "context_tokens": 172,
+  "live_tokens": 172,
+  "dead_tokens": 0,
+  "post_rewrite_context_tokens": 172,
   "prefill_tokens": 0,
   "rewrite_count": 0,
-  "wall_clock_s": 1.401101375,
   "prompt_tokens": 405,
-  "completion_tokens": 3
+  "completion_tokens": 3,
+  "total_usage_tokens": 408,
+  "wall_clock_s": 0.862219291
 }
