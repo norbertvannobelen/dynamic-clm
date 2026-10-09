@@ -6,6 +6,9 @@ BIN := bin
 quality: build
 	./$(BIN)/dynclm-quality -model Qwen3.8-27B-4bit -out docs/quality-report.md
 
+longhorizon: build
+	./$(BIN)/dynclm-longhorizon -model Qwen3.8-27B-4bit -out docs/longhorizon-report.md
+
 all: build test
 
 build:
@@ -15,6 +18,7 @@ build:
 	go build -o $(BIN)/dynclm-gate ./cmd/dynclm-gate
 	go build -o $(BIN)/dynclm-eval ./cmd/dynclm-eval
 	go build -o $(BIN)/dynclm-quality ./cmd/dynclm-quality
+	go build -o $(BIN)/dynclm-longhorizon ./cmd/dynclm-longhorizon
 
 test:
 	go test ./...

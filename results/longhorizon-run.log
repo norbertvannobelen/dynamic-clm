@@ -1,0 +1,27 @@
+{
+  "late_avg_context": {
+    "baseline": 5666,
+    "dynclm": 2023.5,
+    "pct": -64.28697493822803
+  },
+  "late_probe_accuracy": {
+    "baseline": 0,
+    "delta_pp": 100,
+    "dynclm": 100
+  },
+  "late_steady_gen_tok_s": {
+    "baseline": 1.1287900983911767,
+    "dynclm": 1.3623236423609864,
+    "immediate": 0,
+    "pct_vs_base": 20.688837039114397
+  },
+  "late_steady_wall_s": {
+    "baseline": 3.9610320651875,
+    "dyn_pct_vs_base": -6.519607882717406,
+    "dynclm": 3.702788306428572,
+    "imm_pct_vs_base": -100,
+    "immediate": 0
+  },
+  "live": true
+}
+long-horizon report → docs/longhorizon-report.md

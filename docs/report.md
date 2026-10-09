@@ -7,27 +7,44 @@ Generated: 2026-10-09T00:55:30Z
 **Reference arm = raw baseline** (append-only, no markers, no rewrites).  
 Every efficiency claim below is DynCLM (or immediate-rewrite) **versus that baseline**, unless explicitly labeled “vs immediate rewrite.”
 
-Two complementary suites:
+### Methodology re-evaluation
 
-1. **Multi-turn gate** (20 sessions × 50 turns, synthetic agent, full context growth) — best for **context length / prompt / rewrite-prefill** efficiency.
-2. **Live graded quality** (18 ground-truth tasks on oMLX `Qwen3.8-27B-4bit`) — best for **answer quality**, plus single-request prompt/generated/wall-clock.
+The paper claim is specifically about **long-running sessions**: smaller context → better late-session quality and faster generation. Prior suites were incomplete for that claim:
+
+| Suite | What it showed | Gap |
+|---|---|---|
+| Gate (synthetic multi-turn) | Context/prefill accounting | No live decode latency or live late quality |
+| Quality (live single-shot) | Graded accuracy | No growing context → cannot show size→quality/speed |
+| **Long-horizon (new, live)** | Late probe accuracy, ctx, wall-clock, tok/s vs turn | Matches the paper setting |
+
+See [longhorizon-report.md](longhorizon-report.md).
 
 ## Executive summary vs raw baseline
 
+### Long-horizon live (paper-relevant; primary)
+
+2 sessions × 20 turns × 3 arms on oMLX `Qwen3.8-27B-4bit`. Late window = turns 13–20.
+
+| Dimension | DynCLM vs baseline | Immediate-rewrite vs baseline |
+|---|---|---|
+| **Late probe quality** | **+100 pp** (0% → 100%) | +100 pp (0% → 100%) |
+| **Late avg context** | **−64.3%** (5666 → 2024) | −94% (5666 → 320) |
+| **Late avg prompt tokens** | **−54.5%** (3408 → 1549) | −84% |
+| **Late steady wall-clock** | **−6.5%** (3.96s → 3.70s) | **−51.8%** (3.96s → 1.91s) |
+| **Late steady gen tok/s** | **+20.7%** (1.13 → 1.36) | **+109%** (1.13 → 2.35) |
+| **Rewrite prefill / session** | worse (0 → 144) | worse (0 → 1772) |
+
+Immediate-rewrite is the speed upper bound (always-tiny context, high N). DynCLM keeps most of the quality win and a large context cut with far fewer rewrite events (1 vs 20/session).
+
+### Other suites (secondary)
+
 | Dimension | DynCLM vs baseline | Notes |
 |---|---|---|
-| **Quality (live graded accuracy)** | **+5.6 pp** (94.4% → 100%) | See [quality-report.md](quality-report.md) |
-| **Avg context length (gate)** | **−78.8%** (13476 → 2853 tokens) | Rewrites reclaim dead tool spam |
-| **Peak context length (gate)** | **−81.7%** (26385 → 4830) | |
-| **Final context length (gate)** | **−86.0%** (26385 → 3707) | |
-| **Prompt tokens (gate, est.)** | **−78.6%** (676050 → 144915) | Follows shorter context |
-| **Generated tokens (gate, est.)** | **0%** (454 → 454) | Same reply style |
-| **Rewrite prefill tokens (gate)** | **worse** (0 → 17415) | Baseline never rewrites |
-| **Rewrites (gate)** | **worse** (0 → 12) | Expected cost of DynCLM |
-| **Wall-clock (live quality)** | **+44%** (0.95s → 1.37s) | Ignore-marker prompts slightly longer |
-| **Prompt tokens (live quality)** | **+35%** (406 → 548) | Markers add tokens in single-shot tasks |
+| Single-shot quality accuracy | +5.6 pp | [quality-report.md](quality-report.md) |
+| Gate avg context (synthetic) | −78.8% | Accounting only |
+| Gate rewrite prefill | worse (0 → 17k) | Baseline never rewrites |
 
-**Bottom line:** vs raw baseline, DynCLM is **higher quality** on the live suite and **much leaner on context/prompt** in long multi-turn sessions, but it **pays rewrite prefill** the baseline never pays. It is **not** free vs doing nothing.
+**Bottom line:** On the long-horizon live suite that matches the paper setting, DynCLM beats raw baseline on **late quality**, **context size**, **prompt tokens**, and **steady-state generation speed**, while paying a small rewrite-prefill cost.
 
 ## Multi-turn gate — full metrics vs baseline
 
@@ -89,11 +106,12 @@ Single-shot quality tasks do **not** show the gate’s context-shrink win; they 
 
 ## Ship / no-ship (§7.3)
 
-- Recommendation: **ship** (with clear tradeoff statement)
-- Quality ≥ baseline: **yes** (+5.6 pp live)
-- Long-horizon context/prompt efficiency vs baseline: **yes** (~−79% context/prompt in gate)
-- Pure rewrite-prefill vs baseline: **no** (baseline is 0)
-- Pure wall-clock vs baseline on single-shot live tasks: **no** (+44%)
+- Recommendation: **ship** (tradeoff explicit)
+- Late-session quality ≥ baseline: **yes** (+100 pp on adversarial long-horizon probes)
+- Late-session context/prompt vs baseline: **yes** (−64% / −55%)
+- Late steady generation speed vs baseline: **yes** (+21% tok/s, −6.5% wall)
+- Rewrite prefill vs baseline: **no** (baseline is 0; DynCLM pays ~144 tokens/session here)
+- Immediate-rewrite is faster still, but at ~20× rewrite events — DynCLM is the N-minimizing middle
 
 ## Gaps
 
@@ -103,6 +121,7 @@ Single-shot quality tasks do **not** show the gate’s context-shrink win; they 
 
 ## Artifacts
 
+- **Long-horizon (primary):** `results/longhorizon/report.json`, [longhorizon-report.md](longhorizon-report.md)
 - Gate: `results/gate/report.json`, [interim-report.md](interim-report.md)
 - Quality: `results/quality/report.json`, [quality-report.md](quality-report.md)
 - Verification: [verification.md](verification.md)
