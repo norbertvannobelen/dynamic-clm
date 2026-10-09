@@ -1,0 +1,18 @@
+{
+  "task_id": "qr-12",
+  "category": "coding",
+  "arm": "dynclm",
+  "correct": true,
+  "expected": "context.WithTimeout",
+  "got": "context.WithTimeout",
+  "context_tokens": 210,
+  "live_tokens": 20,
+  "dead_tokens": 190,
+  "post_rewrite_context_tokens": 210,
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "prompt_tokens": 627,
+  "completion_tokens": 3,
+  "total_usage_tokens": 630,
+  "wall_clock_s": 1.3895732920000001
+}

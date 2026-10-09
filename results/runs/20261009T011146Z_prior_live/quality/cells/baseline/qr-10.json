@@ -1,0 +1,18 @@
+{
+  "task_id": "qr-10",
+  "category": "retention",
+  "arm": "baseline",
+  "correct": true,
+  "expected": "COMMIT_a1b2c3",
+  "got": "COMMIT_a1b2c3",
+  "context_tokens": 298,
+  "live_tokens": 298,
+  "dead_tokens": 0,
+  "post_rewrite_context_tokens": 298,
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "prompt_tokens": 652,
+  "completion_tokens": 8,
+  "total_usage_tokens": 660,
+  "wall_clock_s": 1.38695675
+}

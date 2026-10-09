@@ -1,0 +1,18 @@
+2026-10-09T01:05:47Z start baseline-00 live=true
+2026-10-09T01:07:03Z finish baseline-00 probes_ok=false turns=20
+2026-10-09T01:07:03Z start baseline-01 live=true
+2026-10-09T01:08:09Z finish baseline-01 probes_ok=false turns=20
+2026-10-09T01:08:09Z start immediate-rewrite-00 live=true
+2026-10-09T01:08:39Z finish immediate-rewrite-00 probes_ok=true turns=20
+2026-10-09T01:08:39Z start immediate-rewrite-01 live=true
+2026-10-09T01:09:09Z finish immediate-rewrite-01 probes_ok=true turns=20
+2026-10-09T01:09:09Z start dynclm-00 live=true
+2026-10-09T01:10:28Z finish dynclm-00 probes_ok=true turns=20
+2026-10-09T01:10:28Z start dynclm-01 live=true
+2026-10-09T01:11:30Z finish dynclm-01 probes_ok=true turns=20
+2026-10-09T01:11:46Z skip baseline-00
+2026-10-09T01:11:46Z skip baseline-01
+2026-10-09T01:11:46Z skip immediate-rewrite-00
+2026-10-09T01:11:46Z skip immediate-rewrite-01
+2026-10-09T01:11:46Z skip dynclm-00
+2026-10-09T01:11:46Z skip dynclm-01

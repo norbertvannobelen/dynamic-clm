@@ -1,0 +1,18 @@
+{
+  "task_id": "qr-09",
+  "category": "recovery",
+  "arm": "baseline",
+  "correct": true,
+  "expected": "VIOLET7",
+  "got": "VIOLET7",
+  "context_tokens": 89,
+  "live_tokens": 89,
+  "dead_tokens": 0,
+  "post_rewrite_context_tokens": 89,
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "prompt_tokens": 374,
+  "completion_tokens": 19,
+  "total_usage_tokens": 393,
+  "wall_clock_s": 1.278176458
+}

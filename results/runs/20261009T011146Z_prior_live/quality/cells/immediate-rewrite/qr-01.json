@@ -1,0 +1,18 @@
+{
+  "task_id": "qr-01",
+  "category": "retention",
+  "arm": "immediate-rewrite",
+  "correct": true,
+  "expected": "NEPTUNIA",
+  "got": "NEPTUNIA",
+  "context_tokens": 157,
+  "live_tokens": 19,
+  "dead_tokens": 138,
+  "post_rewrite_context_tokens": 19,
+  "prefill_tokens": 0,
+  "rewrite_count": 1,
+  "prompt_tokens": 471,
+  "completion_tokens": 4,
+  "total_usage_tokens": 475,
+  "wall_clock_s": 1.068979875
+}

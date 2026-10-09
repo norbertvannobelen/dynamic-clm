@@ -1,0 +1,18 @@
+{
+  "task_id": "qr-02",
+  "category": "retention",
+  "arm": "baseline",
+  "correct": true,
+  "expected": "ZEBRA99",
+  "got": "ZEBRA99",
+  "context_tokens": 202,
+  "live_tokens": 202,
+  "dead_tokens": 0,
+  "post_rewrite_context_tokens": 202,
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "prompt_tokens": 456,
+  "completion_tokens": 5,
+  "total_usage_tokens": 461,
+  "wall_clock_s": 0.879325834
+}

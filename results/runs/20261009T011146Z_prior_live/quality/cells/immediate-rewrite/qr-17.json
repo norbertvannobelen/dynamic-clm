@@ -1,0 +1,18 @@
+{
+  "task_id": "qr-17",
+  "category": "coding",
+  "arm": "immediate-rewrite",
+  "correct": true,
+  "expected": "http.StatusTooManyRequests",
+  "got": "http.StatusTooManyRequests",
+  "context_tokens": 113,
+  "live_tokens": 13,
+  "dead_tokens": 100,
+  "post_rewrite_context_tokens": 13,
+  "prefill_tokens": 0,
+  "rewrite_count": 1,
+  "prompt_tokens": 486,
+  "completion_tokens": 5,
+  "total_usage_tokens": 491,
+  "wall_clock_s": 1.248575667
+}

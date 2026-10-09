@@ -1,0 +1,18 @@
+{
+  "task_id": "qr-13",
+  "category": "retention",
+  "arm": "baseline",
+  "correct": true,
+  "expected": "CANARY_OK",
+  "got": "CANARY_OK",
+  "context_tokens": 135,
+  "live_tokens": 135,
+  "dead_tokens": 0,
+  "post_rewrite_context_tokens": 135,
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "prompt_tokens": 327,
+  "completion_tokens": 3,
+  "total_usage_tokens": 330,
+  "wall_clock_s": 0.783459042
+}

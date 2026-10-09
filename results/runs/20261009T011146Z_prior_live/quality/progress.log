@@ -1,0 +1,108 @@
+2026-10-09T00:54:07Z start baseline/qr-01 live=true
+2026-10-09T00:54:08Z finish baseline/qr-01 correct=true ctx=157 prompt=375 gen=4 wall=0.84s
+2026-10-09T00:54:08Z start baseline/qr-02 live=true
+2026-10-09T00:54:09Z finish baseline/qr-02 correct=true ctx=202 prompt=456 gen=5 wall=0.88s
+2026-10-09T00:54:09Z start baseline/qr-03 live=true
+2026-10-09T00:54:10Z finish baseline/qr-03 correct=true ctx=260 prompt=549 gen=6 wall=1.00s
+2026-10-09T00:54:10Z start baseline/qr-04 live=true
+2026-10-09T00:54:11Z finish baseline/qr-04 correct=true ctx=126 prompt=313 gen=2 wall=0.62s
+2026-10-09T00:54:11Z start baseline/qr-05 live=true
+2026-10-09T00:54:11Z finish baseline/qr-05 correct=true ctx=161 prompt=381 gen=2 wall=0.70s
+2026-10-09T00:54:11Z start baseline/qr-06 live=true
+2026-10-09T00:54:12Z finish baseline/qr-06 correct=true ctx=132 prompt=327 gen=3 wall=0.72s
+2026-10-09T00:54:12Z start baseline/qr-07 live=true
+2026-10-09T00:54:13Z finish baseline/qr-07 correct=true ctx=172 prompt=405 gen=3 wall=0.86s
+2026-10-09T00:54:13Z start baseline/qr-08 live=true
+2026-10-09T00:54:14Z finish baseline/qr-08 correct=true ctx=69 prompt=314 gen=19 wall=1.21s
+2026-10-09T00:54:14Z start baseline/qr-09 live=true
+2026-10-09T00:54:15Z finish baseline/qr-09 correct=true ctx=89 prompt=374 gen=19 wall=1.28s
+2026-10-09T00:54:15Z start baseline/qr-10 live=true
+2026-10-09T00:54:17Z finish baseline/qr-10 correct=true ctx=298 prompt=652 gen=8 wall=1.39s
+2026-10-09T00:54:17Z start baseline/qr-11 live=true
+2026-10-09T00:54:18Z finish baseline/qr-11 correct=true ctx=240 prompt=536 gen=5 wall=1.10s
+2026-10-09T00:54:18Z start baseline/qr-12 live=true
+2026-10-09T00:54:19Z finish baseline/qr-12 correct=true ctx=210 prompt=467 gen=3 wall=0.96s
+2026-10-09T00:54:19Z start baseline/qr-13 live=true
+2026-10-09T00:54:20Z finish baseline/qr-13 correct=true ctx=135 prompt=327 gen=3 wall=0.78s
+2026-10-09T00:54:20Z start baseline/qr-14 live=true
+2026-10-09T00:54:21Z finish baseline/qr-14 correct=true ctx=154 prompt=410 gen=6 wall=1.04s
+2026-10-09T00:54:21Z start baseline/qr-15 live=true
+2026-10-09T00:54:22Z finish baseline/qr-15 correct=true ctx=170 prompt=429 gen=3 wall=0.95s
+2026-10-09T00:54:22Z start baseline/qr-16 live=true
+2026-10-09T00:54:23Z finish baseline/qr-16 correct=true ctx=111 prompt=327 gen=8 wall=1.02s
+2026-10-09T00:54:23Z start baseline/qr-17 live=true
+2026-10-09T00:54:24Z finish baseline/qr-17 correct=true ctx=113 prompt=326 gen=5 wall=0.97s
+2026-10-09T00:54:24Z start baseline/qr-18 live=true
+2026-10-09T00:54:25Z finish baseline/qr-18 correct=false ctx=110 prompt=335 gen=2 wall=0.80s
+2026-10-09T00:54:25Z start immediate-rewrite/qr-01 live=true
+2026-10-09T00:54:26Z finish immediate-rewrite/qr-01 correct=true ctx=157 prompt=471 gen=4 wall=1.07s
+2026-10-09T00:54:26Z start immediate-rewrite/qr-02 live=true
+2026-10-09T00:54:27Z finish immediate-rewrite/qr-02 correct=true ctx=202 prompt=584 gen=5 wall=1.45s
+2026-10-09T00:54:27Z start immediate-rewrite/qr-03 live=true
+2026-10-09T00:54:29Z finish immediate-rewrite/qr-03 correct=true ctx=260 prompt=709 gen=6 wall=1.52s
+2026-10-09T00:54:29Z start immediate-rewrite/qr-04 live=true
+2026-10-09T00:54:30Z finish immediate-rewrite/qr-04 correct=true ctx=126 prompt=409 gen=2 wall=0.96s
+2026-10-09T00:54:30Z start immediate-rewrite/qr-05 live=true
+2026-10-09T00:54:31Z finish immediate-rewrite/qr-05 correct=true ctx=161 prompt=509 gen=2 wall=1.07s
+2026-10-09T00:54:31Z start immediate-rewrite/qr-06 live=true
+2026-10-09T00:54:32Z finish immediate-rewrite/qr-06 correct=true ctx=132 prompt=423 gen=3 wall=1.00s
+2026-10-09T00:54:32Z start immediate-rewrite/qr-07 live=true
+2026-10-09T00:54:33Z finish immediate-rewrite/qr-07 correct=true ctx=172 prompt=533 gen=3 wall=1.24s
+2026-10-09T00:54:33Z start immediate-rewrite/qr-08 live=true
+2026-10-09T00:54:34Z finish immediate-rewrite/qr-08 correct=true ctx=69 prompt=443 gen=19 wall=1.58s
+2026-10-09T00:54:34Z start immediate-rewrite/qr-09 live=true
+2026-10-09T00:54:36Z finish immediate-rewrite/qr-09 correct=true ctx=89 prompt=535 gen=19 wall=1.81s
+2026-10-09T00:54:36Z start immediate-rewrite/qr-10 live=true
+2026-10-09T00:54:38Z finish immediate-rewrite/qr-10 correct=true ctx=298 prompt=846 gen=8 wall=1.98s
+2026-10-09T00:54:38Z start immediate-rewrite/qr-11 live=true
+2026-10-09T00:54:40Z finish immediate-rewrite/qr-11 correct=true ctx=240 prompt=696 gen=5 wall=1.57s
+2026-10-09T00:54:40Z start immediate-rewrite/qr-12 live=true
+2026-10-09T00:54:41Z finish immediate-rewrite/qr-12 correct=true ctx=210 prompt=627 gen=3 wall=1.42s
+2026-10-09T00:54:41Z start immediate-rewrite/qr-13 live=true
+2026-10-09T00:54:42Z finish immediate-rewrite/qr-13 correct=true ctx=135 prompt=455 gen=3 wall=1.13s
+2026-10-09T00:54:42Z start immediate-rewrite/qr-14 live=true
+2026-10-09T00:54:44Z finish immediate-rewrite/qr-14 correct=true ctx=154 prompt=570 gen=6 wall=1.42s
+2026-10-09T00:54:44Z start immediate-rewrite/qr-15 live=true
+2026-10-09T00:54:45Z finish immediate-rewrite/qr-15 correct=true ctx=170 prompt=623 gen=3 wall=1.43s
+2026-10-09T00:54:45Z start immediate-rewrite/qr-16 live=true
+2026-10-09T00:54:47Z finish immediate-rewrite/qr-16 correct=true ctx=111 prompt=455 gen=8 wall=1.33s
+2026-10-09T00:54:47Z start immediate-rewrite/qr-17 live=true
+2026-10-09T00:54:48Z finish immediate-rewrite/qr-17 correct=true ctx=113 prompt=486 gen=5 wall=1.25s
+2026-10-09T00:54:48Z start immediate-rewrite/qr-18 live=true
+2026-10-09T00:54:49Z finish immediate-rewrite/qr-18 correct=true ctx=110 prompt=495 gen=2 wall=1.13s
+2026-10-09T00:54:49Z start dynclm/qr-01 live=true
+2026-10-09T00:54:50Z finish dynclm/qr-01 correct=true ctx=157 prompt=471 gen=4 wall=1.16s
+2026-10-09T00:54:50Z start dynclm/qr-02 live=true
+2026-10-09T00:54:52Z finish dynclm/qr-02 correct=true ctx=202 prompt=584 gen=5 wall=1.44s
+2026-10-09T00:54:52Z start dynclm/qr-03 live=true
+2026-10-09T00:54:53Z finish dynclm/qr-03 correct=true ctx=260 prompt=709 gen=6 wall=1.67s
+2026-10-09T00:54:53Z start dynclm/qr-04 live=true
+2026-10-09T00:54:54Z finish dynclm/qr-04 correct=true ctx=126 prompt=409 gen=2 wall=1.01s
+2026-10-09T00:54:54Z start dynclm/qr-05 live=true
+2026-10-09T00:54:55Z finish dynclm/qr-05 correct=true ctx=161 prompt=509 gen=2 wall=1.14s
+2026-10-09T00:54:55Z start dynclm/qr-06 live=true
+2026-10-09T00:54:56Z finish dynclm/qr-06 correct=true ctx=132 prompt=423 gen=3 wall=1.06s
+2026-10-09T00:54:56Z start dynclm/qr-07 live=true
+2026-10-09T00:54:58Z finish dynclm/qr-07 correct=true ctx=172 prompt=533 gen=3 wall=1.25s
+2026-10-09T00:54:58Z start dynclm/qr-08 live=true
+2026-10-09T00:54:59Z finish dynclm/qr-08 correct=true ctx=69 prompt=443 gen=19 wall=1.52s
+2026-10-09T00:54:59Z start dynclm/qr-09 live=true
+2026-10-09T00:55:01Z finish dynclm/qr-09 correct=true ctx=89 prompt=535 gen=19 wall=1.81s
+2026-10-09T00:55:01Z start dynclm/qr-10 live=true
+2026-10-09T00:55:03Z finish dynclm/qr-10 correct=true ctx=298 prompt=846 gen=8 wall=2.00s
+2026-10-09T00:55:03Z start dynclm/qr-11 live=true
+2026-10-09T00:55:05Z finish dynclm/qr-11 correct=true ctx=240 prompt=696 gen=5 wall=1.60s
+2026-10-09T00:55:05Z start dynclm/qr-12 live=true
+2026-10-09T00:55:06Z finish dynclm/qr-12 correct=true ctx=210 prompt=627 gen=3 wall=1.39s
+2026-10-09T00:55:06Z start dynclm/qr-13 live=true
+2026-10-09T00:55:07Z finish dynclm/qr-13 correct=true ctx=135 prompt=455 gen=3 wall=1.12s
+2026-10-09T00:55:07Z start dynclm/qr-14 live=true
+2026-10-09T00:55:09Z finish dynclm/qr-14 correct=true ctx=154 prompt=570 gen=6 wall=1.43s
+2026-10-09T00:55:09Z start dynclm/qr-15 live=true
+2026-10-09T00:55:10Z finish dynclm/qr-15 correct=true ctx=170 prompt=623 gen=3 wall=1.40s
+2026-10-09T00:55:10Z start dynclm/qr-16 live=true
+2026-10-09T00:55:11Z finish dynclm/qr-16 correct=true ctx=111 prompt=455 gen=8 wall=1.28s
+2026-10-09T00:55:11Z start dynclm/qr-17 live=true
+2026-10-09T00:55:12Z finish dynclm/qr-17 correct=true ctx=113 prompt=486 gen=5 wall=1.25s
+2026-10-09T00:55:12Z start dynclm/qr-18 live=true
+2026-10-09T00:55:14Z finish dynclm/qr-18 correct=true ctx=110 prompt=495 gen=2 wall=1.13s

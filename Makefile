@@ -1,7 +1,7 @@
 MODULE := github.com/norbertvannobelen/dynamic-clm
 BIN := bin
 
-.PHONY: all build test vet gate calibrate baseline learning quality report clean longhorizon longhorizon-b charts
+.PHONY: all build test vet gate calibrate baseline learning quality report clean longhorizon longhorizon-b charts live-full analysis
 
 quality: build
 	./$(BIN)/dynclm-quality -model Qwen3.8-27B-4bit -out docs/quality-report.md
@@ -15,6 +15,14 @@ longhorizon-b: build
 
 charts:
 	python3 scripts/gen_charts.py
+
+analysis:
+	python3 scripts/gen_analysis_report.py --out docs/analysis-report.md
+
+# Full live pipeline (gate → 900-session learning → quality → long-horizon A/B → analysis).
+# Refuses synthetic. Archives under results/runs/<id>/. Expect many hours.
+live-full: build
+	bash scripts/run_live_full.sh
 
 all: build test
 

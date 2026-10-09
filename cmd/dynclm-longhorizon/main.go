@@ -20,7 +20,8 @@ func main() {
 	sessions := flag.Int("sessions", 3, "sessions per arm")
 	probeEvery := flag.Int("probe-every", 4, "probe interval")
 	maxContext := flag.Int("max-context", 8192, "max context (suite A)")
-	offline := flag.Bool("offline", false, "synthetic (no oMLX)")
+	offline := flag.Bool("offline", false, "deprecated alias for --allow-synthetic")
+	allowSynthetic := flag.Bool("allow-synthetic", false, "permit synthetic (no oMLX)")
 	fresh := flag.Bool("fresh", false, "delete prior cells")
 	mode := flag.String("mode", "a", "suite mode: a (raw baseline) or b (compaction matrix)")
 	limits := flag.String("limits", "8192,16384,32768,65536", "comma-separated max contexts for mode b")
@@ -28,6 +29,15 @@ func main() {
 
 	if *fresh {
 		_ = os.RemoveAll(*results)
+	}
+	if *offline && !*allowSynthetic {
+		fmt.Fprintln(os.Stderr, "--offline is disabled; pass --allow-synthetic for a non-live run")
+		os.Exit(1)
+	}
+	live := !*allowSynthetic
+	if !live {
+		fmt.Fprintln(os.Stderr, "live evaluation required: refusing synthetic long-horizon (pass --allow-synthetic to override)")
+		os.Exit(1)
 	}
 
 	cal := scheduler.DefaultM5MaxPrior(*model)
@@ -39,7 +49,7 @@ func main() {
 		ModelID:      *model,
 		HardwareID:   "apple-m5-max",
 		ResultsDir:   *results,
-		UseLiveModel: !*offline,
+		UseLiveModel: live,
 		DeviceCosts:  cal.ToDeviceCosts(),
 		MaxContext:   *maxContext,
 		MaxTurns:     *turns,

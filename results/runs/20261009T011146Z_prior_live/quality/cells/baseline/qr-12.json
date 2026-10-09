@@ -1,0 +1,18 @@
+{
+  "task_id": "qr-12",
+  "category": "coding",
+  "arm": "baseline",
+  "correct": true,
+  "expected": "context.WithTimeout",
+  "got": "context.WithTimeout",
+  "context_tokens": 210,
+  "live_tokens": 210,
+  "dead_tokens": 0,
+  "post_rewrite_context_tokens": 210,
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "prompt_tokens": 467,
+  "completion_tokens": 3,
+  "total_usage_tokens": 470,
+  "wall_clock_s": 0.962996833
+}

@@ -14,12 +14,20 @@ func main() {
 	model := flag.String("model", "Qwen3.8-27B-4bit", "model id")
 	out := flag.String("out", "docs/quality-report.md", "markdown report path")
 	results := flag.String("results", "results/quality", "results directory")
-	offline := flag.Bool("offline", false, "synthetic answers (no oMLX)")
+	offline := flag.Bool("offline", false, "deprecated alias for --allow-synthetic")
+	allowSynthetic := flag.Bool("allow-synthetic", false, "permit synthetic answers (no oMLX)")
 	fresh := flag.Bool("fresh", false, "delete prior quality cells before run")
 	flag.Parse()
 
 	if *fresh {
 		_ = os.RemoveAll(*results)
+	}
+	if *offline && !*allowSynthetic {
+		fatal(fmt.Errorf("--offline is disabled; pass --allow-synthetic for a non-live run"))
+	}
+	live := !*allowSynthetic
+	if !live {
+		fatal(fmt.Errorf("live evaluation required: refusing synthetic quality run (pass --allow-synthetic to override)"))
 	}
 
 	cal := scheduler.DefaultM5MaxPrior(*model)
@@ -31,7 +39,7 @@ func main() {
 		ModelID:      *model,
 		HardwareID:   "apple-m5-max",
 		ResultsDir:   *results,
-		UseLiveModel: !*offline,
+		UseLiveModel: live,
 		DeviceCosts:  cal.ToDeviceCosts(),
 		MaxContext:   8192,
 	})

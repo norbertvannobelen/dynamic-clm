@@ -1,0 +1,18 @@
+{
+  "task_id": "qr-04",
+  "category": "constraint",
+  "arm": "baseline",
+  "correct": true,
+  "expected": "BANANA",
+  "got": "BANANA",
+  "context_tokens": 126,
+  "live_tokens": 126,
+  "dead_tokens": 0,
+  "post_rewrite_context_tokens": 126,
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "prompt_tokens": 313,
+  "completion_tokens": 2,
+  "total_usage_tokens": 315,
+  "wall_clock_s": 0.618414167
+}

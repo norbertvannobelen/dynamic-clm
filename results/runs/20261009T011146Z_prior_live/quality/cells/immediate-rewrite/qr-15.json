@@ -1,0 +1,18 @@
+{
+  "task_id": "qr-15",
+  "category": "retention",
+  "arm": "immediate-rewrite",
+  "correct": true,
+  "expected": "OWNER_alice",
+  "got": "OWNER_alice",
+  "context_tokens": 170,
+  "live_tokens": 14,
+  "dead_tokens": 156,
+  "post_rewrite_context_tokens": 14,
+  "prefill_tokens": 0,
+  "rewrite_count": 1,
+  "prompt_tokens": 623,
+  "completion_tokens": 3,
+  "total_usage_tokens": 626,
+  "wall_clock_s": 1.427101542
+}

@@ -11,6 +11,7 @@ import (
 
 	"github.com/norbertvannobelen/dynamic-clm/internal/backend/omlx"
 	"github.com/norbertvannobelen/dynamic-clm/internal/eval/benchmarks"
+	"github.com/norbertvannobelen/dynamic-clm/internal/eval/runarchive"
 	"github.com/norbertvannobelen/dynamic-clm/internal/scheduler"
 	"github.com/norbertvannobelen/dynamic-clm/internal/session"
 	"github.com/norbertvannobelen/dynamic-clm/internal/tracing"
@@ -37,16 +38,22 @@ type learningYAML struct {
 func main() {
 	mode := flag.String("mode", "learning", "learning|report|benchmarks")
 	cfgPath := flag.String("config", "configs/learning.yaml", "learning config")
-	offline := flag.Bool("offline", false, "synthetic / no live model")
+	allowSynthetic := flag.Bool("allow-synthetic", false, "permit synthetic / no live model")
+	offline := flag.Bool("offline", false, "removed — use --allow-synthetic")
+	runRoot := flag.String("run-root", "", "results/runs/<id> root for this execution")
 	flag.Parse()
+
+	if *offline && !*allowSynthetic {
+		fatal(fmt.Errorf("--offline is disabled; pass --allow-synthetic for a non-live run"))
+	}
 
 	switch *mode {
 	case "learning":
-		if err := runLearning(*cfgPath, *offline); err != nil {
+		if err := runLearning(*cfgPath, *allowSynthetic, *runRoot); err != nil {
 			fatal(err)
 		}
 	case "benchmarks":
-		if err := runBenchmarks(*offline); err != nil {
+		if err := runBenchmarks(*allowSynthetic, *runRoot); err != nil {
 			fatal(err)
 		}
 	case "report":
@@ -58,7 +65,7 @@ func main() {
 	}
 }
 
-func runLearning(cfgPath string, offline bool) error {
+func runLearning(cfgPath string, allowSynthetic bool, runRoot string) error {
 	if _, err := os.Stat("results/gate/PASSED"); err != nil {
 		return fmt.Errorf("Phase B blocked: gate not passed (%v)", err)
 	}
@@ -70,37 +77,73 @@ func runLearning(cfgPath string, offline bool) error {
 	if err := yaml.Unmarshal(raw, &y); err != nil {
 		return err
 	}
-	live := y.UseLiveModel && !offline
+	if y.ResultsDir == "" {
+		y.ResultsDir = "results"
+	}
+
+	live := y.UseLiveModel && !allowSynthetic
+	if err := runarchive.RefuseSynthetic(live, allowSynthetic); err != nil {
+		return err
+	}
+	if !y.UseLiveModel && !allowSynthetic {
+		return fmt.Errorf("learning.yaml has use_live_model: false; set true or pass --allow-synthetic")
+	}
+
+	var run *runarchive.Run
+	if runRoot != "" {
+		run, err = runarchive.Open(runRoot)
+		if err != nil {
+			return err
+		}
+		run.Man.Live = live
+	} else {
+		run, err = runarchive.Begin(y.ResultsDir, live, "learning")
+		if err != nil {
+			return err
+		}
+	}
+	learnDir, err := run.SuiteDir("learning")
+	if err != nil {
+		return err
+	}
+
 	var client *omlx.Client
 	if live {
 		client, err = omlx.NewClient()
 		if err != nil {
-			return err
+			_ = run.Finish(false, "omlx client failed")
+			return fmt.Errorf("live learning requires oMLX: %w", err)
 		}
 		client.MaxTokens = 96
 	}
+
 	cal := scheduler.DefaultM5MaxPrior(y.Models[0])
 	if c, err := scheduler.LoadCalibration("configs/calibration/m5max-qwen38.json"); err == nil {
 		cal = c
 	}
 	costs := cal.ToDeviceCosts()
-	rec, err := tracing.OpenRecorder(filepath.Join(y.ResultsDir, "learning", "trace.jsonl"))
+
+	// Archive-local trace + cells so prior synthetic cells cannot skip live work.
+	rec, err := tracing.OpenRecorder(filepath.Join(learnDir, "trace.jsonl"))
 	if err != nil {
 		return err
 	}
 	defer rec.Close()
 
-	// Fractional factorial order: vary one axis at a time first.
+	cellsRoot := run.Root // CellPath(results, hw, model, ...)
+	total := len(y.Models) * len(y.TaskTypes) * len(y.Policies) * y.SessionsPerCell
+	done := 0
 	for _, model := range y.Models {
 		for _, task := range y.TaskTypes {
 			for _, pol := range y.Policies {
 				for i := 0; i < y.SessionsPerCell; i++ {
 					sid := fmt.Sprintf("%s-%03d", pol.Name, i)
-					cell := tracing.CellPath(y.ResultsDir, y.HardwareID, model, task, pol.Name, sid)
+					cell := tracing.CellPath(cellsRoot, y.HardwareID, model, task, pol.Name, sid)
 					if tracing.CellDone(cell) {
+						done++
 						continue
 					}
-					tracing.ProgressLog(y.ResultsDir, fmt.Sprintf("learning start %s/%s/%s/%s", model, task, pol.Name, sid))
+					tracing.ProgressLog(run.Root, fmt.Sprintf("learning start %s/%s/%s/%s live=%v (%d/%d)", model, task, pol.Name, sid, live, done+1, total))
 					runner := session.NewRunner(client, rec, costs)
 					res, err := runner.RunCodingSession(session.Config{
 						HardwareID:   y.HardwareID,
@@ -114,65 +157,84 @@ func runLearning(cfgPath string, offline bool) error {
 							Name: pol.Name, Beta: pol.Beta, Gamma: pol.Gamma, Delta: pol.Delta,
 						},
 						DeviceCosts:  costs,
-						ResultsDir:   y.ResultsDir,
-						UseLiveModel: live && model == y.Models[0], // live only for primary model to bound runtime
+						ResultsDir:   run.Root,
+						UseLiveModel: live, // all models live — no primary-only shortcut
 					})
 					if err != nil {
-						tracing.ProgressLog(y.ResultsDir, "learning fail: "+err.Error())
+						tracing.ProgressLog(run.Root, "learning fail: "+err.Error())
 						continue
 					}
 					_ = tracing.WriteCell(cell, res)
+					done++
 				}
 			}
 		}
 	}
-	// Fit sqrt(C_fixed/k_d) scaling summary.
 	fit := map[string]any{
 		"rho":              cal.Rho,
 		"optimal_garbage":  scheduler.OptimalGarbage(costs, 200, 50),
 		"hardware":         y.HardwareID,
 		"skipped_hardware": []string{"datacenter-gpu"},
 		"hybrid_gap":       true,
+		"live":             live,
+		"sessions_planned": total,
+		"sessions_done":    done,
 	}
+	_ = tracing.WriteCell(filepath.Join(learnDir, "scaling_fit.json"), fit)
 	_ = tracing.WriteCell(filepath.Join(y.ResultsDir, "learning", "scaling_fit.json"), fit)
 
-	// Benchmarks 1–2
-	return runBenchmarks(offline)
+	if err := runBenchmarks(allowSynthetic, run.Root); err != nil {
+		_ = run.Finish(false, err.Error())
+		return err
+	}
+	_ = run.Finish(true, fmt.Sprintf("learning complete %d/%d", done, total))
+	fmt.Println("RUN_ID=" + run.ID)
+	return nil
 }
 
-func runBenchmarks(offline bool) error {
-	live := !offline
+func runBenchmarks(allowSynthetic bool, runRoot string) error {
+	live := !allowSynthetic
+	if err := runarchive.RefuseSynthetic(live, allowSynthetic); err != nil {
+		return err
+	}
 	var client *omlx.Client
 	if live {
 		var err error
 		client, err = omlx.NewClient()
 		if err != nil {
-			live = false
-		} else {
-			client.MaxTokens = 64
+			return fmt.Errorf("live benchmarks require oMLX: %w", err)
 		}
+		client.MaxTokens = 64
+	}
+	outDir := "results/benchmarks"
+	if runRoot != "" {
+		outDir = filepath.Join(runRoot, "benchmarks")
+		_ = os.MkdirAll(outDir, 0o755)
 	}
 	model := "Qwen3.8-27B-4bit"
 	b1, err := benchmarks.RunBench1(client, model, 5, live)
 	if err != nil {
 		return err
 	}
-	_ = tracing.WriteCell("results/benchmarks/bench1.json", b1)
+	_ = tracing.WriteCell(filepath.Join(outDir, "bench1.json"), b1)
 	b2, err := benchmarks.RunBench2(client, model, 5, live)
 	if err != nil {
 		return err
 	}
-	_ = tracing.WriteCell("results/benchmarks/bench2.json", b2)
+	_ = tracing.WriteCell(filepath.Join(outDir, "bench2.json"), b2)
 	b4, err := benchmarks.RunBench4(client, model, 10, live)
 	if err != nil {
 		return err
 	}
-	_ = tracing.WriteCell("results/benchmarks/bench4.json", b4)
+	_ = tracing.WriteCell(filepath.Join(outDir, "bench4.json"), b4)
 
-	// Bench 5 Pareto from gate + learning cells.
 	pareto := buildPareto()
-	_ = tracing.WriteCell("results/benchmarks/bench5_pareto.json", pareto)
+	_ = tracing.WriteCell(filepath.Join(outDir, "bench5_pareto.json"), pareto)
 	ship := decideShip(pareto)
+	_ = tracing.WriteCell(filepath.Join(outDir, "ship_decision.json"), ship)
+	// Mirror conventional path for older tools.
+	_ = os.MkdirAll("results/benchmarks", 0o755)
+	_ = tracing.WriteCell("results/benchmarks/bench5_pareto.json", pareto)
 	_ = tracing.WriteCell("results/benchmarks/ship_decision.json", ship)
 	return writeFinalReport()
 }
@@ -283,11 +345,12 @@ func writeFinalReport() error {
 	_, _ = fmt.Fprintf(f, "- Datacenter GPU hardware axis: skipped (local M5 Max only).\n")
 	_, _ = fmt.Fprintf(f, "- Hybrid linear-attention model: not installed; recurrent-state SCR path not exercised.\n")
 	_, _ = fmt.Fprintf(f, "- Physical KV span relocation: LogicalCacheBackend accounting only (oMLX has no span-level KV API).\n")
+	_, _ = fmt.Fprintf(f, "- See [analysis-report.md](analysis-report.md) for live multi-run averages.\n")
 	_, _ = fmt.Fprintf(f, "\n## Open questions revisited\n\n")
 	_, _ = fmt.Fprintf(f, "- Quality sweet spot: see gate deferral window (β=0.6, γ=0.5, Δ=3) results in interim report.\n")
 	_, _ = fmt.Fprintf(f, "- Marker recency / structural similarity: Benchmarks 2–3 under `results/benchmarks/`.\n")
 	_, _ = fmt.Fprintf(f, "- Recovery axis: Benchmark 4 under `results/benchmarks/bench4.json`.\n")
-	_, _ = fmt.Fprintf(f, "\nRaw artifacts: `results/`\n")
+	_, _ = fmt.Fprintf(f, "\nRaw artifacts: `results/runs/` (per-run archives) and `results/`\n")
 	fmt.Println("final report →", repPath)
 	return nil
 }

@@ -1,0 +1,6 @@
+2026-10-09T01:55:40Z start baseline-compact-00 live=true max_ctx=8192
+2026-10-09T01:56:48Z finish baseline-compact-00 probes_ok=false turns=16
+2026-10-09T01:56:48Z start immediate-rewrite-00 live=true max_ctx=8192
+2026-10-09T01:57:08Z finish immediate-rewrite-00 probes_ok=true turns=16
+2026-10-09T01:57:08Z start dynclm-00 live=true max_ctx=8192
+2026-10-09T01:58:36Z finish dynclm-00 probes_ok=true turns=16

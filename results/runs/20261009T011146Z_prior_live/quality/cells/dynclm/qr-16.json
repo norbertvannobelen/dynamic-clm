@@ -1,0 +1,18 @@
+{
+  "task_id": "qr-16",
+  "category": "coding",
+  "arm": "dynclm",
+  "correct": true,
+  "expected": "errors.Is(err, context.Canceled)",
+  "got": "errors.Is(err, context.Canceled)",
+  "context_tokens": 111,
+  "live_tokens": 15,
+  "dead_tokens": 96,
+  "post_rewrite_context_tokens": 111,
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "prompt_tokens": 455,
+  "completion_tokens": 8,
+  "total_usage_tokens": 463,
+  "wall_clock_s": 1.283602416
+}

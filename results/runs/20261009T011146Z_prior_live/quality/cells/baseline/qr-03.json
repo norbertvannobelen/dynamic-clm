@@ -1,0 +1,18 @@
+{
+  "task_id": "qr-03",
+  "category": "retention",
+  "arm": "baseline",
+  "correct": true,
+  "expected": "PORT_8443",
+  "got": "PORT_8443",
+  "context_tokens": 260,
+  "live_tokens": 260,
+  "dead_tokens": 0,
+  "post_rewrite_context_tokens": 260,
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "prompt_tokens": 549,
+  "completion_tokens": 6,
+  "total_usage_tokens": 555,
+  "wall_clock_s": 1.003668833
+}
