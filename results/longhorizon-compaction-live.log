@@ -1,0 +1,129 @@
+{
+  "by_max_context": {
+    "16384": {
+      "baseline-compact": {
+        "late_avg_context": 14168.857142857143,
+        "late_probe_accuracy": 0,
+        "late_steady_tok_s": 0.40998631551408327,
+        "late_steady_wall_s": 11.877895433599999,
+        "peak_context": 16277,
+        "total_prefill": 23707,
+        "total_rewrites": 2
+      },
+      "dynclm": {
+        "late_avg_context": 4638.714285714285,
+        "late_probe_accuracy": 100,
+        "late_steady_tok_s": 0.728904003729478,
+        "late_steady_wall_s": 7.5826936526666655,
+        "peak_context": 9020,
+        "total_prefill": 167,
+        "total_rewrites": 2
+      },
+      "immediate-rewrite": {
+        "late_avg_context": 262.85714285714283,
+        "late_probe_accuracy": 100,
+        "late_steady_tok_s": 2.5076085169915765,
+        "late_steady_wall_s": 1.8219758690000003,
+        "peak_context": 307,
+        "total_prefill": 1006,
+        "total_rewrites": 16
+      }
+    },
+    "32768": {
+      "baseline-compact": {
+        "late_avg_context": 29120.14285714286,
+        "late_probe_accuracy": 0,
+        "late_steady_tok_s": 0.6192103121711401,
+        "late_steady_wall_s": 7.696261766799999,
+        "peak_context": 32029,
+        "total_prefill": 52420,
+        "total_rewrites": 2
+      },
+      "dynclm": {
+        "late_avg_context": 8937.714285714286,
+        "late_probe_accuracy": 100,
+        "late_steady_tok_s": 0.5086043667773112,
+        "late_steady_wall_s": 10.5335755765,
+        "peak_context": 17618,
+        "total_prefill": 167,
+        "total_rewrites": 2
+      },
+      "immediate-rewrite": {
+        "late_avg_context": 262.85714285714283,
+        "late_probe_accuracy": 100,
+        "late_steady_tok_s": 2.59949888864559,
+        "late_steady_wall_s": 1.7545035478571427,
+        "peak_context": 307,
+        "total_prefill": 1006,
+        "total_rewrites": 16
+      }
+    },
+    "65536": {
+      "baseline-compact": {
+        "late_avg_context": 57804,
+        "late_probe_accuracy": 0,
+        "late_steady_tok_s": 1.0670791426061508,
+        "late_steady_wall_s": 3.9380949002000003,
+        "peak_context": 63582,
+        "total_prefill": 104057,
+        "total_rewrites": 2
+      },
+      "dynclm": {
+        "late_avg_context": 17539.85714285714,
+        "late_probe_accuracy": 100,
+        "late_steady_tok_s": 0.42586150095751024,
+        "late_steady_wall_s": 13.518614604166666,
+        "peak_context": 34822,
+        "total_prefill": 167,
+        "total_rewrites": 2
+      },
+      "immediate-rewrite": {
+        "late_avg_context": 262.85714285714283,
+        "late_probe_accuracy": 100,
+        "late_steady_tok_s": 2.4983271357800976,
+        "late_steady_wall_s": 1.8324238394285715,
+        "peak_context": 307,
+        "total_prefill": 1006,
+        "total_rewrites": 16
+      }
+    },
+    "8192": {
+      "baseline-compact": {
+        "late_avg_context": 6980,
+        "late_probe_accuracy": 0,
+        "late_steady_tok_s": 0.761068867347114,
+        "late_steady_wall_s": 6.0904992248,
+        "peak_context": 7634,
+        "total_prefill": 12232,
+        "total_rewrites": 2
+      },
+      "dynclm": {
+        "late_avg_context": 2487.714285714286,
+        "late_probe_accuracy": 100,
+        "late_steady_tok_s": 0.7188875093586956,
+        "late_steady_wall_s": 7.755412006999999,
+        "peak_context": 4718,
+        "total_prefill": 167,
+        "total_rewrites": 2
+      },
+      "immediate-rewrite": {
+        "late_avg_context": 262.85714285714283,
+        "late_probe_accuracy": 100,
+        "late_steady_tok_s": 2.934993359722099,
+        "late_steady_wall_s": 1.559413012,
+        "peak_context": 307,
+        "total_prefill": 1006,
+        "total_rewrites": 16
+      }
+    }
+  },
+  "live": true,
+  "max_contexts": [
+    8192,
+    16384,
+    32768,
+    65536
+  ],
+  "noise_pad": 2867
+}
+long-horizon B report → docs/longhorizon-compaction-report.md

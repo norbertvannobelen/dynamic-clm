@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="440" viewBox="0 0 780 440">
+<rect width="100%" height="100%" fill="#fafafa"/>
+<text x="390.0" y="28" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="16" font-weight="700">Long-horizon A: wall-clock vs turn</text>
+<text x="18" y="210.0" transform="rotate(-90 18,210.0)" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#374151">Seconds</text>
+<text x="405.0" y="422" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#374151">Turn</text>
+<line x1="70" y1="50" x2="70" y2="370" stroke="#111827" stroke-width="1.5"/>
+<line x1="70" y1="370" x2="740" y2="370" stroke="#111827" stroke-width="1.5"/>
+<line x1="70" y1="50.0" x2="740" y2="50.0" stroke="#e5e7eb"/>
+<text x="62" y="54.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6b7280">5.7</text>
+<line x1="70" y1="130.0" x2="740" y2="130.0" stroke="#e5e7eb"/>
+<text x="62" y="134.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6b7280">4.3</text>
+<line x1="70" y1="210.0" x2="740" y2="210.0" stroke="#e5e7eb"/>
+<text x="62" y="214.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6b7280">2.8</text>
+<line x1="70" y1="290.0" x2="740" y2="290.0" stroke="#e5e7eb"/>
+<text x="62" y="294.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6b7280">1.4</text>
+<line x1="70" y1="370.0" x2="740" y2="370.0" stroke="#e5e7eb"/>
+<text x="62" y="374.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6b7280">0</text>
+<path d="M 70.0,303.8 L 105.3,249.6 L 140.5,236.7 L 175.8,206.3 L 211.1,182.9 L 246.3,152.4 L 281.6,133.5 L 316.8,98.5 L 352.1,71.1 L 387.4,188.8 L 422.6,143.2 L 457.9,260.5 L 493.2,233.9 L 528.4,206.5 L 563.7,174.0 L 598.9,144.1 L 634.2,123.5 L 669.5,101.6 L 704.7,100.0 L 740.0,95.0" fill="none" stroke="#6b7280" stroke-width="2.5"/>
+<circle cx="70.0" cy="303.8" r="3" fill="#6b7280"/>
+<circle cx="105.3" cy="249.6" r="3" fill="#6b7280"/>
+<circle cx="140.5" cy="236.7" r="3" fill="#6b7280"/>
+<circle cx="175.8" cy="206.3" r="3" fill="#6b7280"/>
+<circle cx="211.1" cy="182.9" r="3" fill="#6b7280"/>
+<circle cx="246.3" cy="152.4" r="3" fill="#6b7280"/>
+<circle cx="281.6" cy="133.5" r="3" fill="#6b7280"/>
+<circle cx="316.8" cy="98.5" r="3" fill="#6b7280"/>
+<circle cx="352.1" cy="71.1" r="3" fill="#6b7280"/>
+<circle cx="387.4" cy="188.8" r="3" fill="#6b7280"/>
+<circle cx="422.6" cy="143.2" r="3" fill="#6b7280"/>
+<circle cx="457.9" cy="260.5" r="3" fill="#6b7280"/>
+<circle cx="493.2" cy="233.9" r="3" fill="#6b7280"/>
+<circle cx="528.4" cy="206.5" r="3" fill="#6b7280"/>
+<circle cx="563.7" cy="174.0" r="3" fill="#6b7280"/>
+<circle cx="598.9" cy="144.1" r="3" fill="#6b7280"/>
+<circle cx="634.2" cy="123.5" r="3" fill="#6b7280"/>
+<circle cx="669.5" cy="101.6" r="3" fill="#6b7280"/>
+<circle cx="704.7" cy="100.0" r="3" fill="#6b7280"/>
+<circle cx="740.0" cy="95.0" r="3" fill="#6b7280"/>
+<rect x="80" y="56" width="12" height="12" fill="#6b7280"/>
+<text x="98" y="66" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#111827">Baseline (raw)</text>
+<path d="M 70.0,290.6 L 105.3,255.7 L 140.5,223.6 L 175.8,188.4 L 211.1,155.6 L 246.3,124.9 L 281.6,93.8 L 316.8,50.0 L 352.1,173.3 L 387.4,143.3 L 422.6,101.5 L 457.9,226.5 L 493.2,186.5 L 528.4,162.9 L 563.7,272.3 L 598.9,217.0 L 634.2,191.7 L 669.5,160.5 L 704.7,127.3 L 740.0,86.9" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+<circle cx="70.0" cy="290.6" r="3" fill="#2563eb"/>
+<circle cx="105.3" cy="255.7" r="3" fill="#2563eb"/>
+<circle cx="140.5" cy="223.6" r="3" fill="#2563eb"/>
+<circle cx="175.8" cy="188.4" r="3" fill="#2563eb"/>
+<circle cx="211.1" cy="155.6" r="3" fill="#2563eb"/>
+<circle cx="246.3" cy="124.9" r="3" fill="#2563eb"/>
+<circle cx="281.6" cy="93.8" r="3" fill="#2563eb"/>
+<circle cx="316.8" cy="50.0" r="3" fill="#2563eb"/>
+<circle cx="352.1" cy="173.3" r="3" fill="#2563eb"/>
+<circle cx="387.4" cy="143.3" r="3" fill="#2563eb"/>
+<circle cx="422.6" cy="101.5" r="3" fill="#2563eb"/>
+<circle cx="457.9" cy="226.5" r="3" fill="#2563eb"/>
+<circle cx="493.2" cy="186.5" r="3" fill="#2563eb"/>
+<circle cx="528.4" cy="162.9" r="3" fill="#2563eb"/>
+<circle cx="563.7" cy="272.3" r="3" fill="#2563eb"/>
+<circle cx="598.9" cy="217.0" r="3" fill="#2563eb"/>
+<circle cx="634.2" cy="191.7" r="3" fill="#2563eb"/>
+<circle cx="669.5" cy="160.5" r="3" fill="#2563eb"/>
+<circle cx="704.7" cy="127.3" r="3" fill="#2563eb"/>
+<circle cx="740.0" cy="86.9" r="3" fill="#2563eb"/>
+<rect x="80" y="74" width="12" height="12" fill="#2563eb"/>
+<text x="98" y="84" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#111827">DynCLM</text>
+<path d="M 70.0,327.1 L 105.3,321.2 L 140.5,310.4 L 175.8,305.7 L 211.1,307.2 L 246.3,299.8 L 281.6,304.6 L 316.8,300.5 L 352.1,290.7 L 387.4,287.8 L 422.6,278.1 L 457.9,275.9 L 493.2,278.9 L 528.4,268.3 L 563.7,270.1 L 598.9,256.1 L 634.2,258.7 L 669.5,261.7 L 704.7,256.6 L 740.0,251.5" fill="none" stroke="#dc2626" stroke-width="2.5"/>
+<circle cx="70.0" cy="327.1" r="3" fill="#dc2626"/>
+<circle cx="105.3" cy="321.2" r="3" fill="#dc2626"/>
+<circle cx="140.5" cy="310.4" r="3" fill="#dc2626"/>
+<circle cx="175.8" cy="305.7" r="3" fill="#dc2626"/>
+<circle cx="211.1" cy="307.2" r="3" fill="#dc2626"/>
+<circle cx="246.3" cy="299.8" r="3" fill="#dc2626"/>
+<circle cx="281.6" cy="304.6" r="3" fill="#dc2626"/>
+<circle cx="316.8" cy="300.5" r="3" fill="#dc2626"/>
+<circle cx="352.1" cy="290.7" r="3" fill="#dc2626"/>
+<circle cx="387.4" cy="287.8" r="3" fill="#dc2626"/>
+<circle cx="422.6" cy="278.1" r="3" fill="#dc2626"/>
+<circle cx="457.9" cy="275.9" r="3" fill="#dc2626"/>
+<circle cx="493.2" cy="278.9" r="3" fill="#dc2626"/>
+<circle cx="528.4" cy="268.3" r="3" fill="#dc2626"/>
+<circle cx="563.7" cy="270.1" r="3" fill="#dc2626"/>
+<circle cx="598.9" cy="256.1" r="3" fill="#dc2626"/>
+<circle cx="634.2" cy="258.7" r="3" fill="#dc2626"/>
+<circle cx="669.5" cy="261.7" r="3" fill="#dc2626"/>
+<circle cx="704.7" cy="256.6" r="3" fill="#dc2626"/>
+<circle cx="740.0" cy="251.5" r="3" fill="#dc2626"/>
+<rect x="80" y="92" width="12" height="12" fill="#dc2626"/>
+<text x="98" y="102" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#111827">CLM (immediate rewrite)</text>
+</svg>

@@ -10,6 +10,21 @@ Long-horizon live suite: early authoritative FACT planted at turn 1; each later 
 - Sessions/arm: 2 · Turns: 20 · Probe every: 4
 - Early window: turns 1–6 · Late window: turns 13–20
 
+
+## Figures
+
+![Late probe accuracy](figures/lh_late_probe_accuracy.svg)
+
+![Late avg context](figures/lh_late_context.svg)
+
+![Late steady wall-clock](figures/lh_late_steady_wall.svg)
+
+![Late steady gen tok/s](figures/lh_late_tok_s.svg)
+
+![Context vs turn](figures/lh_context_vs_turn.svg)
+
+![Wall-clock vs turn](figures/lh_wall_vs_turn.svg)
+
 ## Late-session results (the paper-relevant window)
 
 | Arm | Late probe accuracy | Late avg ctx | Late avg prompt | Late wall-s | Late steady wall-s | Late gen tok/s | Prefill/session | Rewrites/session |

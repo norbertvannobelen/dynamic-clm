@@ -39,6 +39,7 @@ type TurnMetrics struct {
 	WallClockS        float64 `json:"wall_clock_s"`
 	GenTokensPerSec   float64 `json:"gen_tokens_per_sec"`
 	RewriteFired      bool    `json:"rewrite_fired"`
+	CompactFired      bool    `json:"compact_fired"`
 	PrefillTokens     int     `json:"prefill_tokens"`
 	ProbeCorrect      *bool   `json:"probe_correct,omitempty"`
 	Expected          string  `json:"expected,omitempty"`
@@ -47,11 +48,12 @@ type TurnMetrics struct {
 
 // SessionResult is one full long-horizon session.
 type SessionResult struct {
-	Arm       string        `json:"arm"`
-	SessionID string        `json:"session_id"`
-	ModelID   string        `json:"model_id"`
-	Turns     []TurnMetrics `json:"turns"`
-	Success   bool          `json:"success"` // all probes correct if any
+	Arm        string        `json:"arm"`
+	SessionID  string        `json:"session_id"`
+	ModelID    string        `json:"model_id"`
+	MaxContext int           `json:"max_context,omitempty"`
+	Turns      []TurnMetrics `json:"turns"`
+	Success    bool          `json:"success"` // all probes correct if any
 }
 
 // WindowStats aggregates early vs late turns.
@@ -112,12 +114,30 @@ type Config struct {
 	MaxTurns     int
 	Sessions     int
 	ProbeEvery   int
-	NoisePad     int // chars of tool noise per turn
+	NoisePad     int      // chars of tool noise per turn
+	Arms         []string // default: baseline, immediate-rewrite, dynclm
 }
 
-const methodologyText = `Long-horizon live suite: early authoritative FACT planted at turn 1; each later turn appends large obsolete tool noise (and competing pseudo-FACTs). Soft-invalidation markers are harness-applied on obsolete spans for DynCLM/immediate arms; the cost-model scheduler fires batched rewrites. Periodic probes ask for the early FACT. Metrics per turn: context length, prompt/generated tokens, wall-clock, gen tokens/s. Early vs late windows express the paper claim that smaller context improves late-session quality and generation performance vs raw append-only.`
+// MatrixReport aggregates long-horizon B across max-context limits.
+type MatrixReport struct {
+	GeneratedAt   time.Time                     `json:"generated_at"`
+	ModelID       string                        `json:"model_id"`
+	HardwareID    string                        `json:"hardware_id"`
+	Live          bool                          `json:"live"`
+	MaxTurns      int                           `json:"max_turns"`
+	Sessions      int                           `json:"sessions_per_arm"`
+	NoisePad      int                           `json:"noise_pad"`
+	Methodology   string                        `json:"methodology"`
+	MaxContexts   []int                         `json:"max_contexts"`
+	ByMaxContext  map[string]map[string]any     `json:"by_max_context"`
+	Reports       map[string]Report             `json:"reports"` // keyed by max_context string
+}
 
-// Run executes the long-horizon suite.
+const methodologyText = `Long-horizon suite A: early authoritative FACT planted at turn 1; each later turn appends large obsolete tool noise (and competing pseudo-FACTs). Soft-invalidation markers are harness-applied on obsolete spans for DynCLM/immediate (CLM) arms; the cost-model scheduler fires batched rewrites. Periodic probes ask for the early FACT. Metrics per turn: context length, prompt/generated tokens, wall-clock, gen tokens/s. Early vs late windows express the paper claim that smaller context improves late-session quality and generation performance vs raw append-only.`
+
+const methodologyCompaction = `Long-horizon suite B (compaction matrix): same recency-trap session as A, but the raw baseline is replaced by baseline-compact — when context exceeds max_context it drops oldest spans (keeping only the system prompt when possible), forcing a full re-prefill of survivors. DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of blind truncation. Matrix over max_context ∈ {8k,16k,32k,64k}. Per-column noise is sized so cumulative appends exceed that column's limit (~1.4×), ensuring baseline-compact must compact at every limit without forcing 64k-sized prompts into the 8k column.`
+
+// Run executes the long-horizon suite (variant A by default).
 func Run(cfg Config) (Report, error) {
 	cfg = defaults(cfg)
 	_ = os.MkdirAll(cfg.ResultsDir, 0o755)
@@ -137,9 +157,8 @@ func Run(cfg Config) (Report, error) {
 		client = c
 	}
 
-	arms := []string{"baseline", "immediate-rewrite", "dynclm"}
 	var all []SessionResult
-	for _, arm := range arms {
+	for _, arm := range cfg.Arms {
 		for i := 0; i < cfg.Sessions; i++ {
 			sid := fmt.Sprintf("%s-%02d", arm, i)
 			cell := filepath.Join(cfg.ResultsDir, "cells", arm, sid+".json")
@@ -151,7 +170,7 @@ func Run(cfg Config) (Report, error) {
 					continue
 				}
 			}
-			tracing.ProgressLog(cfg.ResultsDir, fmt.Sprintf("start %s live=%v", sid, cfg.UseLiveModel))
+			tracing.ProgressLog(cfg.ResultsDir, fmt.Sprintf("start %s live=%v max_ctx=%d", sid, cfg.UseLiveModel, cfg.MaxContext))
 			res, err := runSession(client, cfg, arm, sid)
 			if err != nil {
 				tracing.ProgressLog(cfg.ResultsDir, fmt.Sprintf("retry %s: %v", sid, err))
@@ -170,6 +189,77 @@ func Run(cfg Config) (Report, error) {
 	rep := summarize(cfg, all)
 	_ = tracing.WriteCell(filepath.Join(cfg.ResultsDir, "report.json"), rep)
 	return rep, nil
+}
+
+// RunCompactionMatrix runs suite B across several max-context limits.
+func RunCompactionMatrix(cfg Config, maxContexts []int) (MatrixReport, error) {
+	cfg = defaults(cfg)
+	if len(maxContexts) == 0 {
+		maxContexts = []int{8192, 16384, 32768, 65536}
+	}
+	if len(cfg.Arms) == 0 || (len(cfg.Arms) == 3 && cfg.Arms[0] == "baseline") {
+		cfg.Arms = []string{"baseline-compact", "immediate-rewrite", "dynclm"}
+	}
+	baseDir := cfg.ResultsDir
+	if baseDir == "" {
+		baseDir = "results/longhorizon_compaction"
+	}
+	_ = os.MkdirAll(baseDir, 0o755)
+
+	out := MatrixReport{
+		GeneratedAt:  time.Now().UTC(),
+		ModelID:      cfg.ModelID,
+		HardwareID:   cfg.HardwareID,
+		Live:         cfg.UseLiveModel,
+		MaxTurns:     cfg.MaxTurns,
+		Sessions:     cfg.Sessions,
+		Methodology:  methodologyCompaction,
+		MaxContexts:  maxContexts,
+		ByMaxContext: map[string]map[string]any{},
+		Reports:      map[string]Report{},
+	}
+
+	for _, mc := range maxContexts {
+		sub := cfg
+		sub.MaxContext = mc
+		sub.ResultsDir = filepath.Join(baseDir, fmt.Sprintf("c%d", mc))
+		sub.Arms = append([]string{}, cfg.Arms...)
+		// Per-limit noise: cumulative tool pads ≈ 1.4× this limit so baseline-compact
+		// must truncate, without forcing 64k-sized prompts at the 8k column.
+		needTok := (mc * 14) / 10
+		sub.NoisePad = (needTok * 4) / cfg.MaxTurns
+		if sub.NoisePad < 2000 {
+			sub.NoisePad = 2000
+		}
+		if out.NoisePad == 0 {
+			out.NoisePad = sub.NoisePad
+		}
+		rep, err := Run(sub)
+		if err != nil {
+			return out, err
+		}
+		key := fmt.Sprintf("%d", mc)
+		out.Reports[key] = rep
+		armMetrics := map[string]any{}
+		for name, a := range rep.Arms {
+			w := a.LateSteady
+			if w.Turns == 0 {
+				w = a.Late
+			}
+			armMetrics[name] = map[string]any{
+				"late_probe_accuracy": a.Late.ProbeAccuracyPct,
+				"late_avg_context":    a.Late.AvgContextTokens,
+				"late_steady_wall_s":  w.AvgWallClockS,
+				"late_steady_tok_s":   w.AvgGenTokensPerSec,
+				"total_prefill":       a.TotalPrefill,
+				"total_rewrites":      a.TotalRewrites,
+				"peak_context":        a.PeakContext,
+			}
+		}
+		out.ByMaxContext[key] = armMetrics
+	}
+	_ = tracing.WriteCell(filepath.Join(baseDir, "matrix_report.json"), out)
+	return out, nil
 }
 
 func defaults(cfg Config) Config {
@@ -194,11 +284,22 @@ func defaults(cfg Config) Config {
 	if cfg.NoisePad <= 0 {
 		cfg.NoisePad = 1200
 	}
+	if len(cfg.Arms) == 0 {
+		cfg.Arms = []string{"baseline", "immediate-rewrite", "dynclm"}
+	}
 	return cfg
 }
 
+func usesMarkers(arm string) bool {
+	return arm == "dynclm" || arm == "immediate-rewrite"
+}
+
 func runSession(client *omlx.Client, cfg Config, arm, sid string) (SessionResult, error) {
-	fact := "CANARY_" + strings.ToUpper(arm[:3]) + "_42"
+	prefix := arm
+	if len(prefix) > 3 {
+		prefix = prefix[:3]
+	}
+	fact := "CANARY_" + strings.ToUpper(prefix) + "_42"
 	label := "session canary token"
 	tr := &contextmgr.Tracker{}
 	// Recency trap: without ignore markers, the model is told to trust the most
@@ -218,9 +319,11 @@ func runSession(client *omlx.Client, cfg Config, arm, sid string) (SessionResult
 		policy = scheduler.ImmediateRewrite()
 	case "dynclm":
 		policy = scheduler.DefaultDynCLM()
+	case "baseline-compact":
+		policy = scheduler.Baseline()
 	}
 
-	out := SessionResult{Arm: arm, SessionID: sid, ModelID: cfg.ModelID}
+	out := SessionResult{Arm: arm, SessionID: sid, ModelID: cfg.ModelID, MaxContext: cfg.MaxContext}
 	turnsSinceRewrite := 0
 	allProbesOK := true
 	hadProbe := false
@@ -231,8 +334,8 @@ func runSession(client *omlx.Client, cfg Config, arm, sid string) (SessionResult
 			toolID, turn, strings.Repeat("x", cfg.NoisePad), label, turn)
 		tr.AppendLive(toolID, noise)
 
-		// Soft-invalidate obsolete tool spans for non-baseline arms (harness-applied).
-		if arm != "baseline" {
+		// Soft-invalidate obsolete tool spans for marker arms (harness-applied).
+		if usesMarkers(arm) {
 			tr.ApplyMarkers(contextmgr.ParseMarkers(contextmgr.FormatIgnore(toolID)), turn)
 		}
 
@@ -244,25 +347,41 @@ func runSession(client *omlx.Client, cfg Config, arm, sid string) (SessionResult
 			DeadTokens:    dead,
 		}
 
-		// Scheduler rewrite decision.
-		st := scheduler.State{
-			ContextLength:           total,
-			MaxContext:              cfg.MaxContext,
-			DeadTokens:              dead,
-			TurnsSinceLastRewrite:   turnsSinceRewrite,
-			EstimatedSuffix:         live + dead/2,
-			EstimatedRemainingTurns: cfg.MaxTurns - turn,
-		}
-		if scheduler.ShouldRewrite(st, policy, cfg.DeviceCosts) {
-			rw := contextmgr.NewRewriter(nil)
-			if rr, err := rw.Rewrite(tr, 0); err == nil {
-				tm.RewriteFired = true
-				tm.PrefillTokens = rr.PrefillTokens
-				turnsSinceRewrite = 0
+		if arm == "baseline-compact" && total > cfg.MaxContext {
+			// Blind truncation: drop oldest (keep system when possible) to ~80% of budget.
+			target := (cfg.MaxContext * 4) / 5
+			removed, _, surv := tr.CompactToBudget(target, map[string]bool{"sys": true})
+			if removed > 0 {
+				tm.CompactFired = true
+				tm.PrefillTokens = surv // full re-prefill of survivors
 				live, dead, total, _ = tr.Stats()
 				tm.ContextTokens = total
 				tm.LiveTokens = live
 				tm.DeadTokens = dead
+			}
+		} else if usesMarkers(arm) {
+			// Scheduler rewrite decision.
+			st := scheduler.State{
+				ContextLength:           total,
+				MaxContext:              cfg.MaxContext,
+				DeadTokens:              dead,
+				TurnsSinceLastRewrite:   turnsSinceRewrite,
+				EstimatedSuffix:         live + dead/2,
+				EstimatedRemainingTurns: cfg.MaxTurns - turn,
+			}
+			if scheduler.ShouldRewrite(st, policy, cfg.DeviceCosts) {
+				rw := contextmgr.NewRewriter(nil)
+				if rr, err := rw.Rewrite(tr, 0); err == nil {
+					tm.RewriteFired = true
+					tm.PrefillTokens = rr.PrefillTokens
+					turnsSinceRewrite = 0
+					live, dead, total, _ = tr.Stats()
+					tm.ContextTokens = total
+					tm.LiveTokens = live
+					tm.DeadTokens = dead
+				}
+			} else {
+				turnsSinceRewrite++
 			}
 		} else {
 			turnsSinceRewrite++
@@ -282,11 +401,20 @@ func runSession(client *omlx.Client, cfg Config, arm, sid string) (SessionResult
 		start := time.Now()
 		var got string
 		var promptTok, genTok int
-		ctxText := tr.ContextText(arm != "baseline") // include ignore markers when used
+		ctxText := tr.ContextText(usesMarkers(arm))
+		factPresent := tr.HasSpanID("fact-0")
 		if cfg.UseLiveModel && client != nil {
+			// Cap prompt chars roughly with max_context to avoid OOM; tokens≈chars/4.
+			capChars := cfg.MaxContext * 4
+			if capChars < 8000 {
+				capChars = 8000
+			}
+			if capChars > 120000 {
+				capChars = 120000
+			}
 			res, err := client.Chat(cfg.ModelID, []omlx.Message{
 				{Role: "system", Content: sys},
-				{Role: "user", Content: truncate(ctxText, 24000) + "\n\n" + userMsg},
+				{Role: "user", Content: truncate(ctxText, capChars) + "\n\n" + userMsg},
 			})
 			if err != nil {
 				return out, err
@@ -295,7 +423,7 @@ func runSession(client *omlx.Client, cfg Config, arm, sid string) (SessionResult
 			promptTok = res.Response.Usage.PromptTokens
 			genTok = res.Response.Usage.CompletionTokens
 		} else {
-			got = syntheticReply(arm, isProbe, fact, turn, total)
+			got = syntheticReply(arm, isProbe, fact, turn, total, factPresent)
 			promptTok = total + contextmgr.EstimateTokens(userMsg)
 			genTok = contextmgr.EstimateTokens(got)
 		}
@@ -327,12 +455,16 @@ func runSession(client *omlx.Client, cfg Config, arm, sid string) (SessionResult
 	return out, nil
 }
 
-func syntheticReply(arm string, probe bool, fact string, turn, ctx int) string {
+func syntheticReply(arm string, probe bool, fact string, turn, ctx int, factPresent bool) string {
 	if !probe {
 		return fmt.Sprintf("ACK %d", turn)
 	}
 	// Baseline follows recency trap once context is large; marker arms keep the early fact.
 	if arm == "baseline" && turn >= 8 {
+		return fmt.Sprintf("WRONG_%d", turn)
+	}
+	// Compaction baseline loses the early FACT once it falls out of the window.
+	if arm == "baseline-compact" && !factPresent {
 		return fmt.Sprintf("WRONG_%d", turn)
 	}
 	return fact
@@ -370,9 +502,26 @@ func summarize(cfg Config, sessions []SessionResult) Report {
 	}
 
 	vs := map[string][]metrics.VsBaseline{}
-	base := armToSnapshot(arms["baseline"])
+	baseName := "baseline"
+	if _, ok := arms["baseline-compact"]; ok && arms["baseline"].Sessions == 0 {
+		baseName = "baseline-compact"
+	}
+	if _, ok := arms["baseline"]; !ok {
+		if _, ok2 := arms["baseline-compact"]; ok2 {
+			baseName = "baseline-compact"
+		}
+	}
+	base := armToSnapshot(arms[baseName])
 	for name, a := range arms {
 		vs[name] = metrics.CompareToBaseline(armToSnapshot(a), base)
+	}
+
+	meth := methodologyText
+	for _, a := range cfg.Arms {
+		if a == "baseline-compact" {
+			meth = methodologyCompaction
+			break
+		}
 	}
 
 	return Report{
@@ -385,7 +534,7 @@ func summarize(cfg Config, sessions []SessionResult) Report {
 		ProbeEvery:   cfg.ProbeEvery,
 		EarlyThrough: earlyThrough,
 		LateFrom:     lateFrom,
-		Methodology:  methodologyText,
+		Methodology:  meth,
 		Arms:         arms,
 		VsBaseline:   vs,
 		SessionsData: sessions,
@@ -404,8 +553,9 @@ func summarizeArm(name string, ss []SessionResult, earlyThrough, lateFrom int) A
 			if t.Turn >= lateFrom {
 				late = append(late, t)
 				// Immediate-rewrite fires every turn by design; those turns *are* its
-				// steady state. For DynCLM/baseline, exclude rewrite-event spikes.
-				if !t.RewriteFired || name == "immediate-rewrite" {
+				// steady state. For DynCLM/baseline, exclude rewrite/compact spikes.
+				spike := t.RewriteFired || t.CompactFired
+				if !spike || name == "immediate-rewrite" {
 					lateSteady = append(lateSteady, t)
 				}
 			}
@@ -414,7 +564,7 @@ func summarizeArm(name string, ss []SessionResult, earlyThrough, lateFrom int) A
 			}
 			a.TotalWallClock += t.WallClockS
 			a.TotalPrefill += float64(t.PrefillTokens)
-			if t.RewriteFired {
+			if t.RewriteFired || t.CompactFired {
 				a.TotalRewrites++
 			}
 		}
@@ -439,9 +589,9 @@ func windowStats(label string, turns []TurnMetrics) WindowStats {
 		gen += float64(t.GeneratedTokens)
 		wall += t.WallClockS
 		pref += float64(t.PrefillTokens)
-		if t.RewriteFired {
-			w.Rewrites++
-		}
+			if t.RewriteFired || t.CompactFired {
+				w.Rewrites++
+			}
 		if t.GenTokensPerSec > 0 {
 			tps += t.GenTokensPerSec
 			tpsN++
@@ -530,7 +680,7 @@ func WriteMarkdownReport(path string, rep Report) error {
 	_, _ = fmt.Fprintf(f, "## Late-session results (the paper-relevant window)\n\n")
 	_, _ = fmt.Fprintf(f, "| Arm | Late probe accuracy | Late avg ctx | Late avg prompt | Late wall-s | Late steady wall-s | Late gen tok/s | Prefill/session | Rewrites/session |\n")
 	_, _ = fmt.Fprintf(f, "|---|---|---|---|---|---|---|---|---|\n")
-	for _, name := range []string{"baseline", "immediate-rewrite", "dynclm"} {
+	for _, name := range armOrder(rep.Arms) {
 		a := rep.Arms[name]
 		_, _ = fmt.Fprintf(f, "| %s | **%.1f%%** (%d/%d) | %.0f | %.0f | %.2f | %.2f | %.2f | %.0f | %.1f |\n",
 			name, a.Late.ProbeAccuracyPct, a.Late.ProbeCorrect, a.Late.ProbeN,
@@ -538,9 +688,14 @@ func WriteMarkdownReport(path string, rep Report) error {
 			a.TotalPrefill/maxF(float64(a.Sessions), 1), a.TotalRewrites/maxF(float64(a.Sessions), 1))
 	}
 
-	_, _ = fmt.Fprintf(f, "\n## Early vs late (DynCLM vs baseline)\n\n")
-	b, d := rep.Arms["baseline"], rep.Arms["dynclm"]
-	_, _ = fmt.Fprintf(f, "| Window | Baseline probe%% | DynCLM probe%% | Baseline ctx | DynCLM ctx | Baseline wall-s | DynCLM wall-s | Baseline tok/s | DynCLM tok/s |\n")
+	baseName := "baseline"
+	if _, ok := rep.Arms["baseline"]; !ok {
+		baseName = "baseline-compact"
+	}
+	b, d := rep.Arms[baseName], rep.Arms["dynclm"]
+	_, _ = fmt.Fprintf(f, "\n## Early vs late (DynCLM vs %s)\n\n", baseName)
+	_, _ = fmt.Fprintf(f, "| Window | %s probe%% | DynCLM probe%% | %s ctx | DynCLM ctx | %s wall-s | DynCLM wall-s | %s tok/s | DynCLM tok/s |\n",
+		baseName, baseName, baseName, baseName)
 	_, _ = fmt.Fprintf(f, "|---|---|---|---|---|---|---|---|---|\n")
 	_, _ = fmt.Fprintf(f, "| early | %.1f | %.1f | %.0f | %.0f | %.2f | %.2f | %.2f | %.2f |\n",
 		b.Early.ProbeAccuracyPct, d.Early.ProbeAccuracyPct, b.Early.AvgContextTokens, d.Early.AvgContextTokens,
@@ -549,8 +704,8 @@ func WriteMarkdownReport(path string, rep Report) error {
 		b.Late.ProbeAccuracyPct, d.Late.ProbeAccuracyPct, b.Late.AvgContextTokens, d.Late.AvgContextTokens,
 		b.Late.AvgWallClockS, d.Late.AvgWallClockS, b.Late.AvgGenTokensPerSec, d.Late.AvgGenTokensPerSec)
 
-	_, _ = fmt.Fprintf(f, "\n## DynCLM vs raw baseline (late-window metrics)\n\n")
-	_, _ = fmt.Fprintf(f, "| Metric | Baseline | DynCLM | Δ | %% change | Better? |\n|---|---|---|---|---|---|\n")
+	_, _ = fmt.Fprintf(f, "\n## DynCLM vs %s (late-window metrics)\n\n", baseName)
+	_, _ = fmt.Fprintf(f, "| Metric | %s | DynCLM | Δ | %% change | Better? |\n|---|---|---|---|---|---|\n", baseName)
 	for _, row := range rep.VsBaseline["dynclm"] {
 		better := "—"
 		if row.BetterThanBase != nil {
@@ -565,22 +720,138 @@ func WriteMarkdownReport(path string, rep Report) error {
 	}
 
 	_, _ = fmt.Fprintf(f, "\n## Headlines\n\n")
-	_, _ = fmt.Fprintf(f, "- **Late quality vs baseline:** %+.1f pp (%.1f%% → %.1f%%)\n",
-		d.Late.ProbeAccuracyPct-b.Late.ProbeAccuracyPct, b.Late.ProbeAccuracyPct, d.Late.ProbeAccuracyPct)
-	_, _ = fmt.Fprintf(f, "- **Late context vs baseline:** %+.1f%% (%.0f → %.0f)\n",
-		pct(d.Late.AvgContextTokens, b.Late.AvgContextTokens), b.Late.AvgContextTokens, d.Late.AvgContextTokens)
-	_, _ = fmt.Fprintf(f, "- **Late wall-clock vs baseline (all late turns):** %+.1f%% (%.2fs → %.2fs)\n",
-		pct(d.Late.AvgWallClockS, b.Late.AvgWallClockS), b.Late.AvgWallClockS, d.Late.AvgWallClockS)
-	_, _ = fmt.Fprintf(f, "- **Late steady wall-clock vs baseline (exclude rewrite turns):** %+.1f%% (%.2fs → %.2fs)\n",
-		pct(d.LateSteady.AvgWallClockS, b.LateSteady.AvgWallClockS), b.LateSteady.AvgWallClockS, d.LateSteady.AvgWallClockS)
-	_, _ = fmt.Fprintf(f, "- **Late steady gen tok/s vs baseline:** %+.1f%% (%.2f → %.2f)\n",
-		pct(d.LateSteady.AvgGenTokensPerSec, b.LateSteady.AvgGenTokensPerSec), b.LateSteady.AvgGenTokensPerSec, d.LateSteady.AvgGenTokensPerSec)
-	_, _ = fmt.Fprintf(f, "- **Immediate-rewrite late steady wall vs baseline:** %+.1f%% (%.2fs → %.2fs) — upper bound if N is high\n",
-		pct(rep.Arms["immediate-rewrite"].LateSteady.AvgWallClockS, b.LateSteady.AvgWallClockS),
-		b.LateSteady.AvgWallClockS, rep.Arms["immediate-rewrite"].LateSteady.AvgWallClockS)
+	_, _ = fmt.Fprintf(f, "- **Late quality vs %s:** %+.1f pp (%.1f%% → %.1f%%)\n",
+		baseName, d.Late.ProbeAccuracyPct-b.Late.ProbeAccuracyPct, b.Late.ProbeAccuracyPct, d.Late.ProbeAccuracyPct)
+	_, _ = fmt.Fprintf(f, "- **Late context vs %s:** %+.1f%% (%.0f → %.0f)\n",
+		baseName, pct(d.Late.AvgContextTokens, b.Late.AvgContextTokens), b.Late.AvgContextTokens, d.Late.AvgContextTokens)
+	_, _ = fmt.Fprintf(f, "- **Late wall-clock vs %s (all late turns):** %+.1f%% (%.2fs → %.2fs)\n",
+		baseName, pct(d.Late.AvgWallClockS, b.Late.AvgWallClockS), b.Late.AvgWallClockS, d.Late.AvgWallClockS)
+	_, _ = fmt.Fprintf(f, "- **Late steady wall-clock vs %s (exclude rewrite/compact turns):** %+.1f%% (%.2fs → %.2fs)\n",
+		baseName, pct(d.LateSteady.AvgWallClockS, b.LateSteady.AvgWallClockS), b.LateSteady.AvgWallClockS, d.LateSteady.AvgWallClockS)
+	_, _ = fmt.Fprintf(f, "- **Late steady gen tok/s vs %s:** %+.1f%% (%.2f → %.2f)\n",
+		baseName, pct(d.LateSteady.AvgGenTokensPerSec, b.LateSteady.AvgGenTokensPerSec), b.LateSteady.AvgGenTokensPerSec, d.LateSteady.AvgGenTokensPerSec)
+	if imm, ok := rep.Arms["immediate-rewrite"]; ok {
+		_, _ = fmt.Fprintf(f, "- **Immediate-rewrite (CLM) late steady wall vs %s:** %+.1f%% (%.2fs → %.2fs) — upper bound if N is high\n",
+			baseName, pct(imm.LateSteady.AvgWallClockS, b.LateSteady.AvgWallClockS),
+			b.LateSteady.AvgWallClockS, imm.LateSteady.AvgWallClockS)
+	}
 	_, _ = fmt.Fprintf(f, "\nNote: gen tok/s uses completion_tokens/wall_clock (includes prefill). ")
-	_, _ = fmt.Fprintf(f, "Steady-state excludes rewrite-event turns so generation-under-context is not mixed with rewrite spikes.\n")
+	_, _ = fmt.Fprintf(f, "Steady-state excludes rewrite/compact-event turns so generation-under-context is not mixed with reclaim spikes.\n")
 	return nil
+}
+
+func armOrder(arms map[string]ArmSummary) []string {
+	prefer := []string{"baseline", "baseline-compact", "immediate-rewrite", "dynclm"}
+	var out []string
+	seen := map[string]bool{}
+	for _, n := range prefer {
+		if _, ok := arms[n]; ok {
+			out = append(out, n)
+			seen[n] = true
+		}
+	}
+	for n := range arms {
+		if !seen[n] {
+			out = append(out, n)
+		}
+	}
+	return out
+}
+
+// WriteMatrixMarkdownReport writes the compaction-matrix report (suite B).
+func WriteMatrixMarkdownReport(path string, m MatrixReport) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	_, _ = fmt.Fprintf(f, "# DynCLM Long-Horizon B — Compaction Matrix\n\n")
+	_, _ = fmt.Fprintf(f, "Generated: %s\n\n", m.GeneratedAt.Format(time.RFC3339))
+	_, _ = fmt.Fprintf(f, "%s\n\n", m.Methodology)
+	_, _ = fmt.Fprintf(f, "- Model: `%s` · Hardware: `%s` · Live: %v\n", m.ModelID, m.HardwareID, m.Live)
+	_, _ = fmt.Fprintf(f, "- Sessions/arm: %d · Turns: %d · NoisePad: %d chars\n", m.Sessions, m.MaxTurns, m.NoisePad)
+	_, _ = fmt.Fprintf(f, "- Max context limits: %v\n\n", m.MaxContexts)
+
+	_, _ = fmt.Fprintf(f, "## Late probe accuracy (%%) by max context\n\n")
+	_, _ = fmt.Fprintf(f, "| Max context | baseline-compact | DynCLM | CLM (immediate) |\n|---|---|---|---|\n")
+	for _, mc := range m.MaxContexts {
+		key := fmt.Sprintf("%d", mc)
+		arms := m.ByMaxContext[key]
+		_, _ = fmt.Fprintf(f, "| %d | %.1f | %.1f | %.1f |\n", mc,
+			num(arms, "baseline-compact", "late_probe_accuracy"),
+			num(arms, "dynclm", "late_probe_accuracy"),
+			num(arms, "immediate-rewrite", "late_probe_accuracy"))
+	}
+
+	_, _ = fmt.Fprintf(f, "\n## Late avg context tokens by max context\n\n")
+	_, _ = fmt.Fprintf(f, "| Max context | baseline-compact | DynCLM | CLM (immediate) |\n|---|---|---|---|\n")
+	for _, mc := range m.MaxContexts {
+		key := fmt.Sprintf("%d", mc)
+		arms := m.ByMaxContext[key]
+		_, _ = fmt.Fprintf(f, "| %d | %.0f | %.0f | %.0f |\n", mc,
+			num(arms, "baseline-compact", "late_avg_context"),
+			num(arms, "dynclm", "late_avg_context"),
+			num(arms, "immediate-rewrite", "late_avg_context"))
+	}
+
+	_, _ = fmt.Fprintf(f, "\n## Late steady wall-clock (s) by max context\n\n")
+	_, _ = fmt.Fprintf(f, "| Max context | baseline-compact | DynCLM | CLM (immediate) |\n|---|---|---|---|\n")
+	for _, mc := range m.MaxContexts {
+		key := fmt.Sprintf("%d", mc)
+		arms := m.ByMaxContext[key]
+		_, _ = fmt.Fprintf(f, "| %d | %.2f | %.2f | %.2f |\n", mc,
+			num(arms, "baseline-compact", "late_steady_wall_s"),
+			num(arms, "dynclm", "late_steady_wall_s"),
+			num(arms, "immediate-rewrite", "late_steady_wall_s"))
+	}
+
+	_, _ = fmt.Fprintf(f, "\n## Late steady gen tok/s by max context\n\n")
+	_, _ = fmt.Fprintf(f, "| Max context | baseline-compact | DynCLM | CLM (immediate) |\n|---|---|---|---|\n")
+	for _, mc := range m.MaxContexts {
+		key := fmt.Sprintf("%d", mc)
+		arms := m.ByMaxContext[key]
+		_, _ = fmt.Fprintf(f, "| %d | %.2f | %.2f | %.2f |\n", mc,
+			num(arms, "baseline-compact", "late_steady_tok_s"),
+			num(arms, "dynclm", "late_steady_tok_s"),
+			num(arms, "immediate-rewrite", "late_steady_tok_s"))
+	}
+
+	_, _ = fmt.Fprintf(f, "\n## Figures\n\n")
+	_, _ = fmt.Fprintf(f, "- ![probe](figures/compaction_probe_vs_limit.svg)\n")
+	_, _ = fmt.Fprintf(f, "- ![context](figures/compaction_context_vs_limit.svg)\n")
+	_, _ = fmt.Fprintf(f, "- ![wall](figures/compaction_wall_vs_limit.svg)\n")
+	_, _ = fmt.Fprintf(f, "- ![tok/s](figures/compaction_toks_vs_limit.svg)\n")
+	return nil
+}
+
+func num(arms map[string]any, arm, key string) float64 {
+	if arms == nil {
+		return 0
+	}
+	m, ok := arms[arm]
+	if !ok {
+		return 0
+	}
+	mm, ok := m.(map[string]any)
+	if !ok {
+		return 0
+	}
+	v, ok := mm[key]
+	if !ok {
+		return 0
+	}
+	switch t := v.(type) {
+	case float64:
+		return t
+	case int:
+		return float64(t)
+	default:
+		return 0
+	}
 }
 
 func pct(val, base float64) float64 {

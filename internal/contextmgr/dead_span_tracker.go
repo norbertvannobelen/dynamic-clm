@@ -154,6 +154,56 @@ func (t *Tracker) RemoveDead() (removedTokens int, removed int) {
 	return removedTokens, removed
 }
 
+// CompactToBudget drops oldest spans until total tokens <= budget.
+// Spans whose IDs are in keepIDs are preserved when possible (system prompt).
+// Returns tokens removed, spans removed, and surviving token count (re-prefill estimate).
+func (t *Tracker) CompactToBudget(budget int, keepIDs map[string]bool) (removedTokens, removedSpans, surviving int) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	if budget < 0 {
+		budget = 0
+	}
+	total := 0
+	for _, sp := range t.spans {
+		total += sp.Tokens
+	}
+	if total <= budget {
+		return 0, 0, total
+	}
+	// Drop from the front, skipping keepIDs until we must drop them to meet budget.
+	for total > budget && len(t.spans) > 0 {
+		dropIdx := -1
+		for i, sp := range t.spans {
+			if keepIDs != nil && keepIDs[sp.ID] {
+				continue
+			}
+			dropIdx = i
+			break
+		}
+		if dropIdx < 0 {
+			// Only keepIDs remain; drop oldest keep span.
+			dropIdx = 0
+		}
+		removedTokens += t.spans[dropIdx].Tokens
+		removedSpans++
+		total -= t.spans[dropIdx].Tokens
+		t.spans = append(t.spans[:dropIdx], t.spans[dropIdx+1:]...)
+	}
+	return removedTokens, removedSpans, total
+}
+
+// HasSpanID reports whether a span with the given ID is still present.
+func (t *Tracker) HasSpanID(id string) bool {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	for _, sp := range t.spans {
+		if sp.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
 // ContextText reconstructs the logical context (live + dead for soft-invalidation phase).
 func (t *Tracker) ContextText(includeDead bool) string {
 	t.mu.Lock()
