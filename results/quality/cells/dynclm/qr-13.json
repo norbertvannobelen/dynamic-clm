@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-13",
+  "category": "retention",
+  "arm": "dynclm",
+  "correct": true,
+  "expected": "CANARY_OK",
+  "got": "CANARY_OK",
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "wall_clock_s": 1.575784625,
+  "prompt_tokens": 455,
+  "completion_tokens": 3
+}

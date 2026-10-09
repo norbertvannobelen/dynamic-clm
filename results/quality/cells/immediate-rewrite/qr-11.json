@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-11",
+  "category": "retention",
+  "arm": "immediate-rewrite",
+  "correct": true,
+  "expected": "REGION_us-west-2",
+  "got": "REGION_us-west-2",
+  "prefill_tokens": 0,
+  "rewrite_count": 1,
+  "wall_clock_s": 2.224723,
+  "prompt_tokens": 696,
+  "completion_tokens": 5
+}

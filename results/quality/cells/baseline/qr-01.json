@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-01",
+  "category": "retention",
+  "arm": "baseline",
+  "correct": true,
+  "expected": "NEPTUNIA",
+  "got": "NEPTUNIA",
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "wall_clock_s": 0.984358708,
+  "prompt_tokens": 375,
+  "completion_tokens": 4
+}

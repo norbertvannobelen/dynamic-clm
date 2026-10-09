@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-10",
+  "category": "retention",
+  "arm": "baseline",
+  "correct": true,
+  "expected": "COMMIT_a1b2c3",
+  "got": "COMMIT_a1b2c3",
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "wall_clock_s": 2.50300125,
+  "prompt_tokens": 652,
+  "completion_tokens": 8
+}

@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-17",
+  "category": "coding",
+  "arm": "baseline",
+  "correct": true,
+  "expected": "http.StatusTooManyRequests",
+  "got": "http.StatusTooManyRequests",
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "wall_clock_s": 1.376788333,
+  "prompt_tokens": 326,
+  "completion_tokens": 5
+}

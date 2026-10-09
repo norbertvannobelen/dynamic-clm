@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-14",
+  "category": "retention",
+  "arm": "dynclm",
+  "correct": true,
+  "expected": "BUILD_4421",
+  "got": "BUILD_4421",
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "wall_clock_s": 1.837012833,
+  "prompt_tokens": 570,
+  "completion_tokens": 6
+}

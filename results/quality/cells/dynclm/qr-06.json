@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-06",
+  "category": "coding",
+  "arm": "dynclm",
+  "correct": true,
+  "expected": "use sync.Once",
+  "got": "use sync.Once",
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "wall_clock_s": 1.3560335829999999,
+  "prompt_tokens": 423,
+  "completion_tokens": 3
+}

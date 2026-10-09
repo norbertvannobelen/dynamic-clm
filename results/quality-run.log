@@ -1,0 +1,20 @@
+{
+  "accuracy": {
+    "baseline": 94.44444444444444,
+    "dynclm": 100,
+    "immediate-rewrite": 100
+  },
+  "delta_vs_baseline_pp": {
+    "baseline": 0,
+    "dynclm": 5.555555555555557,
+    "immediate-rewrite": 5.555555555555557
+  },
+  "delta_vs_immediate_pp": {
+    "baseline": -5.555555555555557,
+    "dynclm": 0,
+    "immediate-rewrite": 0
+  },
+  "live": true,
+  "prefill_cut_vs_immediate_pct": 0
+}
+quality report → docs/quality-report.md

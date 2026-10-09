@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-10",
+  "category": "retention",
+  "arm": "dynclm",
+  "correct": true,
+  "expected": "COMMIT_a1b2c3",
+  "got": "COMMIT_a1b2c3",
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "wall_clock_s": 3.016581792,
+  "prompt_tokens": 846,
+  "completion_tokens": 8
+}

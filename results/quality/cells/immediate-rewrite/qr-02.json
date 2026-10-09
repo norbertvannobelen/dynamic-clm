@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-02",
+  "category": "retention",
+  "arm": "immediate-rewrite",
+  "correct": true,
+  "expected": "ZEBRA99",
+  "got": "ZEBRA99",
+  "prefill_tokens": 0,
+  "rewrite_count": 1,
+  "wall_clock_s": 1.8867032080000001,
+  "prompt_tokens": 584,
+  "completion_tokens": 5
+}

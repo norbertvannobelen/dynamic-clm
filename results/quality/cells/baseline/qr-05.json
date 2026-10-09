@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-05",
+  "category": "constraint",
+  "arm": "baseline",
+  "correct": true,
+  "expected": "MANGO",
+  "got": "MANGO",
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "wall_clock_s": 1.225707875,
+  "prompt_tokens": 381,
+  "completion_tokens": 2
+}

@@ -15,11 +15,13 @@ const DefaultBaseURL = "http://127.0.0.1:8000"
 
 // Client talks to oMLX's OpenAI-compatible API.
 type Client struct {
-	BaseURL    string
-	APIKey     string
-	HTTP       *http.Client
-	MaxTokens  int
+	BaseURL     string
+	APIKey      string
+	HTTP        *http.Client
+	MaxTokens   int
 	Temperature float64
+	// Extra is merged into the chat completions JSON body (e.g. enable_thinking).
+	Extra map[string]any
 }
 
 // NewClient constructs a client; API key from OMLX_API_KEY or ~/.omlx/settings.json.
@@ -110,6 +112,9 @@ func (c *Client) Chat(model string, messages []Message) (ChatCompletionResult, e
 		"messages":    messages,
 		"max_tokens":  c.MaxTokens,
 		"temperature": c.Temperature,
+	}
+	for k, v := range c.Extra {
+		body[k] = v
 	}
 	raw, err := json.Marshal(body)
 	if err != nil {

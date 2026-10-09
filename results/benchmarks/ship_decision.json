@@ -1,8 +1,18 @@
 {
   "ship": true,
   "reasons": [
-    "quality within 5pts of baseline and meaningful re-prefill reduction vs immediate rewrite"
+    "live graded quality +5.6 pp vs baseline and tied with immediate rewrite",
+    "gate re-prefill 38.6% below immediate rewrite"
   ],
-  "quality_margin_vs_baseline": 0,
-  "token_reduction_vs_immediate": 0.3859958396502486
+  "quality_margin_vs_baseline": 5.6,
+  "quality_margin_vs_immediate": 0.0,
+  "token_reduction_vs_immediate": 0.3859958396502486,
+  "quality_suite": {
+    "model": "Qwen3.8-27B-4bit",
+    "live": true,
+    "tasks": 18,
+    "baseline_accuracy_pct": 94.44444444444444,
+    "immediate_accuracy_pct": 100,
+    "dynclm_accuracy_pct": 100
+  }
 }

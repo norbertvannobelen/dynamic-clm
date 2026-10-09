@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-18",
+  "category": "constraint",
+  "arm": "immediate-rewrite",
+  "correct": true,
+  "expected": "KIWI",
+  "got": "KIWI",
+  "prefill_tokens": 0,
+  "rewrite_count": 1,
+  "wall_clock_s": 1.601875459,
+  "prompt_tokens": 495,
+  "completion_tokens": 2
+}

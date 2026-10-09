@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-04",
+  "category": "constraint",
+  "arm": "dynclm",
+  "correct": true,
+  "expected": "BANANA",
+  "got": "BANANA",
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "wall_clock_s": 1.378993208,
+  "prompt_tokens": 409,
+  "completion_tokens": 2
+}

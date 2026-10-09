@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-15",
+  "category": "retention",
+  "arm": "dynclm",
+  "correct": true,
+  "expected": "OWNER_alice",
+  "got": "OWNER_alice",
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "wall_clock_s": 1.9181045,
+  "prompt_tokens": 623,
+  "completion_tokens": 3
+}

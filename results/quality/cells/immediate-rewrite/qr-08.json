@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-08",
+  "category": "recovery",
+  "arm": "immediate-rewrite",
+  "correct": true,
+  "expected": "ORANGE42",
+  "got": "ORANGE42",
+  "prefill_tokens": 0,
+  "rewrite_count": 1,
+  "wall_clock_s": 1.9983864169999999,
+  "prompt_tokens": 443,
+  "completion_tokens": 19
+}

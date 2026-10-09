@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-12",
+  "category": "coding",
+  "arm": "baseline",
+  "correct": true,
+  "expected": "context.WithTimeout",
+  "got": "context.WithTimeout",
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "wall_clock_s": 1.528589625,
+  "prompt_tokens": 467,
+  "completion_tokens": 3
+}

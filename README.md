@@ -26,7 +26,11 @@ make test
 make calibrate   # measure r, k_d, C_fixed → ρ
 make gate        # Phase A hypothesis gate + interim report
 make learning    # Phase B (only after gate pass)
+./bin/dynclm-quality -model Qwen3.8-27B-4bit   # live graded quality suite
 ```
+
+Reports: `docs/quality-report.md` (accuracy deltas), `docs/interim-report.md`, `docs/report.md`.  
+**Note:** the ~38.6% re-prefill figure is a **cost** metric; quality is reported in percentage points of graded accuracy.
 
 ## Layout
 

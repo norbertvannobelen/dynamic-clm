@@ -1,7 +1,10 @@
 MODULE := github.com/norbertvannobelen/dynamic-clm
 BIN := bin
 
-.PHONY: all build test vet gate calibrate baseline learning report clean
+.PHONY: all build test vet gate calibrate baseline learning quality report clean
+
+quality: build
+	./$(BIN)/dynclm-quality -model Qwen3.8-27B-4bit -out docs/quality-report.md
 
 all: build test
 
@@ -11,6 +14,7 @@ build:
 	go build -o $(BIN)/dynclm-calibrate ./cmd/dynclm-calibrate
 	go build -o $(BIN)/dynclm-gate ./cmd/dynclm-gate
 	go build -o $(BIN)/dynclm-eval ./cmd/dynclm-eval
+	go build -o $(BIN)/dynclm-quality ./cmd/dynclm-quality
 
 test:
 	go test ./...

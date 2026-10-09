@@ -59,7 +59,21 @@ Live G1–G4: all PASS (prefill reduction **88.7%** on the short horizon). Artif
 
 No span-level KV control API exposed; LogicalCacheBackend accounting used.
 
+## Live graded quality suite (authoritative quality metric)
+
+See [quality-report.md](quality-report.md). Re-run: `bin/dynclm-quality -model Qwen3.8-27B-4bit`.
+
+| Arm | Accuracy | Δ vs baseline | Δ vs immediate |
+|---|---|---|---|
+| baseline | 94.4% (17/18) | — | −5.6 pp |
+| immediate-rewrite | 100.0% (18/18) | +5.6 pp | — |
+| dynclm | 100.0% (18/18) | **+5.6 pp** | **+0.0 pp** |
+
+**Do not confuse with the 38.6% re-prefill cut** — that is cost, not quality. Quality change vs baseline is **+5.6 percentage points** on this 18-task live suite (tied with immediate rewrite). Not a SWE-bench paper number.
+
 ## Gaps
 
 - No hybrid linear-attention model installed; SCR recurrent-state path not exercised.
 - Physical KV relocation uses LogicalCacheBackend accounting (oMLX lacks span-level KV APIs).
+- Gate G3 used a trivial success token; use the graded quality suite above for quality claims.
+

@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-03",
+  "category": "retention",
+  "arm": "dynclm",
+  "correct": true,
+  "expected": "PORT_8443",
+  "got": "PORT_8443",
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "wall_clock_s": 2.298111375,
+  "prompt_tokens": 709,
+  "completion_tokens": 6
+}

@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-09",
+  "category": "recovery",
+  "arm": "immediate-rewrite",
+  "correct": true,
+  "expected": "VIOLET7",
+  "got": "VIOLET7",
+  "prefill_tokens": 0,
+  "rewrite_count": 1,
+  "wall_clock_s": 2.710771042,
+  "prompt_tokens": 535,
+  "completion_tokens": 19
+}

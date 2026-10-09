@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-07",
+  "category": "coding",
+  "arm": "baseline",
+  "correct": true,
+  "expected": "return fmt.Errorf",
+  "got": "return fmt.Errorf",
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "wall_clock_s": 1.401101375,
+  "prompt_tokens": 405,
+  "completion_tokens": 3
+}

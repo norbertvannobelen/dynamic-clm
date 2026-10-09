@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-16",
+  "category": "coding",
+  "arm": "baseline",
+  "correct": true,
+  "expected": "errors.Is(err, context.Canceled)",
+  "got": "errors.Is(err, context.Canceled)",
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "wall_clock_s": 1.400819291,
+  "prompt_tokens": 327,
+  "completion_tokens": 8
+}

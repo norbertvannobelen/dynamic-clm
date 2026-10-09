@@ -1,0 +1,13 @@
+{
+  "task_id": "qr-18",
+  "category": "constraint",
+  "arm": "dynclm",
+  "correct": true,
+  "expected": "KIWI",
+  "got": "KIWI",
+  "prefill_tokens": 0,
+  "rewrite_count": 0,
+  "wall_clock_s": 1.5964532089999999,
+  "prompt_tokens": 495,
+  "completion_tokens": 2
+}
