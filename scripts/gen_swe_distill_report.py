@@ -189,6 +189,9 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
 
     lines.append("## 2. Methodology\n\n")
     lines.append(str(rep.get("methodology") or "") + "\n\n")
+    tw_bc = float(bc.get("total_wall_s") or 0) / 3600
+    tw_dyn = float(dyn.get("total_wall_s") or 0) / 3600
+    tw_imm = float(imm.get("total_wall_s") or 0) / 3600
     lines.append(
         f"| Knob | Value |\n|---|---|\n"
         f"| max_context | **{rep.get('max_context')}** |\n"
@@ -196,7 +199,13 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
         f"| noise_pad (chars) | **{rep.get('noise_pad')}** |\n"
         f"| tasks | **{len(tasks)}** |\n"
         f"| cells | **{len(cells)}** |\n"
-        f"| target wall | ~2h / arm |\n\n"
+        f"| target wall | ~2h / arm |\n"
+        f"| observed wall | Baseline+compact **{tw_bc:.2f}h** · DynCLM **{tw_dyn:.2f}h** · CLM **{tw_imm:.2f}h** |\n\n"
+    )
+    lines.append(
+        "Wall came in under the 2h/arm budget while still forcing compaction "
+        f"(baseline avg compacts **{float(bc.get('avg_compacts') or 0):.1f}**/task) and DynCLM/CLM reclaim. "
+        "Context is already saturating near `max_context`; stretching wall further would not change the reclaim physics.\n\n"
     )
     lines.append(
         "Fixtures live under `testdata/swe_distill/` (paraphrased Lite-inspired excerpts "

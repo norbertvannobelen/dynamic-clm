@@ -170,7 +170,8 @@ func Run(cfg Config) (Report, error) {
 		if err != nil {
 			return Report{}, err
 		}
-		client.MaxTokens = 128
+		// Thinking models often emit CoT before the fragment; 128 truncates mid-thought.
+		client.MaxTokens = 512
 		client.HTTP.Timeout = 3 * time.Minute
 	}
 
