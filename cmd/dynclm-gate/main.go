@@ -158,7 +158,9 @@ func main() {
 			run.Man.Notes += "; "
 		}
 		run.Man.Notes += "GATE PASS"
-		_ = run.SuiteDir("gate")
+		if _, err := run.SuiteDir("gate"); err != nil {
+			tracing.ProgressLog(resultsForGate, "suite dir refresh: "+err.Error())
+		}
 		tracing.ProgressLog(resultsForGate, "GATE PASS — continuing parent run")
 	} else {
 		_ = run.Finish(true, "GATE PASS")
