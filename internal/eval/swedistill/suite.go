@@ -178,9 +178,13 @@ func Run(cfg Config) (Report, error) {
 	}
 
 	var cells []CellResult
-	for _, arm := range cfg.Arms {
-		armStart := time.Now()
-		for _, fx := range fixtures {
+	// Round-robin by task across arms so intermediate quality can be compared
+	// after each fixture completes for Baseline+compact / DynCLM / CLM.
+	for ti, fx := range fixtures {
+		taskStart := time.Now()
+		tracing.ProgressLog(cfg.ResultsDir, fmt.Sprintf(
+			"task %d/%d begin %s", ti+1, len(fixtures), fx.InstanceID))
+		for _, arm := range cfg.Arms {
 			cellPath := filepath.Join(cfg.ResultsDir, "cells", arm, fx.InstanceID+".json")
 			if tracing.CellDone(cellPath) {
 				var c CellResult
@@ -208,13 +212,35 @@ func Run(cfg Config) (Report, error) {
 				"finish %s/%s ok=%v ctx=%d compacts=%d rewrites=%d wall=%.1fs",
 				arm, fx.InstanceID, c.Success, c.FinalContext, c.Compacts, c.Rewrites, c.TotalWallS))
 		}
+		// Intermediate quality snapshot after this task × all arms.
+		snap := summarize(cfg, fixtures[:ti+1], cellsForInstances(cells, fixtures[:ti+1]))
+		_ = tracing.WriteCell(filepath.Join(cfg.ResultsDir, fmt.Sprintf("interim_task_%02d.json", ti+1)), snap)
 		tracing.ProgressLog(cfg.ResultsDir, fmt.Sprintf(
-			"arm %s done wall=%.1fm", arm, time.Since(armStart).Minutes()))
+			"task %d/%d done %s wall=%.1fm interim_acc baseline=%.0f%% dynclm=%.0f%% clm=%.0f%%",
+			ti+1, len(fixtures), fx.InstanceID, time.Since(taskStart).Minutes(),
+			snap.Arms["baseline-compact"].AccuracyPct,
+			snap.Arms["dynclm"].AccuracyPct,
+			snap.Arms["immediate-rewrite"].AccuracyPct,
+		))
 	}
 
 	rep := summarize(cfg, fixtures, cells)
 	_ = tracing.WriteCell(filepath.Join(cfg.ResultsDir, "report.json"), rep)
 	return rep, nil
+}
+
+func cellsForInstances(cells []CellResult, fixtures []Fixture) []CellResult {
+	want := map[string]bool{}
+	for _, fx := range fixtures {
+		want[fx.InstanceID] = true
+	}
+	var out []CellResult
+	for _, c := range cells {
+		if want[c.InstanceID] {
+			out = append(out, c)
+		}
+	}
+	return out
 }
 
 func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResult, error) {
