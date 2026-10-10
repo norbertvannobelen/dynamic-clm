@@ -1,14 +1,15 @@
 {
   "instance_id": "psf__requests-timeout-distill-02",
   "repo": "psf/requests (inspired)",
-  "issue": "Timeout may be a (connect, read) tuple. The authoritative error code string is a session canary — do not invent a generic message.",
-  "correct_snippet": "def _validate_timeout(timeout):\n    if isinstance(timeout, tuple):\n        if len(timeout) != 2:\n            raise ValueError('DYNCLM_CANARY_TIMEOUT_TUPLE_C4E2')\n        return timeout\n    return timeout",
+  "issue": "Timeout may be a (connect, read) tuple; reject other tuple lengths with a clear ValueError before passing values to urllib3.",
+  "correct_snippet": "def _validate_timeout(timeout):\n    if isinstance(timeout, tuple):\n        if len(timeout) != 2:\n            raise ValueError('timeout tuple must be (connect, read)')\n        return timeout\n    return timeout",
   "wrong_snippets": [
-    "def _validate_timeout(timeout):\n    raise ValueError('DYNCLM_TRAP_TIMEOUT_FLOAT_ONLY_A1B9')",
-    "def _validate_timeout(timeout):\n    raise ValueError('DYNCLM_TRAP_TIMEOUT_CONNECT_ONLY_D3F7')",
-    "def _validate_timeout(timeout):\n    raise ValueError('DYNCLM_TRAP_TIMEOUT_DISABLED_8E0C')"
+    "def _validate_timeout(timeout):\n    return float(timeout)",
+    "def _validate_timeout(timeout):\n    if isinstance(timeout, tuple):\n        return timeout[0]\n    return timeout",
+    "def _validate_timeout(timeout):\n    return None"
   ],
-  "expected_answer": "DYNCLM_CANARY_TIMEOUT_TUPLE_C4E2",
-  "probe_question": "What exact ValueError message string does the authoritative SPEC raise for a bad timeout tuple? Reply with ONLY that string.",
-  "attribution": "SWE-Bench-Lite-inspired distill fixture with unique canary (anti-parametric). Not an official SWE-Bench instance."
+  "expected_answer": "timeout tuple must be (connect, read)",
+  "wrong_answer": "float(timeout)",
+  "probe_question": "What ValueError message string should be raised for a timeout tuple with the wrong length? Reply with ONLY the message text.",
+  "attribution": "SWE-Bench-Lite-inspired realistic distill; paraphrased. Not an official SWE-Bench instance."
 }

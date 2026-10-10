@@ -1,14 +1,15 @@
 {
   "instance_id": "django__queryset-exists-distill-01",
   "repo": "django/django (inspired)",
-  "issue": "QuerySet.exists() should short-circuit after finding one matching row. The authoritative patch uses a session-specific helper name that must be preserved verbatim.",
-  "correct_snippet": "def exists(self):\n    if self._result_cache is not None:\n        return bool(self._result_cache)\n    return self.query.DYNCLM_CANARY_HAS_RESULTS_7F3A(using=self.db)",
+  "issue": "QuerySet.exists() should short-circuit after finding one matching row instead of materializing the full result list.",
+  "correct_snippet": "def exists(self):\n    if self._result_cache is not None:\n        return bool(self._result_cache)\n    return self.query.has_results(using=self.db)",
   "wrong_snippets": [
-    "def exists(self):\n    return self.query.DYNCLM_TRAP_LEN_LIST_9B2C(using=self.db)",
-    "def exists(self):\n    return self.query.DYNCLM_TRAP_COUNT_GT0_4E1D(using=self.db)",
-    "def exists(self):\n    return self.query.DYNCLM_TRAP_FIRST_BOOL_2C8E(using=self.db)"
+    "def exists(self):\n    # reviewer: simplest check\n    return len(list(self)) > 0",
+    "def exists(self):\n    return self.count() > 0",
+    "def exists(self):\n    return self.first() is not None"
   ],
-  "expected_answer": "DYNCLM_CANARY_HAS_RESULTS_7F3A",
-  "probe_question": "What is the exact helper identifier from the authoritative SPEC that exists() must call when the cache is empty? Reply with ONLY that identifier (one token).",
-  "attribution": "SWE-Bench-Lite-inspired distill fixture with unique canary (anti-parametric). Not an official SWE-Bench instance."
+  "expected_answer": "self.query.has_results(using=self.db)",
+  "wrong_answer": "len(list(self)) > 0",
+  "probe_question": "When the result cache is empty, what expression should exists() return? Reply with ONLY that expression.",
+  "attribution": "SWE-Bench-Lite-inspired realistic distill; paraphrased. Not an official SWE-Bench instance."
 }

@@ -1,12 +1,14 @@
 # SWE-Distill fixtures
 
-Hand-curated, SWE-Bench-**Lite-inspired** coding excerpts for the DynCLM
-multi-turn reclaim suite.
+SWE-Bench-**Lite-inspired** multi-turn coding tasks for DynCLM reclaim evaluation.
 
-**Anti-parametric design:** each task’s graded `expected_answer` is a unique
-`DYNCLM_CANARY_*` token that appears only in the turn-1 authoritative `[SPEC]`.
-Obsolete tool dumps push competing `DYNCLM_TRAP_*` tokens. Baseline+compact
-must fail once the early SPEC is dropped; DynCLM/CLM should keep the canary via
-soft-invalidation. This prevents “100% baseline” from model prior knowledge.
+## Realistic protocol
 
-Not full repository checkouts and not an official SWE-Bench resolve evaluation.
+1. Turn 1 plants an authoritative `[SPEC]` with the correct fix fragment.
+2. Later turns append **plausible but wrong** reviewer/tool SPECs (recency trap).
+3. Shared `max_context` forces Baseline+compact to drop early spans; DynCLM/CLM soft-ignore obsolete SPECs.
+4. Final probe asks for the fix fragment; grade `ANSWER: <fragment>`.
+
+Wrong answers are real alternative implementations (not synthetic canaries). Baseline is expected to be **weaker** (follows recent wrong SPEC after compaction), not forced to 0%. Live models may still score some baseline passes from partial context or priors — that is acceptable realism.
+
+Not an official SWE-Bench resolve-rate evaluation.

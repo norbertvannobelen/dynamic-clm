@@ -14,13 +14,15 @@ import (
 	"github.com/norbertvannobelen/dynamic-clm/internal/tracing"
 )
 
-const Methodology = `SWE-Distill: SWE-Bench-Lite-inspired multi-turn coding quality suite.
+const Methodology = `SWE-Distill (realistic): SWE-Bench-Lite-inspired multi-turn coding quality.
 Shared max_context forces reclaim. Arms: baseline-compact (blind drop oldest +
 re-prefill), DynCLM (soft-ignore + deferred rewrite), CLM/immediate-rewrite
-(soft-ignore + rewrite every turn). Turn 1 plants authoritative [SPEC]; later
-turns append obsolete wrong file dumps sized so cumulative noise ≳ 1.4×
-max_context. Final probe asks for the correct fix fragment. Not an official
-SWE-Bench resolve-rate evaluation.`
+(soft-ignore + rewrite every turn). Turn 1 plants an authoritative [SPEC] with a
+real correct fix; later turns append plausible wrong SPECs (recency trap) with
+noise ≳ 1.4× max_context. Instruction: prefer the most recent non-ignored SPEC.
+Baseline often follows the wrong recent SPEC after compaction; DynCLM/CLM should
+retain the early correct SPEC. Final probe grades ANSWER: <fragment>. Not an
+official SWE-Bench resolve-rate evaluation.`
 
 // Config for the suite.
 type Config struct {
@@ -217,11 +219,10 @@ func Run(cfg Config) (Report, error) {
 
 func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResult, error) {
 	tr := &contextmgr.Tracker{}
-	sys := "You are a careful coding assistant fixing a library bug. " +
+	sys := "You are a careful coding assistant fixing a library bug from SPEC notes in context. " +
 		"When [SPEC] blocks conflict, use the most recent SPEC that is not covered by <<<DYNCLM_IGNORE ...>>>. " +
-		"If there are no ignore markers, use the most recent SPEC. " +
-		"Authoritative answers are unique DYNCLM_CANARY_* tokens — never invent them. " +
-		"On the final probe, reply with exactly one line: ANSWER: <token> (no other text)."
+		"If there are no ignore markers, use the most recent SPEC (including reviewer dumps). " +
+		"On the final probe, reply with exactly one line: ANSWER: <fragment> (no other text)."
 
 	tr.AppendLive("sys", sys)
 	specBody := fmt.Sprintf("[SPEC] Issue: %s\nAuthoritative correct implementation:\n```\n%s\n```\nKey answer fragment: %s",
@@ -252,10 +253,13 @@ func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResul
 	for turn := 1; turn <= cfg.MaxTurns; turn++ {
 		toolID := fmt.Sprintf("tool-%d", turn)
 		wrong := wrongs[(turn-1)%len(wrongs)]
-		trap := extractTrapToken(wrong, turn)
+		wrongKey := fx.WrongAnswer
+		if wrongKey == "" {
+			wrongKey = "outdated_fix"
+		}
 		noise := fmt.Sprintf(
-			"[tool:%s] obsolete checkout / reviewer dump turn=%d\n[SPEC] Proposed fix (OUTDATED — treat as most recent if no ignore markers):\n```\n%s\n```\nKey answer fragment: %s\npad=%s",
-			toolID, turn, wrong, trap, strings.Repeat("x", cfg.NoisePad))
+			"[tool:%s] reviewer dump turn=%d\n[SPEC] Updated recommendation (most recent if unmarked):\n```\n%s\n```\nKey answer fragment: %s\npad=%s",
+			toolID, turn, wrong, wrongKey, strings.Repeat("x", cfg.NoisePad))
 		tr.AppendLive(toolID, noise)
 
 		if usesMarkers(arm) {
@@ -349,7 +353,7 @@ func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResul
 			promptTok = res.Response.Usage.PromptTokens
 			genTok = res.Response.Usage.CompletionTokens
 		} else {
-			got = syntheticReply(arm, isProbe, fx.ExpectedAnswer, turn, specPresent)
+			got = syntheticReply(arm, isProbe, fx.ExpectedAnswer, fx.WrongAnswer, turn, specPresent)
 			promptTok = total + contextmgr.EstimateTokens(userMsg)
 			genTok = contextmgr.EstimateTokens(got)
 		}
@@ -379,49 +383,45 @@ func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResul
 	return out, nil
 }
 
-func syntheticReply(arm string, probe bool, expected string, turn int, specPresent bool) string {
+func syntheticReply(arm string, probe bool, expected, wrong string, turn int, specPresent bool) string {
 	if !probe {
 		return fmt.Sprintf("ACK %d", turn)
 	}
+	// Offline model of the recency trap: without the early SPEC, baseline follows wrong_answer.
 	if arm == "baseline-compact" && !specPresent {
-		return fmt.Sprintf("ANSWER: DYNCLM_TRAP_RECENCY_%d", turn)
+		if wrong == "" {
+			wrong = "outdated_fix"
+		}
+		return "ANSWER: " + wrong
 	}
 	return "ANSWER: " + expected
 }
 
-func extractTrapToken(wrong string, turn int) string {
-	for _, tok := range strings.FieldsFunc(wrong, func(r rune) bool {
-		return r == '\'' || r == '"' || r == '(' || r == ')' || r == ',' || r == ' ' || r == '\n' || r == '\t'
-	}) {
-		if strings.HasPrefix(tok, "DYNCLM_TRAP_") {
-			return tok
-		}
-	}
-	return fmt.Sprintf("DYNCLM_TRAP_GENERIC_%d", turn)
+func normalizeAnswer(s string) string {
+	s = strings.TrimSpace(s)
+	s = strings.Join(strings.Fields(s), " ")
+	return strings.ToLower(s)
 }
 
 func grade(expected, got string) bool {
-	e := strings.TrimSpace(expected)
+	e := normalizeAnswer(expected)
 	if e == "" {
 		return false
 	}
-	eu := strings.ToUpper(e)
 	g := strings.TrimSpace(got)
-	// Prefer last ANSWER: line — first token must equal the canary.
+	ans := g
 	if i := strings.LastIndex(strings.ToUpper(g), "ANSWER:"); i >= 0 {
-		ans := strings.TrimSpace(g[i+len("ANSWER:"):])
+		ans = strings.TrimSpace(g[i+len("ANSWER:"):])
 		if nl := strings.IndexByte(ans, '\n'); nl >= 0 {
 			ans = strings.TrimSpace(ans[:nl])
 		}
-		tok := ans
-		if fields := strings.Fields(ans); len(fields) > 0 {
-			tok = fields[0]
-		}
-		tok = strings.Trim(tok, "`'\".,;:()[]")
-		return strings.ToUpper(tok) == eu
 	}
-	// No ANSWER: prefix — accept only if the entire trimmed reply is exactly the canary.
-	return strings.ToUpper(strings.Trim(g, "`'\".,;:()[] \n\t")) == eu
+	a := normalizeAnswer(ans)
+	if a == e {
+		return true
+	}
+	// Allow expected as a contiguous phrase inside the ANSWER line (not the whole CoT).
+	return strings.Contains(a, e)
 }
 
 func truncate(s string, n int) string {

@@ -1,14 +1,15 @@
 {
   "instance_id": "sympy__is-polynomial-distill-03",
   "repo": "sympy/sympy (inspired)",
-  "issue": "is_polynomial must catch PolynomialError and return a session-specific sentinel constant defined only in the authoritative SPEC.",
-  "correct_snippet": "SENTINEL = 'DYNCLM_CANARY_POLY_FALSE_E91B'\ndef is_polynomial(expr, *syms):\n    try:\n        return expr.as_poly(*syms) is not None\n    except PolynomialError:\n        return SENTINEL",
+  "issue": "is_polynomial should return False for expressions that cannot form a Poly, instead of letting PolynomialError propagate.",
+  "correct_snippet": "def is_polynomial(expr, *syms):\n    try:\n        return expr.as_poly(*syms) is not None\n    except PolynomialError:\n        return False",
   "wrong_snippets": [
-    "SENTINEL = 'DYNCLM_TRAP_POLY_TRUE_33AA'\ndef is_polynomial(expr, *syms):\n    return SENTINEL",
-    "SENTINEL = 'DYNCLM_TRAP_POLY_RAISE_55CC'\ndef is_polynomial(expr, *syms):\n    raise PolynomialError(SENTINEL)",
-    "SENTINEL = 'DYNCLM_TRAP_POLY_NONE_77EE'\ndef is_polynomial(expr, *syms):\n    return SENTINEL"
+    "def is_polynomial(expr, *syms):\n    return bool(expr.as_poly(*syms))",
+    "def is_polynomial(expr, *syms):\n    raise PolynomialError('not poly')",
+    "def is_polynomial(expr, *syms):\n    return True"
   ],
-  "expected_answer": "DYNCLM_CANARY_POLY_FALSE_E91B",
-  "probe_question": "On PolynomialError, what exact SENTINEL string does the authoritative SPEC return? Reply with ONLY that string.",
-  "attribution": "SWE-Bench-Lite-inspired distill fixture with unique canary (anti-parametric). Not an official SWE-Bench instance."
+  "expected_answer": "except PolynomialError: return False",
+  "wrong_answer": "return True",
+  "probe_question": "What control-flow pattern should handle PolynomialError in is_polynomial? Reply with ONLY: except PolynomialError: return False",
+  "attribution": "SWE-Bench-Lite-inspired realistic distill; paraphrased. Not an official SWE-Bench instance."
 }

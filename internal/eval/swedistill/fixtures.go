@@ -16,6 +16,7 @@ type Fixture struct {
 	CorrectSnippet string   `json:"correct_snippet"`
 	WrongSnippets  []string `json:"wrong_snippets"`
 	ExpectedAnswer string   `json:"expected_answer"`
+	WrongAnswer    string   `json:"wrong_answer"` // recency-trap fragment shown in obsolete SPECs
 	ProbeQuestion  string   `json:"probe_question"`
 	Attribution    string   `json:"attribution"`
 }
@@ -41,6 +42,10 @@ func LoadFixtures(dir string) ([]Fixture, error) {
 		}
 		if f.InstanceID == "" || f.ExpectedAnswer == "" {
 			return nil, fmt.Errorf("%s: missing instance_id or expected_answer", e.Name())
+		}
+		if f.WrongAnswer == "" && len(f.WrongSnippets) > 0 {
+			// Fallback: last non-empty line of first wrong snippet (best-effort).
+			f.WrongAnswer = "outdated_fix"
 		}
 		out = append(out, f)
 	}

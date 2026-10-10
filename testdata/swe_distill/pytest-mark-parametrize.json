@@ -1,14 +1,15 @@
 {
   "instance_id": "pytest-dev__mark-parametrize-distill-05",
   "repo": "pytest-dev/pytest (inspired)",
-  "issue": "parametrize ids callable must return str; the TypeError message is a session canary from the authoritative SPEC only.",
-  "correct_snippet": "def _idval(val, id_func):\n    if id_func is not None:\n        s = id_func(val)\n        if not isinstance(s, str):\n            raise TypeError('DYNCLM_CANARY_IDS_MUST_STR_F018')\n        return s\n    return str(val)",
+  "issue": "When an ids callable is provided, reject non-string return values with TypeError before using the id.",
+  "correct_snippet": "def _idval(val, id_func):\n    if id_func is not None:\n        s = id_func(val)\n        if not isinstance(s, str):\n            raise TypeError('ids callable must return str')\n        return s\n    return str(val)",
   "wrong_snippets": [
-    "def _idval(val, id_func):\n    raise TypeError('DYNCLM_TRAP_IDS_IGNORE_CALLABLE_1122')",
-    "def _idval(val, id_func):\n    raise TypeError('DYNCLM_TRAP_IDS_REPR_ONLY_3344')",
-    "def _idval(val, id_func):\n    raise TypeError('DYNCLM_TRAP_IDS_WRONG_OBJ_5566')"
+    "def _idval(val, id_func):\n    return id_func(val) if id_func else val",
+    "def _idval(val, id_func):\n    return repr(val)",
+    "def _idval(val, id_func):\n    return id_func"
   ],
-  "expected_answer": "DYNCLM_CANARY_IDS_MUST_STR_F018",
-  "probe_question": "What exact TypeError message string does the authoritative SPEC raise when ids callable returns a non-string? Reply with ONLY that string.",
-  "attribution": "SWE-Bench-Lite-inspired distill fixture with unique canary (anti-parametric). Not an official SWE-Bench instance."
+  "expected_answer": "ids callable must return str",
+  "wrong_answer": "repr(val)",
+  "probe_question": "What TypeError message string should be raised when ids callable returns a non-string? Reply with ONLY the message text.",
+  "attribution": "SWE-Bench-Lite-inspired realistic distill; paraphrased. Not an official SWE-Bench instance."
 }

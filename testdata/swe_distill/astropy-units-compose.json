@@ -1,14 +1,15 @@
 {
   "instance_id": "astropy__units-compose-distill-06",
   "repo": "astropy/astropy (inspired)",
-  "issue": "Unit composition must call a session-specific simplify helper named only in the authoritative SPEC.",
-  "correct_snippet": "def compose(unit):\n    num, den = list(unit.bases), []\n    for b, p in zip(unit.bases, unit.powers):\n        if p < 0:\n            den.append((b, -p))\n            num.remove(b)\n    return DYNCLM_CANARY_SIMPLIFY_9A2F(num, den, unit.scale)",
+  "issue": "Unit composition should cancel identical bases in numerator and denominator, then simplify scale — not return a blank unit.",
+  "correct_snippet": "def compose(unit):\n    num, den = list(unit.bases), []\n    for b, p in zip(unit.bases, unit.powers):\n        if p < 0:\n            den.append((b, -p))\n            num.remove(b)\n    return simplify(num, den, unit.scale)",
   "wrong_snippets": [
-    "def compose(unit):\n    return DYNCLM_TRAP_SCALE_ONLY_B4C1(unit)",
-    "def compose(unit):\n    return DYNCLM_TRAP_EMPTY_UNIT_C5D2(unit)",
-    "def compose(unit):\n    raise UnitConversionError('DYNCLM_TRAP_COMPOSE_FAIL_E6F3')"
+    "def compose(unit):\n    return unit.scale * unit",
+    "def compose(unit):\n    return Unit('')",
+    "def compose(unit):\n    raise UnitConversionError('cannot compose')"
   ],
-  "expected_answer": "DYNCLM_CANARY_SIMPLIFY_9A2F",
-  "probe_question": "What exact helper identifier does the authoritative SPEC call at the end of compose()? Reply with ONLY that identifier.",
-  "attribution": "SWE-Bench-Lite-inspired distill fixture with unique canary (anti-parametric). Not an official SWE-Bench instance."
+  "expected_answer": "simplify(num, den, unit.scale)",
+  "wrong_answer": "Unit('')",
+  "probe_question": "What function call should compose return after splitting bases into num/den? Reply with ONLY that call expression.",
+  "attribution": "SWE-Bench-Lite-inspired realistic distill; paraphrased. Not an official SWE-Bench instance."
 }
