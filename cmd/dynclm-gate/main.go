@@ -150,8 +150,20 @@ func main() {
 		tracing.ProgressLog(resultsForGate, "GATE FAIL — stopping before Phase B")
 		os.Exit(2)
 	}
-	_ = run.Finish(true, "GATE PASS")
-	tracing.ProgressLog(resultsForGate, "GATE PASS — Phase B may continue")
+	// When attached to a multi-suite run root, do not mark the whole run complete.
+	if *runRoot != "" {
+		run.Man.Status = "running"
+		run.Man.FinishedAt = nil
+		if run.Man.Notes != "" {
+			run.Man.Notes += "; "
+		}
+		run.Man.Notes += "GATE PASS"
+		_ = run.SuiteDir("gate")
+		tracing.ProgressLog(resultsForGate, "GATE PASS — continuing parent run")
+	} else {
+		_ = run.Finish(true, "GATE PASS")
+		tracing.ProgressLog(resultsForGate, "GATE PASS — Phase B may continue")
+	}
 	fmt.Println("RUN_ID=" + run.ID)
 
 	if *skipBench3 {

@@ -39,22 +39,16 @@ echo "=== 1/4 SHORT LIVE GATE (8 sessions × 40 turns × 3 arms) ==="
 cp -f "$RUN_ROOT/interim-report.md" "$RUN_ROOT/decision-gate-interim.md" 2>/dev/null || true
 
 echo "=== 2/4 LIVE GRADED QUALITY ==="
-./bin/dynclm-quality -model Qwen3.8-27B-4bit -fresh \
-  -results "$RUN_ROOT/quality" -out "$RUN_ROOT/quality-report.md" \
-  2>&1 | tee "$RUN_ROOT/quality.log"
+# Keep flags on one line — a broken "\\n" continuation previously aborted the suite after quality.
+./bin/dynclm-quality -model Qwen3.8-27B-4bit -fresh -results "$RUN_ROOT/quality" -out "$RUN_ROOT/quality-report.md" 2>&1 | tee "$RUN_ROOT/quality.log"
 cp -f "$RUN_ROOT/quality-report.md" docs/quality-report.md || true
 
 echo "=== 3/4 LIVE LONG-HORIZON A ==="
-./bin/dynclm-longhorizon -mode a -model Qwen3.8-27B-4bit -sessions 3 -turns 24 \
-  -results "$RUN_ROOT/longhorizon" -out "$RUN_ROOT/longhorizon-report.md" \
-  2>&1 | tee "$RUN_ROOT/longhorizon-a.log"
+./bin/dynclm-longhorizon -mode a -model Qwen3.8-27B-4bit -sessions 3 -turns 24 -results "$RUN_ROOT/longhorizon" -out "$RUN_ROOT/longhorizon-report.md" 2>&1 | tee "$RUN_ROOT/longhorizon-a.log"
 cp -f "$RUN_ROOT/longhorizon-report.md" docs/longhorizon-report.md || true
 
 echo "=== 4/4 LIVE LONG-HORIZON B (16k + 64k) ==="
-./bin/dynclm-longhorizon -mode b -model Qwen3.8-27B-4bit -sessions 2 -turns 20 \
-  -limits 16384,65536 \
-  -results "$RUN_ROOT/longhorizon_compaction" -out "$RUN_ROOT/longhorizon-compaction-report.md" \
-  2>&1 | tee "$RUN_ROOT/longhorizon-b.log"
+./bin/dynclm-longhorizon -mode b -model Qwen3.8-27B-4bit -sessions 2 -turns 20 -limits 16384,65536 -results "$RUN_ROOT/longhorizon_compaction" -out "$RUN_ROOT/longhorizon-compaction-report.md" 2>&1 | tee "$RUN_ROOT/longhorizon-b.log"
 cp -f "$RUN_ROOT/longhorizon-compaction-report.md" docs/longhorizon-compaction-report.md || true
 
 # Point chart generator at this run's artifacts via copies into conventional paths used by gen_charts
