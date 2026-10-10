@@ -1,6 +1,6 @@
 # DynCLM Quality & Efficiency Report
 
-Generated: 2026-10-09T00:55:14Z
+Generated: 2026-10-10T17:34:06Z
 
 - Model: `Qwen3.8-27B-4bit`
 - Hardware: `apple-m5-max`
@@ -12,9 +12,9 @@ Generated: 2026-10-09T00:55:14Z
 
 | Arm | Accuracy | Avg ctx | Peak ctx | Prefill | Prompt | Generated | Wall-s | Rewrites |
 |---|---|---|---|---|---|---|---|---|
-| baseline | **94.4%** (17/18) | 162 | 298 | 0 | 406 | 6 | 0.95 | 0.00 |
-| immediate-rewrite | **100.0%** (18/18) | 162 | 298 | 0 | 548 | 6 | 1.35 | 1.00 |
-| dynclm | **100.0%** (18/18) | 162 | 298 | 0 | 548 | 6 | 1.37 | 0.00 |
+| baseline | **94.4%** (17/18) | 162 | 298 | 0 | 406 | 6 | 1.55 | 0.00 |
+| immediate-rewrite | **100.0%** (18/18) | 162 | 298 | 0 | 548 | 6 | 1.83 | 1.00 |
+| dynclm | **100.0%** (18/18) | 162 | 298 | 0 | 548 | 6 | 1.77 | 0.00 |
 
 ## DynCLM vs raw baseline (full comparison)
 
@@ -32,9 +32,9 @@ Generated: 2026-10-09T00:55:14Z
 | avg_total_tokens | 411.61 | 554.17 | +142.56 | +34.6% | no |
 | avg_rewrites | 0.00 | 0.00 | +0.00 | +0.0% | — |
 | avg_dead_carried_turn_sum | 0.00 | 0.00 | +0.00 | +0.0% | — |
-| avg_wall_clock_s | 0.95 | 1.37 | +0.42 | +44.1% | no |
-| total_wall_clock_s | 17.13 | 24.68 | +7.55 | +44.1% | no |
-| wall_clock_per_correct_s | 1.01 | 1.37 | +0.36 | +36.1% | no |
+| avg_wall_clock_s | 1.55 | 1.77 | +0.23 | +14.6% | no |
+| total_wall_clock_s | 27.86 | 31.92 | +4.05 | +14.6% | no |
+| wall_clock_per_correct_s | 1.64 | 1.77 | +0.13 | +8.2% | no |
 | generated_tokens_per_correct | 6.24 | 5.89 | -0.35 | -5.6% | yes |
 | prefill_tokens_per_correct | 0.00 | 0.00 | +0.00 | +0.0% | — |
 
@@ -54,9 +54,9 @@ Generated: 2026-10-09T00:55:14Z
 | avg_total_tokens | 411.61 | 554.17 | +142.56 | +34.6% | no |
 | avg_rewrites | 0.00 | 1.00 | +1.00 | +100.0% | no |
 | avg_dead_carried_turn_sum | 0.00 | 0.00 | +0.00 | +0.0% | — |
-| avg_wall_clock_s | 0.95 | 1.35 | +0.40 | +42.3% | no |
-| total_wall_clock_s | 17.13 | 24.38 | +7.24 | +42.3% | no |
-| wall_clock_per_correct_s | 1.01 | 1.35 | +0.35 | +34.4% | no |
+| avg_wall_clock_s | 1.55 | 1.83 | +0.29 | +18.5% | no |
+| total_wall_clock_s | 27.86 | 33.01 | +5.15 | +18.5% | no |
+| wall_clock_per_correct_s | 1.64 | 1.83 | +0.19 | +11.9% | no |
 | generated_tokens_per_correct | 6.24 | 5.89 | -0.35 | -5.6% | yes |
 | prefill_tokens_per_correct | 0.00 | 0.00 | +0.00 | +0.0% | — |
 
@@ -64,7 +64,7 @@ Generated: 2026-10-09T00:55:14Z
 
 - **Quality vs baseline:** +5.6 pp (94.4% → 100.0%)
 - **Quality vs immediate rewrite:** +0.0 pp
-- **Wall-clock vs baseline:** +44.1% (0.95s → 1.37s avg)
+- **Wall-clock vs baseline:** +14.6% (1.55s → 1.77s avg)
 - **Prompt tokens vs baseline:** +35.1% (406 → 548 avg)
 - **Generated tokens vs baseline:** +0.0% (6 → 6 avg)
 - **Context length (avg) vs baseline:** +0.0% (162 → 162)

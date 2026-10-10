@@ -1,6 +1,8 @@
 # DynCLM Final Report
 
-Generated: 2026-10-09
+Generated: 2026-10-10 · Primary evidence: live decision suite `20261010T145959Z_decision`
+
+Companion: [decision-report.md](decision-report.md) (tables from the same run).
 
 ## How to read this report
 
@@ -13,7 +15,24 @@ Generated: 2026-10-09
 | **DynCLM** | Soft-invalidation markers + cost-model deferred rewrite |
 | **CLM (immediate rewrite)** | Soft-invalidation markers + rewrite every turn (paper-style upper bound on reclaim aggressiveness) |
 
-Every efficiency claim is **versus the suite’s reference baseline** (raw for suite A / short tests; compaction for suite B), unless labeled otherwise.
+Every efficiency claim is **versus the suite’s reference baseline** (raw for gate / quality / long-horizon A; compaction for long-horizon B), unless labeled otherwise.
+
+---
+
+## Executive summary
+
+Live 3-arm decision suite on oMLX `Qwen3.8-27B-4bit` (Apple M5 Max): short gate + graded quality + long-horizon A + compaction matrix (16k / 64k).
+
+| Suite | Headline |
+|---|---|
+| Short live gate (8×40) | **PASS** G1–G4. DynCLM avg ctx **−53.8%**, session wall **−9.0%** vs baseline; rewrite prefill **−71.1%** vs CLM |
+| Graded quality (18 tasks) | Baseline **94.4%** → DynCLM/CLM **100%** (+5.6 pp) |
+| Long-horizon A (3×24) | Late probe **0% → 100%** (DynCLM & CLM). DynCLM late ctx **−70.8%**; CLM fastest late wall |
+| Long-horizon B (2×20 @ 16k/64k) | Compacting baseline late probe **0%**; DynCLM/CLM **100%** at both limits |
+
+**Bottom line.** DynCLM matches CLM on the quality axes that matter here (graded accuracy and late FACT probes) while spending far less rewrite prefill than always-rewrite CLM. CLM remains the speed upper bound on late steady wall. Blind compaction preserves wall-clock but destroys late quality.
+
+**Ship recommendation:** **ship** with the explicit tradeoff that DynCLM pays reclaim prefill vs raw baseline (which never rewrites) and is usually slower than CLM on late wall while winning on N/prefill vs CLM.
 
 ---
 
@@ -57,11 +76,7 @@ Regenerate with `make charts` (`scripts/gen_charts.py`, stdlib SVG — no matplo
 
 ---
 
-## 1. Short tests (plan Phase A / initial harness)
-
-These are the **initial** evaluation layers defined for the DynCLM plan: mechanism gate, live graded quality, calibration, and offline benchmarks. They do **not** by themselves prove the paper’s long-session claim; they establish that markers, rewrites, and basic quality work before long-horizon work.
-
-### 1.1 Calibration (M3 / M5 Max)
+## 1. Calibration
 
 | Metric | Value |
 |---|---|
@@ -70,15 +85,15 @@ These are the **initial** evaluation layers defined for the DynCLM plan: mechani
 | C_fixed (ms) | 1111 |
 | ρ = C_fixed/k_d | 29538 |
 
-Microbenchmark via oMLX chat-completions wall-clock on `Qwen3.8-27B-4bit`. Feeds the DynCLM cost-model scheduler (`β`, `γ`, `Δ`, rewrite when amortized re-prefill beats carrying dead tokens).
+Microbenchmark via oMLX chat-completions wall-clock on `Qwen3.8-27B-4bit`. Feeds the DynCLM cost-model scheduler (`β`, `γ`, `Δ`).
 
 Artifact: `configs/calibration/m5max-qwen38.json`.
 
-### 1.2 Multi-turn gate G1–G4 (synthetic agent)
+---
 
-**What it is.** Fixed 3-arm grid (baseline / immediate-rewrite / dynclm), 20 sessions × 50 turns, synthetic agent (no live decode). Measures context accounting, marker parse rate, shrink error, and rewrite prefill under SCR-style logical backend (K=6) because oMLX has no span KV APIs.
+## 2. Short live gate (G1–G4)
 
-**Config.** `configs/gate.yaml` — `max_context: 4096` so `β·max_context` is reachable within 50 turns.
+**What it is.** Fixed 3-arm grid (baseline / immediate-rewrite / dynclm), **8 sessions × 40 turns**, **live** oMLX. Measures context accounting, marker parse rate, shrink error, rewrite prefill, and session wall under SCR-style logical backend (K=6).
 
 **Pass criteria**
 
@@ -87,56 +102,44 @@ Artifact: `configs/calibration/m5max-qwen38.json`.
 | G1 | Mechanism | Markers parse; rewrites fire; post-rewrite shrink within tolerance |
 | G2 | Compliance | Tail/tool spans receive ignore markers as expected |
 | G3 | Quality | DynCLM success ≥ baseline and ≥ immediate (harness task success) |
-| G4 | Cost | DynCLM rewrite prefill **lower** than immediate-rewrite (N-minimizing) |
+| G4 | Cost | DynCLM rewrite prefill **lower** than immediate-rewrite |
 
-**Result.** Gate **PASS**. DynCLM avg context **−78.8%** vs raw baseline; rewrite prefill **38.6% lower** than immediate-rewrite (17415 vs 28363). Wall-clock here is ~0 (synthetic) — not used for speed claims.
+**Result (decision suite).** Gate **PASS** (G1–G4).
 
-Details: [interim-report.md](interim-report.md), `results/gate/report.json`.
+| Metric | Baseline | DynCLM | CLM |
+|---|---:|---:|---:|
+| Success % | 100.0 | 100.0 | 100.0 |
+| Avg context | 11714 | 5410 | 3995 |
+| Peak context | 23009 | 12630 | 8556 |
+| Wall-clock / session (s) | 402.3 | 365.9 | 352.5 |
+| Rewrite prefill / session | 0 | 5340 | 18504 |
+| Rewrites / session | 0.0 | 5.0 | 17.0 |
 
-### 1.3 Live graded quality (single-shot / short multi-span)
+DynCLM vs baseline: avg ctx **−53.8%**, wall **−9.0%**. DynCLM vs CLM: rewrite prefill **−71.1%** (5340 vs 18504).
+
+Details: [interim-report.md](interim-report.md), `results/runs/20261010T145959Z_decision/gate/`.
+
+---
+
+## 3. Live graded quality
 
 **What it is.** 18 deterministic tasks (retention, constraint, recovery, coding, adversarial FACT/coding) run **live** on oMLX. Distractor spans are soft-invalidated for DynCLM/CLM; answers graded by bidirectional substring match after stripping CoT.
 
-**Why it exists.** Checks that ignore markers help answer correctness when obsolete text conflicts with the authoritative FACT — without requiring a long growing session.
+**Limitation.** Context length is essentially flat across arms (~162 tokens): **no multi-turn reclaim**, so it cannot show size→speed.
 
-**Limitation.** Context length is essentially flat across arms (~162 tokens): **no multi-turn reclaim**, so it cannot show size→speed. Wall-clock can look *worse* for DynCLM (+44% here) because of marker/prompt overhead on tiny contexts.
+| Arm | Accuracy | Correct/N | Avg wall-s | Avg ctx |
+|---|---:|---:|---:|---:|
+| Baseline | 94.4% | 17/18 | 1.55 | 162 |
+| DynCLM | 100.0% | 18/18 | 1.77 | 162 |
+| CLM | 100.0% | 18/18 | 1.83 | 162 |
 
-**Result.** Accuracy 94.4% → **100%** (+5.6 pp) for DynCLM and CLM vs baseline.
-
-Details: [quality-report.md](quality-report.md), `results/quality/report.json`.
-
-### 1.4 Offline unit / mechanism benchmarks (M1–M2)
-
-Internal packages under `internal/eval/benchmarks` and `contextmgr` tests cover marker parse/apply, dead-span tracking, rewriter SCR accounting, and compliance bench-3. These are CI-facing correctness checks, not live model scores.
+Details: [quality-report.md](quality-report.md).
 
 ---
 
-## 2. Plan total run (Phase B learning grid) — status
+## 4. Long-horizon A — late quality + late speed
 
-**Plan design** (`configs/learning.yaml`):
-
-| Axis | Values | Count |
-|---|---|---|
-| Models | Qwen3.8-27B-4bit, Qwen3.6-35B-A3B-4bit, North-Mini-Code-1.0-4bit | 3 |
-| Task types | coding, search, multi-agent | 3 |
-| Policies | β/γ grid (5 named policies) | 5 |
-| Sessions / cell | 20 | 20 |
-| **Nominal total** | | **3 × 3 × 5 × 20 = 900 sessions** |
-| Turns / session | 50 | |
-| max_context | 32768 | |
-| `use_live_model` | true (as written) | |
-
-**What actually ran.** Phase B did **not** complete as a full live 900-session oMLX grid. Artifacts under `results/learning/` are limited (`scaling_fit.json`, `trace.jsonl`); `results/phaseb-run.log` only records final-report generation. The automatic post-gate path continued into report writing using **offline/synthetic** session accounting and the short + long-horizon suites above — not 900 live multi-model cells.
-
-**Implication.** Policy/`ρ` learning from the full grid is **incomplete**. Ship recommendation below rests on gate PASS + live quality + live long-horizon A (+ suite B matrix), not on a finished 900-cell live sweep.
-
-To run the planned grid (expensive): `make learning` with oMLX up and `configs/learning.yaml` unchanged — expect multi-hour wall time on M5 Max.
-
----
-
-## 3. Long-horizon A — current live suite (vs raw baseline)
-
-**Claim under test.** In long sessions, obsolete tool noise accumulates; keeping context small via soft-invalidation + deferred rewrite improves (1) late-session probe quality and (2) steady-state generation speed vs raw append-only.
+**Claim under test.** In long sessions, obsolete tool noise accumulates; soft-invalidation + deferred rewrite improves late-session probe quality and keeps context small vs raw append-only.
 
 **Protocol**
 
@@ -145,102 +148,106 @@ To run the planned grid (expensive): `make learning` with oMLX up and `configs/l
 3. DynCLM/CLM: harness applies `<<<DYNCLM_IGNORE>>>` on obsolete tool spans; cost model decides rewrite.
 4. Baseline: no markers — instruction says use most recent FACT → recency trap.
 5. Probes every N turns ask for the canary; grade exact token presence.
-6. Metrics per turn: context length, prompt/generated tokens, wall-clock, gen tok/s.
-7. Windows: early (first third) vs late (last third); **late_steady** excludes rewrite spikes (except immediate-rewrite, where every turn *is* steady state).
+6. Windows: early vs late; **late_steady** excludes rewrite spikes (except immediate-rewrite).
 
-**Run.** Live oMLX `Qwen3.8-27B-4bit`, 2 sessions × 20 turns × 3 arms. See [longhorizon-report.md](longhorizon-report.md).
+**Run.** Live oMLX, **3 sessions × 24 turns × 3 arms**. See [longhorizon-report.md](longhorizon-report.md).
 
-| Dimension | DynCLM vs baseline | CLM (immediate) vs baseline |
-|---|---|---|
-| Late probe quality | **+100 pp** (0% → 100%) | +100 pp |
-| Late avg context | **−64.3%** (5666 → 2024) | −94% |
-| Late avg prompt tokens | **−54.5%** | −84% |
-| Late steady wall-clock | **−6.5%** (3.96s → 3.70s) | **−51.8%** |
-| Late steady gen tok/s | **+20.7%** (1.13 → 1.36) | **+109%** |
-| Rewrite prefill / session | worse (0 → 144) | worse (0 → 1772) |
+| Arm | Late probe % | Late avg ctx | Late steady wall-s | Late tok/s | Prefill/sess | Rewrites/sess |
+|---|---:|---:|---:|---:|---:|---:|
+| Baseline | 0.0 | 6857 | 2.60 | 2.19 | 0 | 0.0 |
+| DynCLM | 100.0 | 2000 | 3.78 | 1.74 | 144 | 1.0 |
+| CLM | 100.0 | 375 | 1.99 | 2.36 | 2774 | 24.0 |
 
-CLM is the speed upper bound (always-tiny context, high N). DynCLM keeps most of the quality win and a large context cut with far fewer rewrites (~1 vs ~20/session).
+DynCLM keeps the full late-quality win (+100 pp) with ~1 rewrite/session vs CLM’s 24; CLM is faster on late wall and holds the smallest context.
 
 ---
 
-## 4. Long-horizon B — compaction baseline × max context
+## 5. Long-horizon B — compaction baseline × max context
 
-**Motivation.** Production systems rarely keep unbounded raw context; they **compact** (truncate / summarize) when hitting a window. Suite A’s raw baseline is the scientific lower bound on quality; suite B asks whether DynCLM/CLM still win when the baseline is allowed to compact.
+**Motivation.** Production systems compact when hitting a window. Suite B asks whether DynCLM/CLM still win when the baseline may compact.
 
 **Protocol (delta from A)**
 
 - Arms: `baseline-compact`, `immediate-rewrite` (CLM), `dynclm`.
-- When `baseline-compact` exceeds `max_context`, drop oldest spans (keep `sys` when possible) down to ~80% of budget; charge full re-prefill of survivors.
-- Same `max_context` is the DynCLM scheduler ceiling (`β · max_context`).
-- Matrix: **8192, 16384, 32768, 65536**.
-- Per-column noise ≈ 1.4× that limit over the session so compaction **must** fire in every column.
+- When compact exceeds `max_context`, drop oldest spans (keep `sys` when possible) to ~80% of budget; charge full re-prefill of survivors.
+- Decision-suite matrix: **16384, 65536** (2 sessions × 20 turns).
 
-**Live matrix** — 1 session × 16 turns × 3 arms × 4 limits on oMLX `Qwen3.8-27B-4bit` (`results/longhorizon_compaction_live/`). Full tables: [longhorizon-compaction-report.md](longhorizon-compaction-report.md).
+| Max ctx | Compact probe% | DynCLM | CLM | Compact ctx | DynCLM ctx | CLM ctx | Compact wall | DynCLM wall | CLM wall |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 16384 | 0.0 | 100.0 | 100.0 | 14154 | 5154 | 320 | 6.23 | 4.18 | 1.75 |
+| 65536 | 0.0 | 100.0 | 100.0 | 57914 | 19348 | 320 | 3.56 | 6.50 | 1.71 |
 
-| Max context | compact probe% | DynCLM | CLM | compact late ctx | DynCLM | CLM | compact wall-s | DynCLM | CLM |
-|---|---|---|---|---|---|---|---|---|---|
-| 8192 | 0 | 100 | 100 | 6980 | 2488 | 263 | 6.09 | 7.76 | **1.56** |
-| 16384 | 0 | 100 | 100 | 14169 | 4639 | 263 | 11.88 | **7.58** | **1.82** |
-| 32768 | 0 | 100 | 100 | 29120 | 8938 | 263 | 7.70 | 10.53 | **1.75** |
-| 65536 | 0 | 100 | 100 | 57804 | 17540 | 263 | 3.94 | 13.52 | **1.83** |
+Blind compaction drops the early FACT → late probes **0%**; DynCLM/CLM keep **100%**. Compaction can look fast while answering wrong — quality-adjusted, DynCLM/CLM dominate.
 
-Blind compaction drops the early FACT → late probes **0%**; DynCLM/CLM keep **100%**. DynCLM late context is ~1/3 of the compacting baseline; CLM is the speed upper bound. Compaction can post a lower wall-clock while answering wrong — quality-adjusted, DynCLM/CLM dominate.
+Details: [longhorizon-compaction-report.md](longhorizon-compaction-report.md).
 
-Offline replica (2×24 turns, accounting only) remains under `results/longhorizon_compaction/` for regression.
+---
 
-Commands:
+## 6. Learning-900 policy grid (optional / incomplete)
+
+**Plan design** (`configs/learning.yaml`): 3 models × 3 task types × 5 policies × 20 sessions = **900** cells — a **DynCLM policy / βγ sweep**, not the 3-arm Baseline/DynCLM/CLM decision instrument.
+
+**Status.** Paused for disk and archived under `results/runs/20261009T034520Z/archive_learning_900_20261010T145859Z` (~207/900 cells before pause). **Not required** for the ship verdict above.
+
+Resume if needed:
 
 ```bash
-# Suite A
-make longhorizon
-
-# Suite B offline (fast)
-./bin/dynclm-longhorizon -mode b -offline -fresh -sessions 2 -turns 24
-
-# Suite B live
-./bin/dynclm-longhorizon -mode b -sessions 1 -turns 16 -limits 8192,16384,32768,65536 \
-  -results results/longhorizon_compaction_live
-
-make charts
+bash scripts/resume_live_full.sh results/runs/20261009T034520Z
 ```
 
 ---
 
-## Executive summary
+## 7. Relation to the CLM paper’s coding benchmarks
 
-| Suite | vs reference | Headline |
-|---|---|---|
-| Gate (short, synthetic) | raw baseline | Context −79%; G1–G4 PASS; prefill vs CLM −39% |
-| Quality (short, live) | raw baseline | Accuracy +5.6 pp; no context-size win |
-| Phase B 900-grid | — | **Not fully run live** |
-| Long-horizon A (live) | raw baseline | Late quality +100 pp; ctx −64%; steady tok/s +21% |
-| Long-horizon B (live matrix) | compaction baseline | Late probes 0%→100%; ctx ~1/3 of compact; CLM fastest wall |
+The CLM paper ([arXiv:2609.37725](https://arxiv.org/abs/2609.37725)) does **not** evaluate on SWE-Bench Verified / Lite / Multilingual for CLM quality. Coding-adjacent paper evals are:
 
-**Bottom line.** On the paper-relevant long-horizon setting, DynCLM beats raw baseline on late quality, context, and steady generation speed, and still beats a compacting baseline on late quality while holding context well below the window. Immediate-rewrite (CLM) is faster still at much higher rewrite N.
+| Paper benchmark | Role |
+|---|---|
+| **TerminalBench 2.1** + **TBLite** | Terminal-coding quality/efficiency (shared **Mini-SWE-Agent** backbone) |
+| **EdgeBench-10** | 12-hour single-repo optimization |
+| **Software World** | 24-hour multi-repo agent swarm |
+| BrowseComp-Plus | Deep research (primary accuracy/FLOP claim) |
+| ContextBench | Diagnostic context-management tasks |
+
+Our harness measures soft-invalidation + deferred rewrite vs raw / compact / immediate-rewrite on local oMLX; it is **not** a TerminalBench or SWE-Bench reproduction. See [verification.md](verification.md).
 
 ---
 
-## Ship / no-ship (§7.3)
+## Ship / no-ship
 
-- Recommendation: **ship** (tradeoff explicit)
-- Late-session quality ≥ baseline: **yes** (suite A + B)
-- Late-session context/prompt vs baseline: **yes**
-- Late steady generation speed vs baseline: **yes** (suite A live)
-- Rewrite prefill vs baseline: **no** (baseline is 0; DynCLM pays reclaim cost)
-- Full plan 900-session live grid: **outstanding**
+| Criterion | Result |
+|---|---|
+| Late-session quality ≥ baseline | **yes** (A + B) |
+| Late-session context vs baseline | **yes** |
+| Session wall (gate) vs baseline | **yes** (−9%) |
+| Late steady wall vs baseline (A) | **no** on this run (DynCLM slower; CLM faster) |
+| Rewrite prefill vs baseline | **no** (baseline is 0) |
+| Rewrite prefill vs CLM | **yes** (−71% on gate) |
+| Full 900-session live grid | **outstanding** (optional) |
+| Paper TerminalBench / BrowseComp reproduction | **not run** |
+
+Recommendation: **ship** for the DynCLM reclaim policy (quality parity with CLM, much lower rewrite N than CLM, clear win vs raw/compact baselines on late probes).
+
+---
 
 ## Gaps
 
-- Phase B 900-session live learning grid not completed.
-- Not SWE-bench / BrowseComp-Plus paper reproduction.
+- Learning-900 policy grid incomplete (archived mid-run).
+- Not TerminalBench / BrowseComp-Plus / EdgeBench paper reproduction.
 - oMLX has no span-level KV API; prefill is logical/SCR-accounting.
-- Suite B live used n=1 session/arm; wall/tok/s are directional.
+- Decision-suite LH-B used 2 limits (16k/64k), not the older 4-limit exploratory matrix.
+- Late wall/tok/s on small n are directional.
+
+---
 
 ## Artifacts
 
-- **Figures:** `docs/figures/*.svg`
-- **Long-horizon A:** `results/longhorizon/report.json`, [longhorizon-report.md](longhorizon-report.md)
-- **Long-horizon B:** `results/longhorizon_compaction/`, [longhorizon-compaction-report.md](longhorizon-compaction-report.md)
-- Gate: `results/gate/report.json`, [interim-report.md](interim-report.md)
-- Quality: `results/quality/report.json`, [quality-report.md](quality-report.md)
-- Verification: [verification.md](verification.md)
+| What | Where |
+|---|---|
+| Decision suite run | `results/runs/20261010T145959Z_decision/` |
+| Decision report | [decision-report.md](decision-report.md) |
+| Figures | `docs/figures/*.svg` |
+| Long-horizon A/B | [longhorizon-report.md](longhorizon-report.md), [longhorizon-compaction-report.md](longhorizon-compaction-report.md) |
+| Gate / quality | [interim-report.md](interim-report.md), [quality-report.md](quality-report.md) |
+| Learning archive | `results/runs/20261009T034520Z/archive_learning_900_*` |
+| Paper verification | [verification.md](verification.md) |
