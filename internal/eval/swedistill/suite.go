@@ -220,7 +220,8 @@ func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResul
 	sys := "You are a careful coding assistant fixing a library bug. " +
 		"When [SPEC] blocks conflict, use the most recent SPEC that is not covered by <<<DYNCLM_IGNORE ...>>>. " +
 		"If there are no ignore markers, use the most recent SPEC. " +
-		"Answer the final probe with ONLY the requested fragment — no explanation."
+		"Authoritative answers are unique DYNCLM_CANARY_* tokens — never invent them. " +
+		"On the final probe, reply with exactly one line: ANSWER: <token> (no other text)."
 
 	tr.AppendLive("sys", sys)
 	specBody := fmt.Sprintf("[SPEC] Issue: %s\nAuthoritative correct implementation:\n```\n%s\n```\nKey answer fragment: %s",
@@ -251,9 +252,10 @@ func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResul
 	for turn := 1; turn <= cfg.MaxTurns; turn++ {
 		toolID := fmt.Sprintf("tool-%d", turn)
 		wrong := wrongs[(turn-1)%len(wrongs)]
+		trap := extractTrapToken(wrong, turn)
 		noise := fmt.Sprintf(
-			"[tool:%s] obsolete checkout / reviewer dump turn=%d\n[SPEC] Proposed fix (OUTDATED):\n```\n%s\n```\nKey answer fragment: WRONG_%d\npad=%s",
-			toolID, turn, wrong, turn, strings.Repeat("x", cfg.NoisePad))
+			"[tool:%s] obsolete checkout / reviewer dump turn=%d\n[SPEC] Proposed fix (OUTDATED — treat as most recent if no ignore markers):\n```\n%s\n```\nKey answer fragment: %s\npad=%s",
+			toolID, turn, wrong, trap, strings.Repeat("x", cfg.NoisePad))
 		tr.AppendLive(toolID, noise)
 
 		if usesMarkers(arm) {
@@ -318,7 +320,7 @@ func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResul
 		tm.IsProbe = isProbe
 		var userMsg string
 		if isProbe {
-			userMsg = fmt.Sprintf("Final probe at turn %d/%d. %s", turn, cfg.MaxTurns, fx.ProbeQuestion)
+			userMsg = fmt.Sprintf("Final probe at turn %d/%d. %s Format: ANSWER: <token>", turn, cfg.MaxTurns, fx.ProbeQuestion)
 		} else {
 			userMsg = fmt.Sprintf("Turn %d/%d. Acknowledge with exactly: ACK %d", turn, cfg.MaxTurns, turn)
 		}
@@ -382,22 +384,44 @@ func syntheticReply(arm string, probe bool, expected string, turn int, specPrese
 		return fmt.Sprintf("ACK %d", turn)
 	}
 	if arm == "baseline-compact" && !specPresent {
-		return fmt.Sprintf("WRONG_%d", turn)
+		return fmt.Sprintf("ANSWER: DYNCLM_TRAP_RECENCY_%d", turn)
 	}
-	return expected
+	return "ANSWER: " + expected
+}
+
+func extractTrapToken(wrong string, turn int) string {
+	for _, tok := range strings.FieldsFunc(wrong, func(r rune) bool {
+		return r == '\'' || r == '"' || r == '(' || r == ')' || r == ',' || r == ' ' || r == '\n' || r == '\t'
+	}) {
+		if strings.HasPrefix(tok, "DYNCLM_TRAP_") {
+			return tok
+		}
+	}
+	return fmt.Sprintf("DYNCLM_TRAP_GENERIC_%d", turn)
 }
 
 func grade(expected, got string) bool {
 	e := strings.TrimSpace(expected)
-	g := strings.TrimSpace(got)
 	if e == "" {
 		return false
 	}
-	el, gl := strings.ToLower(e), strings.ToLower(g)
-	if strings.Contains(gl, "wrong_") && !strings.Contains(gl, el) {
-		return false
+	eu := strings.ToUpper(e)
+	g := strings.TrimSpace(got)
+	// Prefer last ANSWER: line — first token must equal the canary.
+	if i := strings.LastIndex(strings.ToUpper(g), "ANSWER:"); i >= 0 {
+		ans := strings.TrimSpace(g[i+len("ANSWER:"):])
+		if nl := strings.IndexByte(ans, '\n'); nl >= 0 {
+			ans = strings.TrimSpace(ans[:nl])
+		}
+		tok := ans
+		if fields := strings.Fields(ans); len(fields) > 0 {
+			tok = fields[0]
+		}
+		tok = strings.Trim(tok, "`'\".,;:()[]")
+		return strings.ToUpper(tok) == eu
 	}
-	return strings.Contains(gl, el) || strings.Contains(el, gl)
+	// No ANSWER: prefix — accept only if the entire trimmed reply is exactly the canary.
+	return strings.ToUpper(strings.Trim(g, "`'\".,;:()[] \n\t")) == eu
 }
 
 func truncate(s string, n int) string {
