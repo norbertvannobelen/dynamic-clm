@@ -1,0 +1,14 @@
+{
+  "instance_id": "psf__requests-timeout-distill-02",
+  "repo": "psf/requests (inspired)",
+  "issue": "Timeout may be a (connect, read) tuple; validate and pass both values through to urllib3.",
+  "correct_snippet": "def _validate_timeout(timeout):\n    if isinstance(timeout, tuple):\n        if len(timeout) != 2:\n            raise ValueError('timeout tuple must be (connect, read)')\n        return timeout\n    return timeout",
+  "wrong_snippets": [
+    "def _validate_timeout(timeout):\n    return float(timeout)  # drops connect/read split",
+    "def _validate_timeout(timeout):\n    if isinstance(timeout, tuple):\n        return timeout[0]\n    return timeout",
+    "def _validate_timeout(timeout):\n    return None  # disable timeouts"
+  ],
+  "expected_answer": "timeout tuple must be (connect, read)",
+  "probe_question": "What ValueError message string should be raised for a bad timeout tuple length? Reply with ONLY the message text.",
+  "attribution": "SWE-Bench-Lite-inspired distill fixture; paraphrased for DynCLM context-reclaim test. Not an official SWE-Bench instance."
+}

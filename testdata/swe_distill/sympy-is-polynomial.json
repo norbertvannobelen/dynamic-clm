@@ -1,0 +1,14 @@
+{
+  "instance_id": "sympy__is-polynomial-distill-03",
+  "repo": "sympy/sympy (inspired)",
+  "issue": "is_polynomial should return False for expressions containing transcendental functions of the symbol, not raise.",
+  "correct_snippet": "def is_polynomial(expr, *syms):\n    try:\n        return expr.as_poly(*syms) is not None\n    except PolynomialError:\n        return False",
+  "wrong_snippets": [
+    "def is_polynomial(expr, *syms):\n    return bool(expr.as_poly(*syms))  # may raise",
+    "def is_polynomial(expr, *syms):\n    raise PolynomialError('not poly')",
+    "def is_polynomial(expr, *syms):\n    return True  # overly permissive"
+  ],
+  "expected_answer": "return False",
+  "probe_question": "On PolynomialError inside is_polynomial, what should the function return? Reply with ONLY the return statement (two words).",
+  "attribution": "SWE-Bench-Lite-inspired distill fixture; paraphrased for DynCLM context-reclaim test. Not an official SWE-Bench instance."
+}

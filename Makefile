@@ -1,7 +1,7 @@
 MODULE := github.com/norbertvannobelen/dynamic-clm
 BIN := bin
 
-.PHONY: all build test vet gate calibrate baseline learning quality report clean longhorizon longhorizon-b charts live-full analysis
+.PHONY: all build test vet gate calibrate baseline learning quality report clean longhorizon longhorizon-b charts live-full analysis swe-distill
 
 quality: build
 	./$(BIN)/dynclm-quality -model Qwen3.8-27B-4bit -out docs/quality-report.md
@@ -32,6 +32,10 @@ resume-live: build
 decision-suite: build
 	bash scripts/run_decision_suite.sh
 
+# SWE-Bench-inspired distill (~2h/arm): Baseline+compact vs DynCLM vs CLM.
+swe-distill: build
+	bash scripts/run_swe_distill.sh
+
 all: build test
 
 build:
@@ -42,6 +46,7 @@ build:
 	go build -o $(BIN)/dynclm-eval ./cmd/dynclm-eval
 	go build -o $(BIN)/dynclm-quality ./cmd/dynclm-quality
 	go build -o $(BIN)/dynclm-longhorizon ./cmd/dynclm-longhorizon
+	go build -o $(BIN)/dynclm-swedistill ./cmd/dynclm-swedistill
 
 test:
 	go test ./...

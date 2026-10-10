@@ -1,0 +1,14 @@
+{
+  "instance_id": "matplotlib__tight-layout-distill-04",
+  "repo": "matplotlib/matplotlib (inspired)",
+  "issue": "tight_layout should skip Axes that are part of a layout engine managed figure instead of double-applying spacing.",
+  "correct_snippet": "def tight_layout(fig, **kwargs):\n    if getattr(fig, 'get_layout_engine', lambda: None)() is not None:\n        return\n    _tight_layout_impl(fig, **kwargs)",
+  "wrong_snippets": [
+    "def tight_layout(fig, **kwargs):\n    _tight_layout_impl(fig, **kwargs)  # always apply",
+    "def tight_layout(fig, **kwargs):\n    fig.set_tight_layout(True)\n    return fig",
+    "def tight_layout(fig, **kwargs):\n    raise RuntimeError('tight_layout disabled')"
+  ],
+  "expected_answer": "return",
+  "probe_question": "If the figure already has a layout engine, what single-statement early exit should tight_layout use? Reply with ONLY that statement keyword.",
+  "attribution": "SWE-Bench-Lite-inspired distill fixture; paraphrased for DynCLM context-reclaim test. Not an official SWE-Bench instance."
+}

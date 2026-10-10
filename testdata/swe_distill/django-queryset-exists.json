@@ -1,0 +1,14 @@
+{
+  "instance_id": "django__queryset-exists-distill-01",
+  "repo": "django/django (inspired)",
+  "issue": "QuerySet.exists() should short-circuit after finding one matching row instead of materializing the full result list.",
+  "correct_snippet": "def exists(self):\n    if self._result_cache is not None:\n        return bool(self._result_cache)\n    return self.query.has_results(using=self.db)",
+  "wrong_snippets": [
+    "def exists(self):\n    return len(list(self)) > 0",
+    "def exists(self):\n    return self.count() > 0  # always full aggregate",
+    "def exists(self):\n    return bool(self.first()) and True"
+  ],
+  "expected_answer": "self.query.has_results(using=self.db)",
+  "probe_question": "What expression should exists() return when the result cache is empty? Reply with ONLY that expression.",
+  "attribution": "SWE-Bench-Lite-inspired distill fixture; paraphrased for DynCLM context-reclaim test. Not an official SWE-Bench instance."
+}
