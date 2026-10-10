@@ -33,8 +33,9 @@ if [[ "$code" != "200" ]]; then
 fi
 
 echo "=== 1/4 SHORT LIVE GATE (8 sessions × 40 turns × 3 arms) ==="
-./bin/dynclm-gate -config configs/gate.yaml -sessions 8 -turns 40 -run-root "$RUN_ROOT" \
-  2>&1 | tee "$RUN_ROOT/gate.log"
+# Skip Bench3 here — it is a 50-call compliance curve and blocked the suite after cells finished.
+./bin/dynclm-gate -config configs/gate.yaml -sessions 8 -turns 40 -skip-bench3 \
+  -run-root "$RUN_ROOT" 2>&1 | tee "$RUN_ROOT/gate.log"
 cp -f "$RUN_ROOT/interim-report.md" "$RUN_ROOT/decision-gate-interim.md" 2>/dev/null || true
 
 echo "=== 2/4 LIVE GRADED QUALITY ==="

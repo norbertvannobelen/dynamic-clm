@@ -2,6 +2,7 @@ package benchmarks
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/norbertvannobelen/dynamic-clm/internal/backend/omlx"
@@ -25,10 +26,16 @@ func RunBench3(client *omlx.Client, model string, trials int, live bool) ([]Comp
 	positions := []string{"tail", "middle"}
 	var out []CompliancePoint
 
+	total := len(positions) * len(delays) * trials
+	n := 0
 	for _, pos := range positions {
 		for _, delay := range delays {
 			hits := 0
 			for t := 0; t < trials; t++ {
+				n++
+				if live && (n == 1 || n%5 == 0 || n == total) {
+					fmt.Fprintf(os.Stderr, "bench3 progress %d/%d pos=%s delay=%d trial=%d\n", n, total, pos, delay, t+1)
+				}
 				ok, err := oneComplianceTrial(client, model, pos, delay, live)
 				if err != nil {
 					return out, err

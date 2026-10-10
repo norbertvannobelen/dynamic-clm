@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/norbertvannobelen/dynamic-clm/internal/backend/omlx"
 	"github.com/norbertvannobelen/dynamic-clm/internal/eval/benchmarks"
@@ -34,6 +35,7 @@ func main() {
 	sessions := flag.Int("sessions", 0, "override sessions per arm")
 	turns := flag.Int("turns", 0, "override max turns")
 	runRoot := flag.String("run-root", "", "optional results/runs/<id> root (created if empty)")
+	skipBench3 := flag.Bool("skip-bench3", false, "skip post-gate Bench3 compliance curve (can be slow/live)")
 	flag.Parse()
 
 	if *offline && !*allowSynthetic {
@@ -121,36 +123,18 @@ func main() {
 		fatal(err)
 	}
 
-	var client *omlx.Client
-	if live {
-		client, err = omlx.NewClient()
-		if err != nil {
-			_ = run.Finish(false, "omlx client failed for bench3")
-			fatal(err)
-		}
-		client.MaxTokens = 64
-	}
-	bench3, err := benchmarks.RunBench3(client, y.ModelID, 5, live)
-	if err != nil {
-		tracing.ProgressLog(resultsForGate, "bench3 error: "+err.Error())
-	} else {
-		_ = tracing.WriteCell(filepath.Join(gateDir, "bench3.json"), bench3)
-	}
-
+	// Finalize gate verdict before optional Bench3 so a slow/hung compliance
+	// curve cannot block PASSED / interim report / decision-suite continuation.
 	interim := filepath.Join("docs", "interim-report.md")
 	if err := gate.WriteInterimMarkdown(interim, rep, cacheProbe); err != nil {
 		fatal(err)
 	}
-	// Also keep a copy inside the run archive.
 	_ = gate.WriteInterimMarkdown(filepath.Join(run.Root, "interim-report.md"), rep, cacheProbe)
 
-	// Mirror PASSED into conventional results/gate for Phase B gate check,
-	// and into the run archive.
 	if rep.Passed {
 		_ = os.MkdirAll("results/gate", 0o755)
 		_ = os.WriteFile("results/gate/PASSED", []byte("ok\n"), 0o644)
 		_ = os.WriteFile(filepath.Join(gateDir, "PASSED"), []byte("ok\n"), 0o644)
-		// Copy latest gate report to conventional path for analysis tools.
 		if b, err := os.ReadFile(filepath.Join(resultsForGate, "gate", "report.json")); err == nil {
 			_ = os.WriteFile("results/gate/report.json", b, 0o644)
 		}
@@ -169,6 +153,31 @@ func main() {
 	_ = run.Finish(true, "GATE PASS")
 	tracing.ProgressLog(resultsForGate, "GATE PASS — Phase B may continue")
 	fmt.Println("RUN_ID=" + run.ID)
+
+	if *skipBench3 {
+		tracing.ProgressLog(resultsForGate, "bench3 skipped (--skip-bench3)")
+		return
+	}
+
+	var client *omlx.Client
+	if live {
+		client, err = omlx.NewClient()
+		if err != nil {
+			tracing.ProgressLog(resultsForGate, "bench3 skipped: omlx client failed: "+err.Error())
+			return
+		}
+		client.MaxTokens = 64
+		// Shorter timeout than default so a stuck chat cannot pin the gate process indefinitely.
+		client.HTTP.Timeout = 2 * time.Minute
+	}
+	tracing.ProgressLog(resultsForGate, "bench3 start")
+	bench3, err := benchmarks.RunBench3(client, y.ModelID, 5, live)
+	if err != nil {
+		tracing.ProgressLog(resultsForGate, "bench3 error: "+err.Error())
+		return
+	}
+	_ = tracing.WriteCell(filepath.Join(gateDir, "bench3.json"), bench3)
+	tracing.ProgressLog(resultsForGate, "bench3 done")
 }
 
 func fatal(err error) {
