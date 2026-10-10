@@ -24,6 +24,10 @@ analysis:
 live-full: build
 	bash scripts/run_live_full.sh
 
+# Resume a paused run (default: results/latest). Skips completed learning cells.
+resume-live: build
+	bash scripts/resume_live_full.sh $(RUN_ROOT)
+
 all: build test
 
 build:
