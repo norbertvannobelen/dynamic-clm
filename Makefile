@@ -28,6 +28,10 @@ live-full: build
 resume-live: build
 	bash scripts/resume_live_full.sh $(RUN_ROOT)
 
+# Efficient 3-arm decision suite (short gate + quality + LH A/B). Not the 900 grid.
+decision-suite: build
+	bash scripts/run_decision_suite.sh
+
 all: build test
 
 build:

@@ -1,0 +1,9 @@
+{
+  "archived_at": "2026-10-10T14:58:59Z",
+  "source_run": "20261009T034520Z",
+  "kind": "learning_900_checkpoint",
+  "learning_cells_complete": 207,
+  "learning_cells_total": 900,
+  "resume_learning": "bash scripts/resume_live_full.sh results/runs/20261009T034520Z",
+  "note": "Paused in favor of efficient 3-arm decision suite. Cells preserved under source run and this snapshot."
+}
