@@ -401,7 +401,7 @@ func runSession(client *omlx.Client, cfg Config, arm, sid string) (SessionResult
 		start := time.Now()
 		var got string
 		var promptTok, genTok int
-		ctxText := tr.ContextText(usesMarkers(arm))
+		ctxText := tr.ContextTextForServing(usesMarkers(arm))
 		factPresent := tr.HasSpanID("fact-0")
 		if cfg.UseLiveModel && client != nil {
 			// Cap prompt chars roughly with max_context to avoid OOM; tokens≈chars/4.

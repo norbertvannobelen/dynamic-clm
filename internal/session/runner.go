@@ -157,8 +157,8 @@ Final answer for the bugfix must contain the token SUCCESS_FIX.`
 
 		var assistant string
 		if cfg.UseLiveModel && r.Client != nil {
-			// Send compressed context: live spans + markers for dead.
-			ctx := r.Track.ContextText(true)
+			// Chat backends: stub dead bodies (no KV soft-ignore on oMLX).
+			ctx := r.Track.ContextTextForServing(true)
 			chatMsgs := []omlx.Message{
 				{Role: "system", Content: system},
 				{Role: "user", Content: truncate(ctx, 12000) + "\n\n" + user},

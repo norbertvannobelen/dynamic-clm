@@ -14,15 +14,15 @@ import (
 	"github.com/norbertvannobelen/dynamic-clm/internal/tracing"
 )
 
-const Methodology = `SWE-Distill (realistic): SWE-Bench-Lite-inspired multi-turn coding quality.
+const Methodology = `SWE-Distill (realistic): SWE-Bench-Lite-inspired multi-turn coding quality + latency.
 Shared max_context forces reclaim. Arms: baseline-compact (blind drop oldest +
 re-prefill), DynCLM (soft-ignore + deferred rewrite), CLM/immediate-rewrite
 (soft-ignore + rewrite every turn). Turn 1 plants an authoritative [SPEC] with a
 real correct fix; later turns append plausible wrong SPECs (recency trap) with
 noise ≳ 1.4× max_context. Instruction: prefer the most recent non-ignored SPEC.
-Baseline often follows the wrong recent SPEC after compaction; DynCLM/CLM should
-retain the early correct SPEC. Final probe grades ANSWER: <fragment>. Not an
-official SWE-Bench resolve-rate evaluation.`
+Chat serving uses ContextTextForServing: dead spans are stubbed (no body) so
+DynCLM/CLM prompts shrink without waiting for Rewrite — matching oMLX Chat
+(no KV soft-ignore). Final probe grades ANSWER: <fragment>. Not official SWE-Bench.`
 
 // Config for the suite.
 type Config struct {
@@ -463,17 +463,16 @@ func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResul
 		start := time.Now()
 		var got string
 		var promptTok, genTok int
-		// Marker arms keep dead span text in the prompt (soft-ignore markers); only
-		// Rewrite() physically drops them. oMLX Chat has no KV soft-ignore, so
-		// prompt_tokens tracks billed/prefill size — often ≫ live_tokens for DynCLM.
-		ctxText := tr.ContextText(usesMarkers(arm))
+		// oMLX Chat cannot mask dead KV — stub dead bodies so DynCLM latency tracks
+		// live context (method intent) rather than serializing ignored tool dumps.
+		ctxText := tr.ContextTextForServing(usesMarkers(arm))
 		specPresent := tr.HasSpanID("spec-0")
 		if cfg.UseLiveModel && client != nil {
 			// Probe replies need headroom for CoT; quality should not fail on MaxTokens.
 			if isProbe {
 				client.MaxTokens = 2048
 			} else {
-				client.MaxTokens = 256
+				client.MaxTokens = 64 // ACK-only turns; keep gen short for fair wall
 			}
 			capChars := cfg.MaxContext * 4
 			if capChars < 8000 {
@@ -494,8 +493,7 @@ func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResul
 			genTok = res.Response.Usage.CompletionTokens
 		} else {
 			got = syntheticReply(arm, isProbe, fx.ExpectedAnswer, fx.WrongAnswer, turn, specPresent)
-			// Match live ContextText(includeDead): marker arms still serialize dead spans.
-			promptTok = total + contextmgr.EstimateTokens(userMsg)
+			promptTok = contextmgr.EstimateTokens(ctxText) + contextmgr.EstimateTokens(userMsg)
 			genTok = contextmgr.EstimateTokens(got)
 		}
 		wall := time.Since(start).Seconds()
