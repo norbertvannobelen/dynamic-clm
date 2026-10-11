@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/norbertvannobelen/dynamic-clm/internal/eval/runarchive"
 	"github.com/norbertvannobelen/dynamic-clm/internal/eval/swedistill"
@@ -24,6 +25,7 @@ func main() {
 	allowSynthetic := flag.Bool("allow-synthetic", false, "permit synthetic (no oMLX)")
 	runRoot := flag.String("run-root", "", "attach to existing results/runs/<id> parent")
 	only := flag.String("only", "", "run only fixtures whose instance_id contains this substring")
+	arms := flag.String("arms", "", "comma-separated arms to run (default: baseline-compact,immediate-rewrite,dynclm)")
 	resummarizeOnly := flag.Bool("resummarize-only", false, "rebuild report.json from cells on disk (no model calls)")
 	flag.Parse()
 
@@ -80,6 +82,14 @@ func main() {
 		MaxTurns:     *turns,
 		NoisePad:     *noisePad,
 		OnlyInstance: *only,
+	}
+	if *arms != "" {
+		for _, a := range strings.Split(*arms, ",") {
+			a = strings.TrimSpace(a)
+			if a != "" {
+				cfg.Arms = append(cfg.Arms, a)
+			}
+		}
 	}
 
 	var rep swedistill.Report
