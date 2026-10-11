@@ -29,8 +29,9 @@ Live 3-arm decision suite on oMLX `Qwen3.8-27B-4bit` (Apple M5 Max): short gate 
 | Graded quality (18 tasks) | Baseline **94.4%** → DynCLM/CLM **100%** (+5.6 pp) |
 | Long-horizon A (3×24) | Late probe **0% → 100%** (DynCLM & CLM). DynCLM late ctx **−70.8%**; CLM fastest late wall |
 | Long-horizon B (2×20 @ 16k/64k) | Compacting baseline late probe **0%**; DynCLM/CLM **100%** at both limits |
+| SWE-Distill (6 coding tasks) | Final probe: Baseline+compact **16.7%** · DynCLM **83.3%** · CLM **100%** |
 
-**Bottom line.** DynCLM matches CLM on the quality axes that matter here (graded accuracy and late FACT probes) while spending far less rewrite prefill than always-rewrite CLM. CLM remains the speed upper bound on late steady wall. Blind compaction preserves wall-clock but destroys late quality.
+**Bottom line.** DynCLM matches CLM on the quality axes that matter here (graded accuracy and late FACT probes) while spending far less rewrite prefill than always-rewrite CLM. On SWE-inspired multi-turn coding under compaction pressure, DynCLM recovers most of CLM’s quality win vs Baseline+compact. CLM remains the speed upper bound on late steady wall. Blind compaction preserves wall-clock but destroys late quality.
 
 **Ship recommendation:** **ship** with the explicit tradeoff that DynCLM pays reclaim prefill vs raw baseline (which never rewrites) and is usually slower than CLM on late wall while winning on N/prefill vs CLM.
 
@@ -183,7 +184,19 @@ Details: [longhorizon-compaction-report.md](longhorizon-compaction-report.md).
 
 ---
 
-## 6. Learning-900 policy grid (optional / incomplete)
+## 6. SWE-Distill — realistic coding quality (live)
+
+Run `20261010T225155Z_swe_distill` on `Qwen3.8-27B-4bit`, shared `max_context=16384`, Baseline+compact / DynCLM / CLM. Full write-up: [swe-distill-report.md](swe-distill-report.md).
+
+| Arm | Final-probe accuracy | Spec survive % | Wall (h) |
+|---|---:|---:|---:|
+| Baseline+compact | 16.7% (1/6) | 0% | 1.13 |
+| DynCLM | 83.3% (5/6) | 100% | 1.42 |
+| CLM | 100.0% (6/6) | 100% | 0.42 |
+
+DynCLM **+66.7 pp** vs Baseline+compact; CLM **+83.3 pp**. One DynCLM miss (`django__queryset-exists`).
+
+## 7. Learning-900 policy grid (optional / incomplete)
 
 **Plan design** (`configs/learning.yaml`): 3 models × 3 task types × 5 policies × 20 sessions = **900** cells — a **DynCLM policy / βγ sweep**, not the 3-arm Baseline/DynCLM/CLM decision instrument.
 

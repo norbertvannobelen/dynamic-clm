@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="420" viewBox="0 0 900 420">
+<rect width="100%" height="100%" fill="#fafafa"/>
+<text x="450.0" y="28" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="16" font-weight="700">Per-task probe pass (1=pass)</text>
+<line x1="60" y1="50" x2="60" y2="310" stroke="#111827"/>
+<line x1="60" y1="310" x2="870" y2="310" stroke="#111827"/>
+<rect x="76.875" y="310.0" width="28.6875" height="0.0" fill="#9ca3af" rx="2"/>
+<rect x="110.625" y="76.0" width="28.6875" height="234.0" fill="#2563eb" rx="2"/>
+<rect x="144.375" y="76.0" width="28.6875" height="234.0" fill="#dc2626" rx="2"/>
+<text x="127.5" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 127.5,326)">astropy__units-compose</text>
+<rect x="211.875" y="310.0" width="28.6875" height="0.0" fill="#9ca3af" rx="2"/>
+<rect x="245.625" y="310.0" width="28.6875" height="0.0" fill="#2563eb" rx="2"/>
+<rect x="279.375" y="76.0" width="28.6875" height="234.0" fill="#dc2626" rx="2"/>
+<text x="262.5" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 262.5,326)">django__queryset-exist</text>
+<rect x="346.875" y="76.0" width="28.6875" height="234.0" fill="#9ca3af" rx="2"/>
+<rect x="380.625" y="76.0" width="28.6875" height="234.0" fill="#2563eb" rx="2"/>
+<rect x="414.375" y="76.0" width="28.6875" height="234.0" fill="#dc2626" rx="2"/>
+<text x="397.5" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 397.5,326)">matplotlib__tight-layo</text>
+<rect x="481.875" y="310.0" width="28.6875" height="0.0" fill="#9ca3af" rx="2"/>
+<rect x="515.625" y="76.0" width="28.6875" height="234.0" fill="#2563eb" rx="2"/>
+<rect x="549.375" y="76.0" width="28.6875" height="234.0" fill="#dc2626" rx="2"/>
+<text x="532.5" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 532.5,326)">psf__requests-timeout-</text>
+<rect x="616.875" y="310.0" width="28.6875" height="0.0" fill="#9ca3af" rx="2"/>
+<rect x="650.625" y="76.0" width="28.6875" height="234.0" fill="#2563eb" rx="2"/>
+<rect x="684.375" y="76.0" width="28.6875" height="234.0" fill="#dc2626" rx="2"/>
+<text x="667.5" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 667.5,326)">pytest-dev__mark-param</text>
+<rect x="751.875" y="310.0" width="28.6875" height="0.0" fill="#9ca3af" rx="2"/>
+<rect x="785.625" y="76.0" width="28.6875" height="234.0" fill="#2563eb" rx="2"/>
+<rect x="819.375" y="76.0" width="28.6875" height="234.0" fill="#dc2626" rx="2"/>
+<text x="802.5" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 802.5,326)">sympy__is-polynomial-d</text>
+<rect x="60" y="392" width="12" height="12" fill="#9ca3af"/>
+<text x="76" y="402" font-family="Helvetica,Arial,sans-serif" font-size="11">Baseline+compact</text>
+<rect x="200" y="392" width="12" height="12" fill="#2563eb"/>
+<text x="216" y="402" font-family="Helvetica,Arial,sans-serif" font-size="11">DynCLM</text>
+<rect x="340" y="392" width="12" height="12" fill="#dc2626"/>
+<text x="356" y="402" font-family="Helvetica,Arial,sans-serif" font-size="11">CLM</text>
+</svg>
