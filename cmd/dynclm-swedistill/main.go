@@ -24,10 +24,11 @@ func main() {
 	allowSynthetic := flag.Bool("allow-synthetic", false, "permit synthetic (no oMLX)")
 	runRoot := flag.String("run-root", "", "attach to existing results/runs/<id> parent")
 	only := flag.String("only", "", "run only fixtures whose instance_id contains this substring")
+	resummarizeOnly := flag.Bool("resummarize-only", false, "rebuild report.json from cells on disk (no model calls)")
 	flag.Parse()
 
 	live := !*allowSynthetic
-	if !live {
+	if !live && !*resummarizeOnly {
 		fmt.Fprintln(os.Stderr, "live evaluation required: refusing synthetic swe-distill (pass --allow-synthetic to override)")
 		os.Exit(1)
 	}
@@ -81,9 +82,14 @@ func main() {
 		OnlyInstance: *only,
 	}
 
-	rep, err := swedistill.Run(cfg)
+	var rep swedistill.Report
+	if *resummarizeOnly {
+		rep, err = swedistill.Resummarize(cfg)
+	} else {
+		rep, err = swedistill.Run(cfg)
+	}
 	if err != nil {
-		if run != nil {
+		if run != nil && !*resummarizeOnly {
 			_ = run.Finish(false, err.Error())
 		}
 		fmt.Fprintln(os.Stderr, err)
@@ -97,7 +103,7 @@ func main() {
 	}
 	_ = swedistill.WriteMarkdownReport(filepath.Join(resultsDir, "swe-distill-report.md"), rep)
 
-	if run != nil {
+	if run != nil && !*resummarizeOnly {
 		_ = run.Finish(true, "SWE-Distill complete")
 		fmt.Println("RUN_ID=" + run.ID)
 	}

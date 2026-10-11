@@ -8,7 +8,7 @@
 <rect x="144.375" y="76.0" width="28.6875" height="234.0" fill="#dc2626" rx="2"/>
 <text x="127.5" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 127.5,326)">astropy__units-compose</text>
 <rect x="211.875" y="310.0" width="28.6875" height="0.0" fill="#9ca3af" rx="2"/>
-<rect x="245.625" y="310.0" width="28.6875" height="0.0" fill="#2563eb" rx="2"/>
+<rect x="245.625" y="76.0" width="28.6875" height="234.0" fill="#2563eb" rx="2"/>
 <rect x="279.375" y="76.0" width="28.6875" height="234.0" fill="#dc2626" rx="2"/>
 <text x="262.5" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 262.5,326)">django__queryset-exist</text>
 <rect x="346.875" y="76.0" width="28.6875" height="234.0" fill="#9ca3af" rx="2"/>

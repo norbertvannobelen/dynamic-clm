@@ -29,9 +29,9 @@ Live 3-arm decision suite on oMLX `Qwen3.8-27B-4bit` (Apple M5 Max): short gate 
 | Graded quality (18 tasks) | Baseline **94.4%** → DynCLM/CLM **100%** (+5.6 pp) |
 | Long-horizon A (3×24) | Late probe **0% → 100%** (DynCLM & CLM). DynCLM late ctx **−70.8%**; CLM fastest late wall |
 | Long-horizon B (2×20 @ 16k/64k) | Compacting baseline late probe **0%**; DynCLM/CLM **100%** at both limits |
-| SWE-Distill (6 coding tasks) | Final probe: Baseline+compact **16.7%** · DynCLM **83.3%** · CLM **100%** |
+| SWE-Distill (6 coding tasks) | Final probe: Baseline+compact **16.7%** · DynCLM **100%** · CLM **100%** |
 
-**Bottom line.** DynCLM matches CLM on the quality axes that matter here (graded accuracy and late FACT probes) while spending far less rewrite prefill than always-rewrite CLM. On SWE-inspired multi-turn coding under compaction pressure, DynCLM recovers most of CLM’s quality win vs Baseline+compact. CLM remains the speed upper bound on late steady wall. Blind compaction preserves wall-clock but destroys late quality.
+**Bottom line.** DynCLM matches CLM on the quality axes that matter here (graded accuracy, late FACT probes, and SWE-Distill probes) while spending far less rewrite prefill than always-rewrite CLM. On SWE-inspired multi-turn coding under compaction pressure, DynCLM matches CLM at **100%** vs Baseline+compact **16.7%**, with lower live context than the compacting baseline. CLM remains the speed upper bound on late steady wall. Blind compaction preserves wall-clock but destroys late quality.
 
 **Ship recommendation:** **ship** with the explicit tradeoff that DynCLM pays reclaim prefill vs raw baseline (which never rewrites) and is usually slower than CLM on late wall while winning on N/prefill vs CLM.
 
@@ -188,13 +188,15 @@ Details: [longhorizon-compaction-report.md](longhorizon-compaction-report.md).
 
 Run `20261010T225155Z_swe_distill` on `Qwen3.8-27B-4bit`, shared `max_context=16384`, Baseline+compact / DynCLM / CLM. Full write-up: [swe-distill-report.md](swe-distill-report.md).
 
-| Arm | Final-probe accuracy | Spec survive % | Wall (h) |
-|---|---:|---:|---:|
-| Baseline+compact | 16.7% (1/6) | 0% | 1.13 |
-| DynCLM | 83.3% (5/6) | 100% | 1.42 |
-| CLM | 100.0% (6/6) | 100% | 0.42 |
+Headline context is **final live** (decode-relevant tracker tokens), not live+dead footprint. After the django-only rerun (probe `MaxTokens` headroom), DynCLM and CLM both clear all six probes.
 
-DynCLM **+66.7 pp** vs Baseline+compact; CLM **+83.3 pp**. One DynCLM miss (`django__queryset-exists`).
+| Arm | Final-probe accuracy | Spec survive % | Avg final live | Avg final prompt | Wall (h) |
+|---|---:|---:|---:|---:|---:|
+| Baseline+compact | 16.7% (1/6) | 0% | 14714 | 9651 | 1.00 |
+| DynCLM | 100.0% (6/6) | 100% | 10864 | 13517 | 1.36 |
+| CLM | 100.0% (6/6) | 100% | 1064 | 1454 | 0.44 |
+
+DynCLM **+83.3 pp** vs Baseline+compact (parity with CLM). Live ctx is **−26%** vs Baseline+compact; DynCLM’s higher **prompt** and wall reflect oMLX still serializing soft-ignored dead spans until rewrite (no KV soft-ignore) — prefer live ctx over prompt/wall when reading DynCLM efficiency here.
 
 ## 7. Learning-900 policy grid (optional / incomplete)
 
@@ -210,7 +212,7 @@ bash scripts/resume_live_full.sh results/runs/20261009T034520Z
 
 ---
 
-## 7. Relation to the CLM paper’s coding benchmarks
+## 8. Relation to the CLM paper’s coding benchmarks
 
 The CLM paper ([arXiv:2609.37725](https://arxiv.org/abs/2609.37725)) does **not** evaluate on SWE-Bench Verified / Lite / Multilingual for CLM quality. Coding-adjacent paper evals are:
 
@@ -259,6 +261,7 @@ Recommendation: **ship** for the DynCLM reclaim policy (quality parity with CLM,
 |---|---|
 | Decision suite run | `results/runs/20261010T145959Z_decision/` |
 | Decision report | [decision-report.md](decision-report.md) |
+| SWE-Distill | [swe-distill-report.md](swe-distill-report.md) · `results/runs/20261010T225155Z_swe_distill/` |
 | Figures | `docs/figures/*.svg` |
 | Long-horizon A/B | [longhorizon-report.md](longhorizon-report.md), [longhorizon-compaction-report.md](longhorizon-compaction-report.md) |
 | Gate / quality | [interim-report.md](interim-report.md), [quality-report.md](quality-report.md) |

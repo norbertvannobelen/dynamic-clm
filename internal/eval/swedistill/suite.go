@@ -263,6 +263,46 @@ func Run(cfg Config) (Report, error) {
 	return rep, nil
 }
 
+// Resummarize rebuilds report.json from cells on disk without re-running models.
+// Use after metric changes or partial (-only) reruns so arm averages pick up
+// live/total/prompt/steady fields derived from cell JSON (including legacy cells).
+func Resummarize(cfg Config) (Report, error) {
+	// Prefer knobs from prior report.json before defaults() fills zeros.
+	if b, err := os.ReadFile(filepath.Join(cfg.ResultsDir, "report.json")); err == nil {
+		var prev Report
+		if json.Unmarshal(b, &prev) == nil {
+			if cfg.MaxContext <= 0 && prev.MaxContext > 0 {
+				cfg.MaxContext = prev.MaxContext
+			}
+			if cfg.MaxTurns <= 0 && prev.MaxTurns > 0 {
+				cfg.MaxTurns = prev.MaxTurns
+			}
+			if cfg.NoisePad <= 0 && prev.NoisePad > 0 {
+				cfg.NoisePad = prev.NoisePad
+			}
+			if cfg.ModelID == "" && prev.ModelID != "" {
+				cfg.ModelID = prev.ModelID
+			}
+			if cfg.HardwareID == "" && prev.HardwareID != "" {
+				cfg.HardwareID = prev.HardwareID
+			}
+			cfg.UseLiveModel = prev.Live
+		}
+	}
+	cfg = defaults(cfg)
+	fixtures, err := LoadFixtures(cfg.FixtureDir)
+	if err != nil {
+		return Report{}, err
+	}
+	cells := loadAllCells(cfg.ResultsDir, cfg.Arms)
+	if len(cells) == 0 {
+		return Report{}, fmt.Errorf("no cells under %s/cells", cfg.ResultsDir)
+	}
+	rep := summarize(cfg, fixtures, cells)
+	_ = tracing.WriteCell(filepath.Join(cfg.ResultsDir, "report.json"), rep)
+	return rep, nil
+}
+
 func loadAllCells(resultsDir string, arms []string) []CellResult {
 	if len(arms) == 0 {
 		arms = []string{"baseline-compact", "immediate-rewrite", "dynclm"}

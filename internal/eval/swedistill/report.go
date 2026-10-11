@@ -32,8 +32,11 @@ func WriteMarkdownReport(path string, rep Report) error {
 	bc := rep.Arms["baseline-compact"]
 	dyn := rep.Arms["dynclm"]
 	imm := rep.Arms["immediate-rewrite"]
-	_, _ = fmt.Fprintf(f, "| Arm | Accuracy | Correct/N | Avg final ctx | Peak ctx | Avg reclaim events | Avg prefill | Total wall (s) |\n")
-	_, _ = fmt.Fprintf(f, "|---|---:|---:|---:|---:|---:|---:|---:|\n")
+	_, _ = fmt.Fprintf(f, "Context: **final live** = decode-relevant; **final total** = live+dead footprint; "+
+		"**final prompt** = oMLX probe `prompt_tokens` (marker arms still serialize dead spans). "+
+		"Wall includes reclaim turns; prefer live ctx over prompt when comparing DynCLM efficiency.\n\n")
+	_, _ = fmt.Fprintf(f, "| Arm | Accuracy | Correct/N | Avg final live | Avg final total | Avg final prompt | Peak live | Avg reclaim events | Avg prefill | Total wall (s) | Steady wall/task (s) |\n")
+	_, _ = fmt.Fprintf(f, "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n")
 	for _, name := range []string{"baseline-compact", "dynclm", "immediate-rewrite"} {
 		a := rep.Arms[name]
 		events := a.AvgCompacts + a.AvgRewrites
@@ -47,21 +50,25 @@ func WriteMarkdownReport(path string, rep Report) error {
 		if name == "dynclm" {
 			label = "DynCLM"
 		}
-		_, _ = fmt.Fprintf(f, "| %s | %.1f%% | %d/%d | %.0f | %d | %.1f | %.0f | %.1f |\n",
-			label, a.AccuracyPct, a.Correct, a.N, a.AvgFinalContext, a.PeakContext, events, a.AvgPrefill, a.TotalWallS)
+		_, _ = fmt.Fprintf(f, "| %s | %.1f%% | %d/%d | %.0f | %.0f | %.0f | %d | %.1f | %.0f | %.1f | %.1f |\n",
+			label, a.AccuracyPct, a.Correct, a.N, a.AvgFinalContext, a.AvgFinalTotal, a.AvgFinalPrompt,
+			a.PeakContext, events, a.AvgPrefill, a.TotalWallS, a.AvgSteadyWallS)
 	}
 	_, _ = fmt.Fprintf(f, "\n")
 	_, _ = fmt.Fprintf(f, "DynCLM accuracy Δ vs Baseline+compact: **%+.1f pp**. CLM: **%+.1f pp**.\n",
 		dyn.AccuracyPct-bc.AccuracyPct, imm.AccuracyPct-bc.AccuracyPct)
-	_, _ = fmt.Fprintf(f, "DynCLM final ctx vs Baseline+compact: **%+.1f%%**. CLM: **%+.1f%%**.\n\n",
+	_, _ = fmt.Fprintf(f, "DynCLM final live ctx vs Baseline+compact: **%+.1f%%**. CLM: **%+.1f%%**.\n\n",
 		pct(dyn.AvgFinalContext, bc.AvgFinalContext), pct(imm.AvgFinalContext, bc.AvgFinalContext))
 
 	_, _ = fmt.Fprintf(f, "## Vs Baseline+compact\n\n")
 	_, _ = fmt.Fprintf(f, "| Metric | DynCLM | CLM |\n|---|---|---|\n")
 	vd, vi := rep.VsBaseline["dynclm"], rep.VsBaseline["immediate-rewrite"]
 	_, _ = fmt.Fprintf(f, "| Accuracy Δ (pp) | %+.1f | %+.1f |\n", vd["accuracy_delta_pp"], vi["accuracy_delta_pp"])
-	_, _ = fmt.Fprintf(f, "| Final ctx %% | %+.1f%% | %+.1f%% |\n", vd["ctx_pct"], vi["ctx_pct"])
+	_, _ = fmt.Fprintf(f, "| Final live ctx %% | %+.1f%% | %+.1f%% |\n", vd["ctx_pct"], vi["ctx_pct"])
+	_, _ = fmt.Fprintf(f, "| Final total ctx %% | %+.1f%% | %+.1f%% |\n", vd["total_ctx_pct"], vi["total_ctx_pct"])
+	_, _ = fmt.Fprintf(f, "| Final prompt %% | %+.1f%% | %+.1f%% |\n", vd["prompt_pct"], vi["prompt_pct"])
 	_, _ = fmt.Fprintf(f, "| Total wall %% | %+.1f%% | %+.1f%% |\n", vd["wall_pct"], vi["wall_pct"])
+	_, _ = fmt.Fprintf(f, "| Steady wall %% | %+.1f%% | %+.1f%% |\n", vd["steady_wall_pct"], vi["steady_wall_pct"])
 	_, _ = fmt.Fprintf(f, "| Prefill Δ (avg) | %+.0f | %+.0f |\n\n", vd["prefill_delta"], vi["prefill_delta"])
 
 	_, _ = fmt.Fprintf(f, "## Per-task breakdown\n\n")
