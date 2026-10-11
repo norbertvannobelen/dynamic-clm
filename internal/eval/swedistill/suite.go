@@ -36,6 +36,7 @@ type Config struct {
 	MaxTurns     int
 	NoisePad     int // chars of pad per obsolete tool dump
 	Arms         []string
+	OnlyInstance string // if set, run only fixtures whose instance_id contains this substring
 }
 
 // TurnMetrics is one turn of one task×arm session.
@@ -58,21 +59,26 @@ type TurnMetrics struct {
 
 // CellResult is one fixture × arm.
 type CellResult struct {
-	InstanceID    string        `json:"instance_id"`
-	Arm           string        `json:"arm"`
-	ModelID       string        `json:"model_id"`
-	MaxContext    int           `json:"max_context"`
-	Success       bool          `json:"success"`
-	Expected      string        `json:"expected"`
-	Got           string        `json:"got"`
-	Compacts      int           `json:"compacts"`
-	Rewrites      int           `json:"rewrites"`
-	TotalPrefill  int           `json:"total_prefill"`
-	PeakContext   int           `json:"peak_context"`
-	FinalContext  int           `json:"final_context"`
-	TotalWallS    float64       `json:"total_wall_s"`
-	SpecSurvived  bool          `json:"spec_survived"`
-	Turns         []TurnMetrics `json:"turns"`
+	InstanceID        string        `json:"instance_id"`
+	Arm               string        `json:"arm"`
+	ModelID           string        `json:"model_id"`
+	MaxContext        int           `json:"max_context"`
+	Success           bool          `json:"success"`
+	Expected          string        `json:"expected"`
+	Got               string        `json:"got"`
+	Compacts          int           `json:"compacts"`
+	Rewrites          int           `json:"rewrites"`
+	TotalPrefill      int           `json:"total_prefill"`
+	PeakContext       int           `json:"peak_context"`        // peak live+dead tracker footprint
+	PeakLiveContext   int           `json:"peak_live_context"`   // peak live-only (decode-relevant)
+	FinalContext      int           `json:"final_context"`       // live tokens (headline); not live+dead
+	FinalTotalContext int           `json:"final_total_context"` // live+dead tracker footprint
+	FinalDeadContext  int           `json:"final_dead_context"`
+	FinalPromptTokens int           `json:"final_prompt_tokens"` // API prompt_tokens on probe turn
+	TotalWallS        float64       `json:"total_wall_s"`
+	SteadyWallS       float64       `json:"steady_wall_s"` // wall excluding rewrite/compact turns
+	SpecSurvived      bool          `json:"spec_survived"`
+	Turns             []TurnMetrics `json:"turns"`
 }
 
 // ArmSummary aggregates one arm.
@@ -81,13 +87,17 @@ type ArmSummary struct {
 	N                int     `json:"n"`
 	Correct          int     `json:"correct"`
 	AccuracyPct      float64 `json:"accuracy_pct"`
-	AvgFinalContext  float64 `json:"avg_final_context"`
-	PeakContext      int     `json:"peak_context"`
+	AvgFinalContext  float64 `json:"avg_final_context"`  // live-only
+	AvgFinalTotal    float64 `json:"avg_final_total"`    // live+dead
+	AvgFinalPrompt   float64 `json:"avg_final_prompt"`   // probe API prompt_tokens
+	PeakContext      int     `json:"peak_context"`       // peak live (headline)
+	PeakTotalContext int     `json:"peak_total_context"` // peak live+dead
 	AvgCompacts      float64 `json:"avg_compacts"`
 	AvgRewrites      float64 `json:"avg_rewrites"`
 	AvgPrefill       float64 `json:"avg_prefill"`
 	TotalWallS       float64 `json:"total_wall_s"`
 	AvgWallS         float64 `json:"avg_wall_s"`
+	AvgSteadyWallS   float64 `json:"avg_steady_wall_s"` // excludes reclaim-event turns
 	SpecSurvivePct   float64 `json:"spec_survive_pct"`
 }
 
@@ -102,18 +112,18 @@ type TaskBreakdown struct {
 
 // Report is the suite output.
 type Report struct {
-	GeneratedAt  time.Time                `json:"generated_at"`
-	ModelID      string                   `json:"model_id"`
-	HardwareID   string                   `json:"hardware_id"`
-	Live         bool                     `json:"live"`
-	MaxContext   int                      `json:"max_context"`
-	MaxTurns     int                      `json:"max_turns"`
-	NoisePad     int                      `json:"noise_pad"`
-	Methodology  string                   `json:"methodology"`
-	Arms         map[string]ArmSummary    `json:"arms"`
-	Tasks        []TaskBreakdown          `json:"tasks"`
-	Cells        []CellResult             `json:"cells"`
-	VsBaseline   map[string]map[string]float64 `json:"vs_baseline"`
+	GeneratedAt time.Time                     `json:"generated_at"`
+	ModelID     string                        `json:"model_id"`
+	HardwareID  string                        `json:"hardware_id"`
+	Live        bool                          `json:"live"`
+	MaxContext  int                           `json:"max_context"`
+	MaxTurns    int                           `json:"max_turns"`
+	NoisePad    int                           `json:"noise_pad"`
+	Methodology string                        `json:"methodology"`
+	Arms        map[string]ArmSummary         `json:"arms"`
+	Tasks       []TaskBreakdown               `json:"tasks"`
+	Cells       []CellResult                  `json:"cells"`
+	VsBaseline  map[string]map[string]float64 `json:"vs_baseline"`
 }
 
 func defaults(cfg Config) Config {
@@ -161,6 +171,19 @@ func Run(cfg Config) (Report, error) {
 	if err != nil {
 		return Report{}, err
 	}
+	if cfg.OnlyInstance != "" {
+		var filtered []Fixture
+		needle := strings.ToLower(cfg.OnlyInstance)
+		for _, fx := range fixtures {
+			if strings.Contains(strings.ToLower(fx.InstanceID), needle) {
+				filtered = append(filtered, fx)
+			}
+		}
+		if len(filtered) == 0 {
+			return Report{}, fmt.Errorf("no fixtures match -only %q", cfg.OnlyInstance)
+		}
+		fixtures = filtered
+	}
 	_ = os.MkdirAll(filepath.Join(cfg.ResultsDir, "cells"), 0o755)
 	tracing.ProgressLog(cfg.ResultsDir, fmt.Sprintf(
 		"swe-distill start live=%v tasks=%d turns=%d max_ctx=%d noise_pad=%d",
@@ -172,8 +195,9 @@ func Run(cfg Config) (Report, error) {
 		if err != nil {
 			return Report{}, err
 		}
-		// Thinking models often emit CoT before the fragment; 128 truncates mid-thought.
-		client.MaxTokens = 512
+		// Non-probe turns stay short; probes bump MaxTokens below so CoT cannot
+		// exhaust the completion budget before ANSWER: (quality ≠ output cap).
+		client.MaxTokens = 256
 		client.HTTP.Timeout = 3 * time.Minute
 	}
 
@@ -224,9 +248,47 @@ func Run(cfg Config) (Report, error) {
 		))
 	}
 
-	rep := summarize(cfg, fixtures, cells)
+	// If this was a partial (-only) run, rebuild the report from all cells on disk
+	// so we do not overwrite the full suite report with a 1-task snapshot.
+	reportFixtures := fixtures
+	reportCells := cells
+	if cfg.OnlyInstance != "" {
+		if all, err := LoadFixtures(cfg.FixtureDir); err == nil {
+			reportFixtures = all
+		}
+		reportCells = loadAllCells(cfg.ResultsDir, cfg.Arms)
+	}
+	rep := summarize(cfg, reportFixtures, reportCells)
 	_ = tracing.WriteCell(filepath.Join(cfg.ResultsDir, "report.json"), rep)
 	return rep, nil
+}
+
+func loadAllCells(resultsDir string, arms []string) []CellResult {
+	if len(arms) == 0 {
+		arms = []string{"baseline-compact", "immediate-rewrite", "dynclm"}
+	}
+	var out []CellResult
+	for _, arm := range arms {
+		dir := filepath.Join(resultsDir, "cells", arm)
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			continue
+		}
+		for _, e := range entries {
+			if e.IsDir() || !strings.HasSuffix(e.Name(), ".json") {
+				continue
+			}
+			b, err := os.ReadFile(filepath.Join(dir, e.Name()))
+			if err != nil {
+				continue
+			}
+			var c CellResult
+			if json.Unmarshal(b, &c) == nil {
+				out = append(out, c)
+			}
+		}
+	}
+	return out
 }
 
 func cellsForInstances(cells []CellResult, fixtures []Fixture) []CellResult {
@@ -345,6 +407,9 @@ func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResul
 		if total > out.PeakContext {
 			out.PeakContext = total
 		}
+		if live > out.PeakLiveContext {
+			out.PeakLiveContext = live
+		}
 
 		isProbe := turn == cfg.MaxTurns
 		tm.IsProbe = isProbe
@@ -358,9 +423,18 @@ func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResul
 		start := time.Now()
 		var got string
 		var promptTok, genTok int
+		// Marker arms keep dead span text in the prompt (soft-ignore markers); only
+		// Rewrite() physically drops them. oMLX Chat has no KV soft-ignore, so
+		// prompt_tokens tracks billed/prefill size — often ≫ live_tokens for DynCLM.
 		ctxText := tr.ContextText(usesMarkers(arm))
 		specPresent := tr.HasSpanID("spec-0")
 		if cfg.UseLiveModel && client != nil {
+			// Probe replies need headroom for CoT; quality should not fail on MaxTokens.
+			if isProbe {
+				client.MaxTokens = 2048
+			} else {
+				client.MaxTokens = 256
+			}
 			capChars := cfg.MaxContext * 4
 			if capChars < 8000 {
 				capChars = 8000
@@ -380,6 +454,7 @@ func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResul
 			genTok = res.Response.Usage.CompletionTokens
 		} else {
 			got = syntheticReply(arm, isProbe, fx.ExpectedAnswer, fx.WrongAnswer, turn, specPresent)
+			// Match live ContextText(includeDead): marker arms still serialize dead spans.
 			promptTok = total + contextmgr.EstimateTokens(userMsg)
 			genTok = contextmgr.EstimateTokens(got)
 		}
@@ -388,6 +463,9 @@ func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResul
 		tm.GeneratedTokens = genTok
 		tm.WallClockS = wall
 		out.TotalWallS += wall
+		if !tm.RewriteFired && !tm.CompactFired {
+			out.SteadyWallS += wall
+		}
 
 		if isProbe {
 			ok := grade(fx.ExpectedAnswer, got)
@@ -396,6 +474,7 @@ func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResul
 			tm.Got = truncate(got, 200)
 			out.Success = ok
 			out.Got = truncate(got, 400)
+			out.FinalPromptTokens = promptTok
 		}
 
 		tr.AppendLive(fmt.Sprintf("user-%d", turn), userMsg)
@@ -403,10 +482,78 @@ func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResul
 		out.Turns = append(out.Turns, tm)
 	}
 
-	_, _, final, _ := tr.Stats()
-	out.FinalContext = final
+	live, dead, total, _ := tr.Stats()
+	// Headline final_context is live-only. Tracker footprint (live+dead) is final_total_context.
+	out.FinalContext = live
+	out.FinalTotalContext = total
+	out.FinalDeadContext = dead
 	out.SpecSurvived = tr.HasSpanID("spec-0")
 	return out, nil
+}
+
+// cellFinalLive returns decode-relevant final context. Legacy cells stored
+// live+dead in final_context; prefer last-turn live_tokens when total fields are absent.
+func cellFinalLive(c CellResult) int {
+	if c.FinalTotalContext > 0 || c.FinalDeadContext > 0 {
+		return c.FinalContext
+	}
+	if n := len(c.Turns); n > 0 && c.Turns[n-1].LiveTokens > 0 {
+		return c.Turns[n-1].LiveTokens
+	}
+	return c.FinalContext
+}
+
+func cellFinalTotal(c CellResult) int {
+	if c.FinalTotalContext > 0 {
+		return c.FinalTotalContext
+	}
+	return c.FinalContext
+}
+
+func cellFinalPrompt(c CellResult) int {
+	if c.FinalPromptTokens > 0 {
+		return c.FinalPromptTokens
+	}
+	if n := len(c.Turns); n > 0 {
+		return c.Turns[n-1].PromptTokens
+	}
+	return 0
+}
+
+func cellPeakLive(c CellResult) int {
+	if c.PeakLiveContext > 0 {
+		return c.PeakLiveContext
+	}
+	peak := 0
+	for _, t := range c.Turns {
+		if t.LiveTokens > peak {
+			peak = t.LiveTokens
+		}
+	}
+	if peak > 0 {
+		return peak
+	}
+	return c.PeakContext
+}
+
+func cellSteadyWall(c CellResult) float64 {
+	// Prefer stored value from new cells. CLM rewrites every turn, so "non-reclaim"
+	// can be empty — fall back to total Chat wall (rewrite itself is in-process).
+	if c.SteadyWallS > 0 {
+		return c.SteadyWallS
+	}
+	var s float64
+	n := 0
+	for _, t := range c.Turns {
+		if !t.RewriteFired && !t.CompactFired {
+			s += t.WallClockS
+			n++
+		}
+	}
+	if n == 0 {
+		return c.TotalWallS
+	}
+	return s
 }
 
 func syntheticReply(arm string, probe bool, expected, wrong string, turn int, specPresent bool) string {
@@ -466,18 +613,25 @@ func summarize(cfg Config, fixtures []Fixture, cells []CellResult) Report {
 	for name, cs := range byArm {
 		a := ArmSummary{Arm: name, N: len(cs)}
 		surv := 0
+		var steadySum float64
 		for _, c := range cs {
 			if c.Success {
 				a.Correct++
 			}
-			a.AvgFinalContext += float64(c.FinalContext)
-			if c.PeakContext > a.PeakContext {
-				a.PeakContext = c.PeakContext
+			a.AvgFinalContext += float64(cellFinalLive(c))
+			a.AvgFinalTotal += float64(cellFinalTotal(c))
+			a.AvgFinalPrompt += float64(cellFinalPrompt(c))
+			if pl := cellPeakLive(c); pl > a.PeakContext {
+				a.PeakContext = pl
+			}
+			if c.PeakContext > a.PeakTotalContext {
+				a.PeakTotalContext = c.PeakContext
 			}
 			a.AvgCompacts += float64(c.Compacts)
 			a.AvgRewrites += float64(c.Rewrites)
 			a.AvgPrefill += float64(c.TotalPrefill)
 			a.TotalWallS += c.TotalWallS
+			steadySum += cellSteadyWall(c)
 			if c.SpecSurvived {
 				surv++
 			}
@@ -485,10 +639,13 @@ func summarize(cfg Config, fixtures []Fixture, cells []CellResult) Report {
 		if a.N > 0 {
 			a.AccuracyPct = 100 * float64(a.Correct) / float64(a.N)
 			a.AvgFinalContext /= float64(a.N)
+			a.AvgFinalTotal /= float64(a.N)
+			a.AvgFinalPrompt /= float64(a.N)
 			a.AvgCompacts /= float64(a.N)
 			a.AvgRewrites /= float64(a.N)
 			a.AvgPrefill /= float64(a.N)
 			a.AvgWallS = a.TotalWallS / float64(a.N)
+			a.AvgSteadyWallS = steadySum / float64(a.N)
 			a.SpecSurvivePct = 100 * float64(surv) / float64(a.N)
 		}
 		arms[name] = a
@@ -508,7 +665,7 @@ func summarize(cfg Config, fixtures []Fixture, cells []CellResult) Report {
 				continue
 			}
 			tb.ByArm[c.Arm] = c.Success
-			tb.CtxByArm[c.Arm] = c.FinalContext
+			tb.CtxByArm[c.Arm] = cellFinalLive(c)
 			tb.EventsArm[c.Arm] = c.Compacts + c.Rewrites
 		}
 		tasks = append(tasks, tb)
@@ -520,7 +677,10 @@ func summarize(cfg Config, fixtures []Fixture, cells []CellResult) Report {
 		vs[name] = map[string]float64{
 			"accuracy_delta_pp": a.AccuracyPct - base.AccuracyPct,
 			"ctx_pct":           pct(a.AvgFinalContext, base.AvgFinalContext),
+			"total_ctx_pct":     pct(a.AvgFinalTotal, base.AvgFinalTotal),
+			"prompt_pct":        pct(a.AvgFinalPrompt, base.AvgFinalPrompt),
 			"wall_pct":          pct(a.TotalWallS, base.TotalWallS),
+			"steady_wall_pct":   pct(a.AvgSteadyWallS, base.AvgSteadyWallS),
 			"prefill_delta":     a.AvgPrefill - base.AvgPrefill,
 		}
 	}

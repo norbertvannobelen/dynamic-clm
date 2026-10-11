@@ -50,4 +50,20 @@ func TestOfflineSuite(t *testing.T) {
 	if imm.AccuracyPct < 100 || dyn.AccuracyPct < 100 {
 		t.Fatalf("expected marker arms 100%% offline: dyn=%.1f imm=%.1f", dyn.AccuracyPct, imm.AccuracyPct)
 	}
+	// Headline final_context is live-only; DynCLM may carry dead until deferred rewrite.
+	for _, c := range rep.Cells {
+		if c.Arm != "dynclm" {
+			continue
+		}
+		if c.FinalContext != c.FinalTotalContext-c.FinalDeadContext {
+			t.Fatalf("dynclm final live+dead mismatch: live=%d dead=%d total=%d",
+				c.FinalContext, c.FinalDeadContext, c.FinalTotalContext)
+		}
+		if c.FinalTotalContext < c.FinalContext {
+			t.Fatalf("dynclm total < live: total=%d live=%d", c.FinalTotalContext, c.FinalContext)
+		}
+	}
+	if dyn.AvgFinalContext > dyn.AvgFinalTotal+1 {
+		t.Fatalf("avg live should be <= avg total: live=%.0f total=%.0f", dyn.AvgFinalContext, dyn.AvgFinalTotal)
+	}
 }

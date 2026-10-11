@@ -23,6 +23,7 @@ func main() {
 	fresh := flag.Bool("fresh", false, "delete prior cells in results dir")
 	allowSynthetic := flag.Bool("allow-synthetic", false, "permit synthetic (no oMLX)")
 	runRoot := flag.String("run-root", "", "attach to existing results/runs/<id> parent")
+	only := flag.String("only", "", "run only fixtures whose instance_id contains this substring")
 	flag.Parse()
 
 	live := !*allowSynthetic
@@ -77,6 +78,7 @@ func main() {
 		MaxContext:   *maxContext,
 		MaxTurns:     *turns,
 		NoisePad:     *noisePad,
+		OnlyInstance: *only,
 	}
 
 	rep, err := swedistill.Run(cfg)

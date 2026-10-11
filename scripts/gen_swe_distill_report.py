@@ -214,8 +214,14 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
 
     lines.append("## 3. Headline results\n\n")
     lines.append(
-        "| Arm | Accuracy | Correct/N | Avg final ctx | Peak ctx | Avg compacts | Avg rewrites | Avg prefill | Total wall (s) | Wall (h) |\n"
-        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n"
+        "Context columns: **final live** is decode-relevant tracker live tokens; "
+        "**final total** is live+dead footprint; **final prompt** is oMLX `prompt_tokens` on the probe "
+        "(marker arms still serialize ignored dead spans until rewrite). "
+        "**Steady wall** excludes compact/rewrite turns when present.\n\n"
+    )
+    lines.append(
+        "| Arm | Accuracy | Correct/N | Avg final live | Avg final total | Avg final prompt | Peak live | Avg compacts | Avg rewrites | Avg prefill | Total wall (s) | Steady wall/task (s) | Wall (h) |\n"
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n"
     )
     for name in ORDER:
         a = arm(name)
@@ -225,9 +231,13 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
         lines.append(
             f"| {LABELS[name]} | {float(a.get('accuracy_pct') or 0):.1f}% | "
             f"{a.get('correct', 0)}/{a.get('n', 0)} | "
-            f"{float(a.get('avg_final_context') or 0):.0f} | {a.get('peak_context', 0)} | "
+            f"{float(a.get('avg_final_context') or 0):.0f} | "
+            f"{float(a.get('avg_final_total') or a.get('avg_final_context') or 0):.0f} | "
+            f"{float(a.get('avg_final_prompt') or 0):.0f} | "
+            f"{a.get('peak_context', 0)} | "
             f"{float(a.get('avg_compacts') or 0):.2f} | {float(a.get('avg_rewrites') or 0):.2f} | "
-            f"{float(a.get('avg_prefill') or 0):.0f} | {tw:.1f} | {tw/3600:.2f} |\n"
+            f"{float(a.get('avg_prefill') or 0):.0f} | {tw:.1f} | "
+            f"{float(a.get('avg_steady_wall_s') or a.get('avg_wall_s') or 0):.1f} | {tw/3600:.2f} |\n"
         )
     lines.append("\n")
 
@@ -236,8 +246,11 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
     vd, vi = vs.get("dynclm") or {}, vs.get("immediate-rewrite") or {}
     lines.append(
         f"| Accuracy Δ (pp) | {float(vd.get('accuracy_delta_pp') or 0):+.1f} | {float(vi.get('accuracy_delta_pp') or 0):+.1f} |\n"
-        f"| Final ctx % | {float(vd.get('ctx_pct') or 0):+.1f}% | {float(vi.get('ctx_pct') or 0):+.1f}% |\n"
+        f"| Final live ctx % | {float(vd.get('ctx_pct') or 0):+.1f}% | {float(vi.get('ctx_pct') or 0):+.1f}% |\n"
+        f"| Final total ctx % | {float(vd.get('total_ctx_pct') or vd.get('ctx_pct') or 0):+.1f}% | {float(vi.get('total_ctx_pct') or vi.get('ctx_pct') or 0):+.1f}% |\n"
+        f"| Final prompt % | {float(vd.get('prompt_pct') or 0):+.1f}% | {float(vi.get('prompt_pct') or 0):+.1f}% |\n"
         f"| Total wall % | {float(vd.get('wall_pct') or 0):+.1f}% | {float(vi.get('wall_pct') or 0):+.1f}% |\n"
+        f"| Steady wall % | {float(vd.get('steady_wall_pct') or 0):+.1f}% | {float(vi.get('steady_wall_pct') or 0):+.1f}% |\n"
         f"| Prefill Δ (avg) | {float(vd.get('prefill_delta') or 0):+.0f} | {float(vi.get('prefill_delta') or 0):+.0f} |\n\n"
     )
 
