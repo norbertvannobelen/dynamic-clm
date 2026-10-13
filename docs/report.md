@@ -29,9 +29,9 @@ Live 3-arm decision suite on oMLX `Qwen3.8-27B-4bit` (Apple M5 Max): short gate 
 | Graded quality (18 tasks) | Baseline **94.4%** → DynCLM/CLM **100%** (+5.6 pp) |
 | Long-horizon A (3×24) | Late probe **0% → 100%** (DynCLM & CLM). DynCLM late ctx **−70.8%**; CLM fastest late wall |
 | Long-horizon B (2×20 @ 16k/64k) | Compacting baseline late probe **0%**; DynCLM/CLM **100%** at both limits |
-| SWE-Distill (6 coding tasks) | Prior live run used **blind FIFO** compact (Baseline **16.7%** · DynCLM/CLM **100%**). Baseline is now **Codex-style rolling summary** — re-run required before quoting new accuracy deltas (see §6) |
+| SWE-Distill (6 coding tasks) | Codex-style summary baseline **50%** · DynCLM/CLM **100%** (+50 pp); baseline **spec survive 100%** (was 0% under blind FIFO) — see §6 |
 
-**Bottom line.** DynCLM matches CLM on the quality axes that matter here (graded accuracy, late FACT probes) while spending far fewer rewrites than always-rewrite CLM. SWE-Distill numbers in archived runs reflect the old blind-drop baseline; the harness now uses a paper-adjacent summarization baseline so accuracy gaps should look like lossy retention, not a designed 0%→100% cliff.
+**Bottom line.** DynCLM matches CLM on the quality axes that matter here (graded accuracy, late FACT probes, and SWE-Distill probes) while spending far fewer rewrites than always-rewrite CLM. On SWE-Distill with a paper-adjacent summarization baseline, DynCLM/CLM still win (**+50 pp**) even though the baseline now **retains** the early SPEC (`spec_survive` **100%**) — failures are recency/confusion under lossy summary, not FIFO wipeout.
 
 **Ship recommendation:** **ship** with the explicit tradeoff that DynCLM pays reclaim prefill vs raw baseline (which never rewrites) and is usually slower than CLM on late wall while winning on N/prefill vs CLM.
 
@@ -186,19 +186,17 @@ Details: [longhorizon-compaction-report.md](longhorizon-compaction-report.md).
 
 ## 6. SWE-Distill — realistic coding quality (live)
 
-Run `20261010T225155Z_swe_distill` on `Qwen3.8-27B-4bit`, shared `max_context=16384`, Baseline+compact / DynCLM / CLM. Full write-up: [swe-distill-report.md](swe-distill-report.md).
+Run `20261013T190132Z_swe_distill_summary_baseline` on `Qwen3.8-27B-4bit`, shared `max_context=16384`. **Baseline+compact** re-run live under Codex-style rolling summary; **DynCLM/CLM** cells reused from `20261010T225155Z_swe_distill` (unchanged reclaim path). Full write-up: [swe-distill-report.md](swe-distill-report.md).
 
-**Baseline+compact methodology (updated).** Baseline is now Codex-style **rolling summarization** (keep recent raw + budget-capped `[CONTEXT_SUMMARY]` with an early-requirements quota), not blind FIFO drop. Archived SWE-Distill **16.7%** was under the old drop-oldest baseline and should not be cited as the current contrast. Re-run SWE-Distill / LH-B for paper-adjacent accuracy deltas. Same model on short graded quality (no reclaim pressure) is **94.4% → 100%**. Details: [swe-distill-report.md](swe-distill-report.md).
-
-Headline context is **final live** (decode-relevant tracker tokens). After `ContextTextForServing` (dead bodies stubbed) and a DynCLM-only re-run, DynCLM matches CLM on quality and is competitive on wall.
+Baseline keeps `sys` + recent raw and folds older spans into a budget-capped `[CONTEXT_SUMMARY]` (early-requirements quota + newest-preferred notes). Old blind-FIFO run was Baseline **16.7%** / **0%** survive — do not cite that as current.
 
 | Arm | Final-probe accuracy | Spec survive % | Avg final live | Avg final prompt | Wall (h) |
 |---|---:|---:|---:|---:|---:|
-| Baseline+compact | 16.7% (1/6) | **0%** | 14714 | 9651 | 1.00 |
+| Baseline+summary | **50.0%** (3/6) | **100%** | 17540 | 12013 | 0.90 |
 | DynCLM | 100.0% (6/6) | **100%** | 1939 | 2524 | **0.34** |
 | CLM | 100.0% (6/6) | **100%** | 1064 | 1454 | 0.44 |
 
-DynCLM **+83.3 pp** vs Baseline+compact (parity with CLM) because reclaim kept the authoritative SPEC. Live ctx **−87%** vs Baseline+compact; wall **faster than CLM** on this suite (deferred rewrite + stubbed soft-ignore prompts).
+DynCLM/CLM **+50 pp** vs summarize baseline (parity with each other). Spec survive is **100%** on all arms — baseline failures are wrong/confused answers with the fix still in context, not dropped SPECs. Live ctx **−89%** (DynCLM) vs baseline; DynCLM wall still under CLM on the reused cells.
 
 ## 7. Learning-900 policy grid (optional / incomplete)
 
@@ -263,7 +261,7 @@ Recommendation: **ship** for the DynCLM reclaim policy (quality parity with CLM,
 |---|---|
 | Decision suite run | `results/runs/20261010T145959Z_decision/` |
 | Decision report | [decision-report.md](decision-report.md) |
-| SWE-Distill | [swe-distill-report.md](swe-distill-report.md) · `results/runs/20261010T225155Z_swe_distill/` |
+| SWE-Distill | [swe-distill-report.md](swe-distill-report.md) · `results/runs/20261013T190132Z_swe_distill_summary_baseline/` |
 | Figures | `docs/figures/*.svg` |
 | Long-horizon A/B | [longhorizon-report.md](longhorizon-report.md), [longhorizon-compaction-report.md](longhorizon-compaction-report.md) |
 | Gate / quality | [interim-report.md](interim-report.md), [quality-report.md](quality-report.md) |

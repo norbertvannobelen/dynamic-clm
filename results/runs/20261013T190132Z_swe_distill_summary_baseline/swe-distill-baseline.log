@@ -1,0 +1,26 @@
+RUN_ID=20261013T190132Z_swe_distill_summary_baseline
+{
+  "arms": {
+    "baseline-compact": {
+      "arm": "baseline-compact",
+      "n": 6,
+      "correct": 3,
+      "accuracy_pct": 50,
+      "avg_final_context": 17540,
+      "avg_final_total": 17540,
+      "avg_final_prompt": 12012.666666666666,
+      "peak_context": 16385,
+      "peak_total_context": 16385,
+      "avg_compacts": 7.333333333333333,
+      "avg_rewrites": 0,
+      "avg_prefill": 114386.66666666667,
+      "total_wall_s": 3256.725259382,
+      "avg_wall_s": 542.7875432303333,
+      "avg_steady_wall_s": 189.9319355145,
+      "spec_survive_pct": 100
+    }
+  },
+  "live": true,
+  "max_context": 16384
+}
+swe-distill report → results/runs/20261013T190132Z_swe_distill_summary_baseline/swe-distill-report.md

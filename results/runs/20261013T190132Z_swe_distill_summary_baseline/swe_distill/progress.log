@@ -1,0 +1,26 @@
+2026-10-13T19:01:49Z swe-distill start live=true tasks=6 turns=28 max_ctx=16384 noise_pad=3398
+2026-10-13T19:01:49Z task 1/6 begin astropy__units-compose-distill-06
+2026-10-13T19:01:49Z start baseline-compact/astropy__units-compose-distill-06 live=true
+2026-10-13T19:12:44Z finish baseline-compact/astropy__units-compose-distill-06 ok=false ctx=18732 compacts=7 rewrites=0 wall=654.6s
+2026-10-13T19:12:44Z task 1/6 done astropy__units-compose-distill-06 wall=10.9m interim_acc baseline=0% dynclm=0% clm=0%
+2026-10-13T19:12:44Z task 2/6 begin django__queryset-exists-distill-01
+2026-10-13T19:12:44Z start baseline-compact/django__queryset-exists-distill-01 live=true
+2026-10-13T19:24:21Z finish baseline-compact/django__queryset-exists-distill-01 ok=false ctx=16431 compacts=9 rewrites=0 wall=696.5s
+2026-10-13T19:24:21Z task 2/6 done django__queryset-exists-distill-01 wall=11.6m interim_acc baseline=0% dynclm=0% clm=0%
+2026-10-13T19:24:21Z task 3/6 begin matplotlib__tight-layout-distill-04
+2026-10-13T19:24:21Z start baseline-compact/matplotlib__tight-layout-distill-04 live=true
+2026-10-13T19:36:09Z finish baseline-compact/matplotlib__tight-layout-distill-04 ok=true ctx=16438 compacts=9 rewrites=0 wall=708.2s
+2026-10-13T19:36:09Z task 3/6 done matplotlib__tight-layout-distill-04 wall=11.8m interim_acc baseline=33% dynclm=0% clm=0%
+2026-10-13T19:36:09Z task 4/6 begin psf__requests-timeout-distill-02
+2026-10-13T19:36:09Z start baseline-compact/psf__requests-timeout-distill-02 live=true
+2026-10-13T19:47:48Z retry baseline-compact/psf__requests-timeout-distill-02: context deadline exceeded (Client.Timeout or context cancellation while reading body)
+2026-10-13T19:56:21Z finish baseline-compact/psf__requests-timeout-distill-02 ok=false ctx=18655 compacts=7 rewrites=0 wall=513.0s
+2026-10-13T19:56:21Z task 4/6 done psf__requests-timeout-distill-02 wall=20.2m interim_acc baseline=25% dynclm=0% clm=0%
+2026-10-13T19:56:21Z task 5/6 begin pytest-dev__mark-parametrize-distill-05
+2026-10-13T19:56:21Z start baseline-compact/pytest-dev__mark-parametrize-distill-05 live=true
+2026-10-13T20:02:31Z finish baseline-compact/pytest-dev__mark-parametrize-distill-05 ok=true ctx=18543 compacts=6 rewrites=0 wall=370.2s
+2026-10-13T20:02:31Z task 5/6 done pytest-dev__mark-parametrize-distill-05 wall=6.2m interim_acc baseline=40% dynclm=0% clm=0%
+2026-10-13T20:02:31Z task 6/6 begin sympy__is-polynomial-distill-03
+2026-10-13T20:02:31Z start baseline-compact/sympy__is-polynomial-distill-03 live=true
+2026-10-13T20:07:45Z finish baseline-compact/sympy__is-polynomial-distill-03 ok=true ctx=16441 compacts=6 rewrites=0 wall=314.1s
+2026-10-13T20:07:45Z task 6/6 done sympy__is-polynomial-distill-03 wall=5.2m interim_acc baseline=50% dynclm=0% clm=0%

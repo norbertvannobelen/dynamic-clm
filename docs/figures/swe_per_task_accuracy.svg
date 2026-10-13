@@ -19,11 +19,11 @@
 <rect x="515.625" y="76.0" width="28.6875" height="234.0" fill="#2563eb" rx="2"/>
 <rect x="549.375" y="76.0" width="28.6875" height="234.0" fill="#dc2626" rx="2"/>
 <text x="532.5" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 532.5,326)">psf__requests-timeout-</text>
-<rect x="616.875" y="310.0" width="28.6875" height="0.0" fill="#9ca3af" rx="2"/>
+<rect x="616.875" y="76.0" width="28.6875" height="234.0" fill="#9ca3af" rx="2"/>
 <rect x="650.625" y="76.0" width="28.6875" height="234.0" fill="#2563eb" rx="2"/>
 <rect x="684.375" y="76.0" width="28.6875" height="234.0" fill="#dc2626" rx="2"/>
 <text x="667.5" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 667.5,326)">pytest-dev__mark-param</text>
-<rect x="751.875" y="310.0" width="28.6875" height="0.0" fill="#9ca3af" rx="2"/>
+<rect x="751.875" y="76.0" width="28.6875" height="234.0" fill="#9ca3af" rx="2"/>
 <rect x="785.625" y="76.0" width="28.6875" height="234.0" fill="#2563eb" rx="2"/>
 <rect x="819.375" y="76.0" width="28.6875" height="234.0" fill="#dc2626" rx="2"/>
 <text x="802.5" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 802.5,326)">sympy__is-polynomial-d</text>

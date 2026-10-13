@@ -14,8 +14,8 @@
 <text x="62" y="264.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6b7280">25</text>
 <line x1="70" y1="330.0" x2="690" y2="330.0" stroke="#e5e7eb"/>
 <text x="62" y="334.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6b7280">0</text>
-<rect x="116.5" y="283.3333333333333" width="113.66666666666667" height="46.66666666666667" fill="#9ca3af" rx="3"/>
-<text x="173.33333333333334" y="277.3333333333333" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11">17</text>
+<rect x="116.5" y="190.0" width="113.66666666666667" height="140.0" fill="#9ca3af" rx="3"/>
+<text x="173.33333333333334" y="184.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11">50</text>
 <text x="173.33333333333334" y="350" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11">Baseline+compact</text>
 <rect x="323.16666666666663" y="50.0" width="113.66666666666667" height="280.0" fill="#2563eb" rx="3"/>
 <text x="379.99999999999994" y="44.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11">1e+02</text>
