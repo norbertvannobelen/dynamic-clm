@@ -4,6 +4,12 @@ A context-management method where the model marks context as dead via append-onl
 
 **Naming:** Spell out "Dynamic CLM" or use **DynCLM** in writeups. Do not abbreviate as DCLM (that name is taken by DataComp-LM).
 
+## DynCLM vs Codex-style compaction
+
+DynCLM is still compaction in the broad sense (shrink context under a budget). It is **not** the same as Codex-style summarization: summarizers fold older turns into a **lossy** note; DynCLM/CLM **soft-invalidate** known-stale spans and later **physically drop** them while keeping survivors **verbatim**. DynCLM additionally **defers** that rewrite via a cost model (`β` / `γ` / `Δ`); immediate-rewrite CLM reclaims every edit.
+
+Full delineation, arm definitions, and how to read accuracy gaps (paper-sized vs recency-trap): **[docs/dynclm-vs-compaction.md](docs/dynclm-vs-compaction.md)**.
+
 ## Phases
 
 1. **Append** — normal operation; prefix cache preserved.
@@ -30,7 +36,7 @@ make learning    # Phase B (only after gate pass)
 ./bin/dynclm-longhorizon -model Qwen3.8-27B-4bit  # long-horizon quality + decode speed
 ```
 
-Reports: `docs/longhorizon-report.md` (primary for paper claim), `docs/quality-report.md`, `docs/interim-report.md`, `docs/report.md`.
+Reports: `docs/dynclm-vs-compaction.md` (mechanism vs Codex-style compact), `docs/longhorizon-report.md` (primary for paper claim), `docs/quality-report.md`, `docs/interim-report.md`, `docs/report.md`.
 
 ## Layout
 
