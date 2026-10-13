@@ -1,6 +1,15 @@
 # How DynCLM works (in this repo)
 
-DynCLM is a three-phase context manager: **append**, **soft-invalidation**, **deferred physical rewrite**. Contrast with Codex-style summarize compact: [dynclm-vs-compaction.md](dynclm-vs-compaction.md).
+DynCLM is a three-phase context manager: **append**, **soft-invalidation**, **deferred physical rewrite**.
+
+| | DynCLM | CLM (immediate rewrite) | Codex-style summarize |
+|---|---|---|---|
+| Soft-ignore stale spans | yes | yes | no (folds age into a note) |
+| When physical reclaim runs | cost model (`β`,`γ`,`Δ` + defer vs rewrite cost) | every turn with dead tokens | when over `max_context` |
+| Survivors | verbatim live spans | verbatim live spans | lossy `[CONTEXT_SUMMARY]` + recent raw |
+| Session rewrite count | low (batched) | high (every edit) | compact count (not marker rewrites) |
+
+Same soft-invalidation vocabulary as CLM; DynCLM’s difference is **deferral**. Mechanism vs summarize: [dynclm-vs-compaction.md](dynclm-vs-compaction.md). Math sketch of DynCLM vs CLM context load: below.
 
 ## 1. Append (normal turns)
 
@@ -63,6 +72,71 @@ rewrite: drop dead spans
          charge re-prefill of survivors
          continue session from that context
 ```
+
+## DynCLM vs CLM: session context load (toy math)
+
+Both arms soft-ignore the same garbage. The difference is **how often** dead spans are physically dropped. Define a session of \(T\) turns where each turn:
+
+1. Keeps a live core of \(L\) tokens (system + facts that never die).
+2. Appends \(g\) obsolete tool tokens and marks them dead immediately.
+3. May run a physical rewrite (policy-dependent).
+
+Let \(C_t\) be the **tracker footprint after that turn’s policy** (live + any remaining soft-dead). Session **context load**:
+
+\[
+\Lambda \;=\; \sum_{t=1}^{T} C_t
+\]
+
+(Average context is \(\Lambda / T\).)
+
+**CLM (immediate rewrite).** Rewrite every turn after the mark. Soft-dead never carries into the next turn:
+
+\[
+C_t^{\mathrm{CLM}} \;=\; L \qquad\Rightarrow\qquad \Lambda_{\mathrm{CLM}} \;=\; T\,L
+\]
+
+Rewrite count \(N_{\mathrm{CLM}} = T\). If each rewrite re-prefills about \(L\) survivor tokens, rewrite-prefill load is \(P_{\mathrm{CLM}} \approx T\,L\).
+
+**DynCLM (rewrite every \(R\) turns).** Soft-dead accumulates for \(R-1\) turns, then a batched rewrite on turn \(R\) of each cycle resets to \(L\). Assume \(T = M R\). In a cycle, post-policy footprints are:
+
+\[
+C_j \;=\; L + j\,g \quad (j=1,\ldots,R-1), \qquad C_R \;=\; L
+\]
+
+Sum over one cycle:
+
+\[
+\sum_{j=1}^{R-1} (L + j g) + L \;=\; R L + g\,\frac{R(R-1)}{2}
+\]
+
+Over the session (\(M = T/R\) cycles):
+
+\[
+\Lambda_{\mathrm{Dyn}} \;=\; T\,L + T g\,\frac{R-1}{2}, \qquad N_{\mathrm{Dyn}} \;=\; \frac{T}{R}, \qquad P_{\mathrm{Dyn}} \approx \frac{T}{R}\,L
+\]
+
+**Ratios (the deferral tradeoff):**
+
+\[
+\frac{\Lambda_{\mathrm{Dyn}}}{\Lambda_{\mathrm{CLM}}} \;=\; 1 + \frac{g(R-1)}{2L}, \qquad
+\frac{N_{\mathrm{Dyn}}}{N_{\mathrm{CLM}}} \;=\; \frac{1}{R}, \qquad
+\frac{P_{\mathrm{Dyn}}}{P_{\mathrm{CLM}}} \;\approx\; \frac{1}{R}
+\]
+
+DynCLM **raises** \(\Lambda\) (carries soft-dead between batched rewrites) and **cuts** rewrite count / rewrite-prefill by about \(R\).
+
+**Numeric example.** \(L = 2000\), \(g = 3000\), \(T = 12\), DynCLM period \(R = 4\):
+
+| | \(\Lambda = \sum C_t\) | Avg \(C\) | Rewrites \(N\) | Prefill \(P \approx N L\) |
+|---|---:|---:|---:|---:|
+| CLM (\(R=1\)) | \(12 \times 2000 = 24000\) | 2000 | 12 | 24000 |
+| DynCLM (\(R=4\)) | \(24000 + 12\times 3000\times 3/2 = 78000\) | 6500 | 3 | 6000 |
+
+\(\Lambda_{\mathrm{Dyn}} / \Lambda_{\mathrm{CLM}} = 78000/24000 = 3.25 = 1 + 3000\cdot 3/(2\cdot 2000)\), while prefill drops \(24000 \rightarrow 6000\) (\(= 1/R\)).
+
+**Serving note.** On oMLX Chat, `ContextTextForServing` stubs dead bodies, so **billed prompt** between rewrites grows much slower than tracker total \(C_t\) (stubs ≪ \(g\)). The \(\Lambda\) formulas are the logical soft-dead footprint the cost model reasons about; gate tables report avg context and rewrite prefill.
+
+**Live gate (empirical shape).** Decision-suite gate (8×40): DynCLM avg context 5410 vs CLM 3995 (CLM smaller), rewrite prefill 5340 vs 18504, rewrites/session 5.0 vs 17.0 - same tradeoff.
 
 ## Where this shows up in evals
 
