@@ -1,11 +1,12 @@
 # DynCLM Live Intermediate Report
 
+> **Historical note (2026-10-09).** Planning snapshot while learning-900 was paused. For current suite definitions and numbers, use [report.md](report.md) and [dynclm-vs-compaction.md](dynclm-vs-compaction.md). Long-horizon B / SWE-Distill now use Codex-style summarize baselines (see those reports).
+
 **Learning-900 run:** `results/runs/20261009T034520Z` - **paused & archived** at ~207/900  
 **Snapshot:** `archive_learning_900_*` under that run · resume: `bash scripts/resume_live_full.sh results/runs/20261009T034520Z`  
-**Active:** efficient **decision suite** (`make decision-suite` → `docs/decision-report.md`)  
+**Superseded by:** [decision-report.md](decision-report.md) and [report.md](report.md)
 
-
-Primary question for this note: **Baseline vs DynCLM vs CLM on speed and quality.**  
+Primary question for this note (at the time): **Baseline vs DynCLM vs CLM on speed and quality.**  
 Secondary: what the 900-session grid is for, and whether a cheaper suite can answer the primary question.
 
 ---

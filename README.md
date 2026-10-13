@@ -8,7 +8,7 @@ A context-management method where the model marks context as dead via append-onl
 
 DynCLM is still compaction in the broad sense (shrink context under a budget). It is **not** the same as Codex-style summarization: summarizers fold older turns into a **lossy** note; DynCLM/CLM **soft-invalidate** known-stale spans and later **physically drop** them while keeping survivors **verbatim**. DynCLM additionally **defers** that rewrite via a cost model (`β` / `γ` / `Δ`); immediate-rewrite CLM reclaims every edit.
 
-Full delineation, arm definitions, and how to read accuracy gaps (paper-sized vs recency-trap): **[docs/dynclm-vs-compaction.md](docs/dynclm-vs-compaction.md)**.
+Arm definitions and how to read per-suite gaps: **[docs/dynclm-vs-compaction.md](docs/dynclm-vs-compaction.md)**.
 
 ## Phases
 

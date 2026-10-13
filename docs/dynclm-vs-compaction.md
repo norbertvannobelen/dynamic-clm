@@ -15,29 +15,36 @@ So: summarization compaction is **lossy rollup of the past**; DynCLM/CLM are **s
 
 ## What “different” means in practice
 
-1. **Information channel**: Compaction trades fidelity for length. DynCLM/CLM try to remove only dead material and keep critical text byte-for-byte. A paper-style win is better answers under *mild* information loss, not “the baseline forgot the SPEC.”
-
-2. **When reclaim happens**: Summarizers compact because the window is full. DynCLM can carry soft-dead tokens for a while (`β` / `γ` / `Δ`) to protect prefix reuse, then one rewrite. That deferred-cost scheduling is the DynCLM-specific piece; immediate-rewrite CLM is the same reclaim idea without deferral.
-
-3. **Who decides**: Ideal CLM marks “this tool dump / span is obsolete.” Summarization decides “older turns → one note,” which can garble or omit early facts that still matter late.
+1. **Information channel**: Compaction trades fidelity for length. DynCLM/CLM try to remove only dead material and keep critical text byte-for-byte.
+2. **When reclaim happens**: Summarizers compact because the window is full. DynCLM can carry soft-dead tokens for a while (`β` / `γ` / `Δ`) to protect prefix reuse, then one rewrite. Immediate-rewrite CLM is the same reclaim idea without deferral.
+3. **Who decides**: DynCLM/CLM mark known-obsolete spans. Summarization folds older turns into one note, which can bury or mix early facts with later wrong dumps.
 
 ## Arms in this repository
 
 | Label | Meaning |
 |---|---|
-| **Baseline (raw)** | Append-only; no markers; no rewrite; no compaction |
-| **Baseline + compaction** | Paper-adjacent **Codex-style** rolling summary when over budget (keep system + recent raw; fold older spans into a budget-capped summary; re-prefill). Older eval artifacts may still reflect **blind FIFO drop-oldest**: treat those as a recency-trap baseline, not the current methodology |
+| **Baseline (raw)** | Append-only; no markers; no rewrite; no compaction (gate, graded quality, long-horizon A) |
+| **Baseline + compaction** | **Codex-style** rolling summary when over budget (keep system + recent raw; fold older spans into a budget-capped `[CONTEXT_SUMMARY]`; re-prefill). Used in long-horizon B and SWE-Distill |
 | **DynCLM** | Soft-invalidation markers + cost-model deferred rewrite |
 | **CLM (immediate rewrite)** | Soft-invalidation markers + rewrite every turn (upper bound on reclaim aggressiveness) |
 
-## How to read measured gaps
+## How to read the live gaps (current methodology)
 
-- Against a **competent summarization** baseline, expect **modest** joint gains (roughly paper order: ~5–15 pp accuracy with lower prompt/prefill or estimated FLOPs) - same *order of magnitude* as graded quality here (**94.4% → 100%**, +5.6 pp vs raw), not an 80+ pp cliff.
-- Against **blind oldest-drop**, late probes and SPEC survival can collapse toward 0% while DynCLM/CLM stay high. That shows a **recency trap**, not that DynCLM beat good Codex-style compaction by that margin.
-- **Sanity check:** log whether critical early spans survive as **verbatim** (DynCLM/CLM) vs **only inside a summary** (compaction). Celebrate better answers under mild loss; do not celebrate a baseline that simply lost the authoritative text.
+Do **not** mix suites: each uses a different reference baseline and pressure.
+
+| Suite | Reference baseline | Current headline |
+|---|---|---|
+| Graded quality | Raw (short, no window reclaim) | **94.4% → 100%** (+5.6 pp) |
+| Long-horizon A | Raw append-only + recency instruction | Late probe **0% → 100%** |
+| Long-horizon B | Summarize compact + recency instruction | Late probe **0% → 100%** (baseline answers `WRONG_*`) |
+| SWE-Distill | Summarize compact + recency instruction | **50% → 100%** (+50 pp); **spec survive 100%** on all arms |
+
+On SWE-Distill the early SPEC **stays in context** for the summarize baseline (`spec_survive` 100%). DynCLM/CLM still win because soft-invalidation keeps the authoritative SPEC dominant while baseline follows recent wrong dumps. That is a **recency / confusion** gap with retention, not “baseline deleted the answer.”
+
+Long-horizon B is a harder FACT canary under the same summarize compact: late probes stay **0%** for baseline because every turn plants a newer `WRONG_n` FACT and the prompt says to prefer the most recent.
 
 ## Bottom line
 
-DynCLM differs from Codex-style compaction in **mechanism and failure mode** (selective verbatim reclaim + scheduled rewrite vs lossy age-compressed notes). It remains in the compaction family. If a strong summarizer retains critical early facts, accuracy deltas should look paper-sized - not a designed 0%→100% retention cliff.
+DynCLM differs from Codex-style compaction in **mechanism** (selective verbatim reclaim + scheduled rewrite vs lossy age-compressed notes). Live wins are suite-specific: small on short graded quality, large on long-horizon FACT probes, and **+50 pp** on SWE-Distill with full SPEC survival under summarization.
 
-See also: [report.md](report.md) (arms and live suites), [longhorizon-compaction-report.md](longhorizon-compaction-report.md) (matrix vs compact baseline), [swe-distill-report.md](swe-distill-report.md) (coding retention under compact).
+See: [report.md](report.md), [longhorizon-compaction-report.md](longhorizon-compaction-report.md), [swe-distill-report.md](swe-distill-report.md).

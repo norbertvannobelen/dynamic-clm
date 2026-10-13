@@ -51,12 +51,14 @@ Sessions/arm: 3 · Turns: 24 · live=True
 
 ## 4. Live long-horizon B (compaction matrix)
 
-Limits: [16384, 65536] · live=True
+Limits: [16384, 65536] · live=True · this decision-suite snapshot
 
 | Max ctx | Compact probe% | DynCLM | CLM | Compact ctx | DynCLM ctx | CLM ctx | Compact wall | DynCLM wall | CLM wall |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | 16384 | 0.0 | 100.0 | 100.0 | 14154 | 5154 | 320 | 6.23 | 4.18 | 1.75 |
 | 65536 | 0.0 | 100.0 | 100.0 | 57914 | 19348 | 320 | 3.56 | 6.50 | 1.71 |
+
+**Current methodology:** Baseline+compact is Codex-style rolling summary. Fresh matrix with that baseline: [longhorizon-compaction-report.md](longhorizon-compaction-report.md) (`20261013T201630Z_lh_compaction_summary`). Late probes remain **0% → 100%** (recency trap); cite that report for wall/ctx under summarize compact.
 
 ## 5. Verdict
 

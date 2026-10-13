@@ -1,8 +1,8 @@
 # DynCLM Final Report
 
-Generated: 2026-10-10 · Primary evidence: live decision suite `20261010T145959Z_decision`
+Generated: 2026-10-13 · Decision suite `20261010T145959Z_decision` plus current summarize-baseline SWE-Distill / LH-B runs.
 
-Companion: [decision-report.md](decision-report.md) (tables from the same run).
+Companion: [decision-report.md](decision-report.md) · mechanism note: [dynclm-vs-compaction.md](dynclm-vs-compaction.md).
 
 ## How to read this report
 
@@ -10,30 +10,30 @@ Companion: [decision-report.md](decision-report.md) (tables from the same run).
 
 | Label in charts/tables | Meaning |
 |---|---|
-| **Baseline (raw)** | Append-only context; no markers; no rewrite; no compaction |
-| **Baseline + compaction** | Append-only until `max_context`, then Codex-style rolling summary (keep system + recent raw; fold older spans into a budget-capped `[CONTEXT_SUMMARY]`) and re-prefill survivors |
+| **Baseline (raw)** | Append-only; no markers; no rewrite; no compaction (gate, graded quality, long-horizon A) |
+| **Baseline + compaction** | Codex-style rolling summary over `max_context` (keep system + recent raw; fold older spans into `[CONTEXT_SUMMARY]`; re-prefill). Used in long-horizon B and SWE-Distill |
 | **DynCLM** | Soft-invalidation markers + cost-model deferred rewrite |
-| **CLM (immediate rewrite)** | Soft-invalidation markers + rewrite every turn (paper-style upper bound on reclaim aggressiveness) |
+| **CLM (immediate rewrite)** | Soft-invalidation markers + rewrite every turn |
 
-Every efficiency claim is **versus the suite’s reference baseline** (raw for gate / quality / long-horizon A; compaction for long-horizon B), unless labeled otherwise.
+Every efficiency claim is **versus that suite’s reference baseline** (raw for gate / quality / long-horizon A; summarize-compact for long-horizon B and SWE-Distill). Do not mix deltas across suites.
 
 ---
 
 ## Executive summary
 
-Live 3-arm decision suite on oMLX `Qwen3.8-27B-4bit` (Apple M5 Max): short gate + graded quality + long-horizon A + compaction matrix (16k / 64k).
+Live oMLX `Qwen3.8-27B-4bit` (Apple M5 Max). Gate / quality / long-horizon A from decision suite `20261010T145959Z_decision`. Compaction suites use the current summarize baseline.
 
-| Suite | Headline |
-|---|---|
-| Short live gate (8×40) | **PASS** G1–G4. DynCLM avg ctx **−53.8%**, session wall **−9.0%** vs baseline; rewrite prefill **−71.1%** vs CLM |
-| Graded quality (18 tasks) | Baseline **94.4%** → DynCLM/CLM **100%** (+5.6 pp) |
-| Long-horizon A (3×24) | Late probe **0% → 100%** (DynCLM & CLM). DynCLM late ctx **−70.8%**; CLM fastest late wall |
-| Long-horizon B (2×20 @ 16k/64k) | Summarize baseline late probe still **0%**; DynCLM/CLM **100%** at 16k/64k (recency trap under rolling summary - see §5) |
-| SWE-Distill (6 coding tasks) | Codex-style summary baseline **50%** · DynCLM/CLM **100%** (+50 pp); baseline **spec survive 100%** (was 0% under blind FIFO) - see §6 |
+| Suite | Ref. baseline | Headline |
+|---|---|---|
+| Short live gate (8×40) | Raw | **PASS** G1–G4. DynCLM avg ctx **−53.8%**, session wall **−9.0%**; rewrite prefill **−71.1%** vs CLM |
+| Graded quality (18 tasks) | Raw (short; no window reclaim) | **94.4% → 100%** (+5.6 pp) |
+| Long-horizon A (3×24) | Raw + recency instruction | Late probe **0% → 100%**. DynCLM late ctx **−70.8%**; CLM fastest late wall |
+| Long-horizon B (2×20 @ 16k/64k) | Summarize compact + recency | Late probe **0% → 100%** at both limits (baseline answers `WRONG_*`) |
+| SWE-Distill (6 tasks) | Summarize compact + recency | **50% → 100%** (+50 pp); **spec survive 100%** on all arms |
 
-**Bottom line.** DynCLM matches CLM on the quality axes that matter here (graded accuracy, late FACT probes, and SWE-Distill probes) while spending far fewer rewrites than always-rewrite CLM. On SWE-Distill with a paper-adjacent summarization baseline, DynCLM/CLM still win (**+50 pp**) even though the baseline now **retains** the early SPEC (`spec_survive` **100%**) - failures are recency/confusion under lossy summary, not FIFO wipeout.
+**Bottom line.** DynCLM matches CLM on quality (graded, late FACT probes, SWE-Distill) with far fewer rewrites than always-rewrite CLM. Under summarize compaction, SWE-Distill keeps the early SPEC in baseline context (`spec_survive` 100%) but DynCLM/CLM still win by **+50 pp** because soft-invalidation beats recency confusion. Long-horizon B remains a hard FACT canary (baseline late probe 0%).
 
-**Ship recommendation:** **ship** with the explicit tradeoff that DynCLM pays reclaim prefill vs raw baseline (which never rewrites) and is usually slower than CLM on late wall while winning on N/prefill vs CLM.
+**Ship recommendation:** **ship**, with the tradeoff that DynCLM pays reclaim prefill vs raw baseline (which never rewrites) and is often slower than CLM on late wall while winning on N/prefill vs CLM.
 
 ---
 
@@ -178,17 +178,15 @@ DynCLM keeps the full late-quality win (+100 pp) with ~1 rewrite/session vs CLM�
 | 16384 | 0.0 | 100.0 | 100.0 | 14502 | 5154 | 320 | 4.04 | 1.45 | 1.15 |
 | 65536 | 0.0 | 100.0 | 100.0 | 58201 | 19348 | 320 | 3.90 | 1.78 | 1.65 |
 
-**Read.** Even with rolling summary (not blind FIFO), late probes stay **0%** for baseline: the session plants competing `[FACT] … WRONG_n` dumps and instructs “use the most recent FACT,” so the model answers `WRONG_*` while DynCLM/CLM soft-ignore obsolete dumps and keep **100%**. This suite is a stronger recency trap than SWE-Distill (where summarize baseline reached **50%** with **100%** SPEC survive). Quality-adjusted, DynCLM/CLM still dominate; compact baseline can look fine on wall while answering wrong.
+**Read.** Late probes stay **0%** for summarize baseline: each turn plants a newer `[FACT] … WRONG_n` and the prompt says to use the most recent FACT, so answers are `WRONG_*`. DynCLM/CLM soft-ignore those dumps and keep **100%**. Harder recency pressure than SWE-Distill (where the same summarize baseline scored **50%** with **100%** SPEC survive). Compact baseline can look fine on wall while answering wrong.
 
-Details: [longhorizon-compaction-report.md](longhorizon-compaction-report.md).
+Details: [longhorizon-compaction-report.md](longhorizon-compaction-report.md) · run `20261013T201630Z_lh_compaction_summary`.
 
 ---
 
 ## 6. SWE-Distill - realistic coding quality (live)
 
-Run `20261013T190132Z_swe_distill_summary_baseline` on `Qwen3.8-27B-4bit`, shared `max_context=16384`. **Baseline+compact** re-run live under Codex-style rolling summary; **DynCLM/CLM** cells reused from `20261010T225155Z_swe_distill` (unchanged reclaim path). Full write-up: [swe-distill-report.md](swe-distill-report.md).
-
-Baseline keeps `sys` + recent raw and folds older spans into a budget-capped `[CONTEXT_SUMMARY]` (early-requirements quota + newest-preferred notes). Old blind-FIFO run was Baseline **16.7%** / **0%** survive - do not cite that as current.
+Run `20261013T190132Z_swe_distill_summary_baseline` on `Qwen3.8-27B-4bit`, shared `max_context=16384`. Baseline+compact is live under Codex-style rolling summary; DynCLM/CLM cells from `20261010T225155Z_swe_distill` (same reclaim path; reused for the three-arm table). Full write-up: [swe-distill-report.md](swe-distill-report.md).
 
 | Arm | Final-probe accuracy | Spec survive % | Avg final live | Avg final prompt | Wall (h) |
 |---|---:|---:|---:|---:|---:|
@@ -196,7 +194,7 @@ Baseline keeps `sys` + recent raw and folds older spans into a budget-capped `[C
 | DynCLM | 100.0% (6/6) | **100%** | 1939 | 2524 | **0.34** |
 | CLM | 100.0% (6/6) | **100%** | 1064 | 1454 | 0.44 |
 
-DynCLM/CLM **+50 pp** vs summarize baseline (parity with each other). Spec survive is **100%** on all arms - baseline failures are wrong/confused answers with the fix still in context, not dropped SPECs. Live ctx **−89%** (DynCLM) vs baseline; DynCLM wall still under CLM on the reused cells.
+DynCLM/CLM **+50 pp** vs summarize baseline. Spec survive is **100%** on all arms: baseline failures are wrong/confused answers with the fix still in context. Live ctx **−89%** (DynCLM) vs baseline; DynCLM wall under CLM on the reused cells. This is **not** the same as graded quality (+5.6 pp vs raw with no window reclaim).
 
 ## 7. Learning-900 policy grid (optional / incomplete)
 

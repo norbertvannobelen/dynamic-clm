@@ -188,36 +188,29 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
         f"and much lower rewrite N than always-rewrite.\n\n"
     )
     lines.append(
-        "**Paper-adjacent read.** Baseline is Codex-style **lossy summarization**, not blind "
-        "FIFO drop. Expect modest accuracy gaps when the summary still carries the fix, and "
-        "larger gaps only after the early fragment fades from the summary budget. "
-        f"Baseline accuracy **{bc.get('accuracy_pct', 0):.1f}%** with spec survive "
-        f"**{bc.get('spec_survive_pct', 0):.0f}%**: see §2.\n\n"
+        "**Read.** Baseline is Codex-style **lossy summarization**. Quote accuracy with "
+        f"`spec_survive` (**{bc.get('spec_survive_pct', 0):.0f}%** here). Gaps with high "
+        "survive are recency/confusion under summarization, not deleted SPECs. "
+        "Not official SWE-Bench; not the same as graded quality (+5.6 pp vs raw with no "
+        "window reclaim). See §2.\n\n"
     )
 
-    lines.append("## 2. How to read Baseline+compact accuracy (do not misread)\n\n")
+    lines.append("## 2. How to read Baseline+compact accuracy\n\n")
     lines.append(
-        "This suite measures **reclaim under window pressure** against a competent "
-        "summarization baseline (CLM-paper style), not raw single-shot coding ability.\n\n"
-        "Causal chain for Baseline+compact:\n\n"
-        "1. **Plant**: turn 1 inserts the correct fix fragment as `[SPEC]`.\n"
-        "2. **Flood**: later turns append plausible wrong SPECs (reviewer dumps) plus "
-        "padding sized so cumulative tokens exceed `max_context` (~1.4×).\n"
-        "3. **Rolling summary compact**: when over budget, Baseline keeps `sys` + a "
-        "recent raw tail and folds older spans into a budget-capped `[CONTEXT_SUMMARY]` "
-        "(early-requirements quota + newest-preferred notes), then re-prefills.\n"
-        "4. **Recency instruction**: with no ignore markers, the prompt prefers the "
-        "most recent non-ignored SPEC; a lossy summary may still retain the early fix "
-        "in abbreviated form, or let it fade after repeated compacts.\n"
-        "5. **Probe**: final turn grades `ANSWER: <fragment>` against the turn-1 truth.\n\n"
-        "DynCLM/CLM soft-ignore obsolete dumps and keep the early SPEC verbatim "
-        f"(`spec_survive` **{dyn.get('spec_survive_pct', 0):.0f}%** / "
-        f"**{imm.get('spec_survive_pct', 0):.0f}%**). Baseline `spec_survive` counts "
-        "verbatim **or** expected fragment present in the rolling summary "
-        f"(**{bc.get('spec_survive_pct', 0):.0f}%**).\n\n"
-        "This is meant to resemble the paper’s Codex-style summary contrast "
-        "(single-digit to low-teens pp), not a designed 0%→100% FIFO trap. "
-        "Not comparable to official SWE-Bench resolve rate.\n\n"
+        "This suite measures **reclaim under window pressure** against summarize "
+        "compaction, not single-shot coding skill.\n\n"
+        "1. **Plant**: turn 1 inserts the correct fix as `[SPEC]`.\n"
+        "2. **Flood**: later turns append plausible wrong SPECs plus padding so tokens "
+        "exceed `max_context` (~1.4×).\n"
+        "3. **Rolling summary compact**: keep `sys` + recent raw; fold older spans into "
+        "`[CONTEXT_SUMMARY]`; re-prefill.\n"
+        "4. **Recency instruction**: without ignore markers, prefer the most recent SPEC.\n"
+        "5. **Probe**: grade `ANSWER: <fragment>` against turn-1 truth.\n\n"
+        f"`spec_survive` counts the expected fragment still present (verbatim or in the "
+        f"summary). DynCLM/CLM: **{dyn.get('spec_survive_pct', 0):.0f}%** / "
+        f"**{imm.get('spec_survive_pct', 0):.0f}%**. Baseline: "
+        f"**{bc.get('spec_survive_pct', 0):.0f}%**. When survive is high and accuracy is "
+        "lower, the gap is recency/confusion, not deletion of the fix.\n\n"
     )
 
     lines.append("## 3. Methodology\n\n")
@@ -330,9 +323,9 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
 
     lines.append("## 8. Failure analysis\n\n")
     lines.append(
-        "Baseline failures below are **lossy-summary / recency** mistakes (early fix "
-        "faded or overshadowed), not evidence that the model cannot emit the correct "
-        "fragment when DynCLM/CLM keep the SPEC verbatim.\n\n"
+        "Baseline failures below should be read with `spec_survived`. When survive is "
+        "true, the fix was still in context and the miss is recency/confusion. "
+        "DynCLM/CLM show the model can answer when obsolete SPECs are ignored.\n\n"
     )
     for title, key in [
         ("Baseline+compact", "baseline-compact"),
@@ -351,12 +344,11 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
                 f"rewrites={c.get('rewrites')})\n"
             )
         lines.append("\n")
-    base_drop = [c for c in cells if c.get("arm") == "baseline-compact" and not c.get("spec_survived")]
+    base_keep = [c for c in cells if c.get("arm") == "baseline-compact" and c.get("spec_survived")]
+    n_bc = int(bc.get("n") or 0)
     lines.append(
-        f"Baseline+compact lost the early SPEC (verbatim and summary) in "
-        f"**{len(base_drop)}/{bc.get('n', 0)}** tasks  - the lossy-fade failure mode under "
-        "rolling summarization when repeated compacts crowd out the early-requirements "
-        "quota (see §2).\n\n"
+        f"Early SPEC retained (verbatim or in summary) in "
+        f"**{len(base_keep)}/{n_bc}** baseline tasks.\n\n"
     )
 
     lines.append("## 9. Efficiency deep-dive\n\n")

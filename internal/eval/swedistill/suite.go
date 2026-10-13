@@ -25,8 +25,7 @@ max_context. Instruction: prefer the most recent non-ignored SPEC. Chat serving
 uses ContextTextForServing: dead spans are stubbed (no body) so DynCLM/CLM
 prompts shrink without waiting for Rewrite  - matching oMLX Chat (no KV
 soft-ignore). Final probe grades ANSWER: <fragment>. Not official SWE-Bench.
-Paper-adjacent contrast: lossy summary retention vs selective soft-invalidation,
-not blind FIFO drop.`
+Contrast: lossy summary + recency vs selective soft-invalidation.`
 
 // Config for the suite.
 type Config struct {
