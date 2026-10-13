@@ -1,45 +1,57 @@
 # DynCLM Final Report
 
-Generated: 2026-10-13 · Decision suite `20261010T145959Z_decision` plus current summarize-baseline SWE-Distill / LH-B runs.
+Generated: 2026-10-13 · Live oMLX `Qwen3.8-27B-4bit` · Apple M5 Max (128GB; oMLX ~8 GB in-memory cache)
 
-Companion: [decision-report.md](decision-report.md) · mechanism note: [dynclm-vs-compaction.md](dynclm-vs-compaction.md).
+Companions: [decision-report.md](decision-report.md) · [dynclm-vs-compaction.md](dynclm-vs-compaction.md) · [verification.md](verification.md)
 
-## How to read this report
+## Iterations (how we got here)
 
-**Arms**
+Early work used a 900-cell policy grid (paused), then an efficient 3-arm decision suite (gate / graded quality / long-horizon A, plus an LH-B matrix under blind FIFO drop-oldest). We then changed the compact baseline to **Codex-style rolling summary** and re-ran long-horizon B and the SWE-Distill baseline under that protocol. Marker-arm SWE cells that already matched the final reclaim path were kept. **Everything below is the final methodology and numbers only**; superseded FIFO LH-B figures are not cited.
 
-| Label in charts/tables | Meaning |
+| Final evidence | Run |
 |---|---|
-| **Baseline (raw)** | Append-only; no markers; no rewrite; no compaction (gate, graded quality, long-horizon A) |
-| **Baseline + compaction** | Codex-style rolling summary over `max_context` (keep system + recent raw; fold older spans into `[CONTEXT_SUMMARY]`; re-prefill). Used in long-horizon B and SWE-Distill |
-| **DynCLM** | Soft-invalidation markers + cost-model deferred rewrite |
-| **CLM (immediate rewrite)** | Soft-invalidation markers + rewrite every turn |
+| Gate, graded quality, long-horizon A | `20261010T145959Z_decision` |
+| Long-horizon B (summarize compact) | `20261013T201630Z_lh_compaction_summary` |
+| SWE-Distill | `20261013T190132Z_swe_distill_summary_baseline` (DynCLM/CLM cells from `20261010T225155Z_swe_distill`) |
 
-Every efficiency claim is **versus that suite’s reference baseline** (raw for gate / quality / long-horizon A; summarize-compact for long-horizon B and SWE-Distill). Do not mix deltas across suites.
+---
+
+## How to read
+
+| Label | Meaning | Suites |
+|---|---|---|
+| **Baseline (raw)** | Append-only; no markers; no rewrite; no compaction | Gate, graded quality, long-horizon A |
+| **Baseline + compaction** | Codex-style rolling summary over `max_context` (keep system + recent raw; fold older spans into `[CONTEXT_SUMMARY]`; re-prefill) | Long-horizon B, SWE-Distill |
+| **DynCLM** | Soft-invalidation markers + cost-model deferred rewrite | All |
+| **CLM (immediate rewrite)** | Soft-invalidation markers + rewrite every turn | All |
+
+Compare each suite only to **its** reference baseline (raw or summarize-compact).
+
+**Serving.** oMLX has no span-level KV API. Prefill uses `LogicalCacheBackend` (span cap K=6) - logical SCR-shaped accounting, not physical relocation. Long-horizon and SWE-Distill marker arms serve prompts via `ContextTextForServing` (dead bodies stubbed).
 
 ---
 
 ## Executive summary
 
-Live 3-arm decision suite on oMLX `Qwen3.8-27B-4bit` (Apple M5 Max 128GB, oMLX 8 GB in memory cache): short gate + graded quality + long-horizon A + compaction matrix (16k / 64k).
-
 | Suite | Ref. baseline | Headline |
 |---|---|---|
 | Short live gate (8×40) | Raw | **PASS** G1–G4. DynCLM avg ctx **−53.8%**, session wall **−9.0%**; rewrite prefill **−71.1%** vs CLM |
-| Graded quality (18 tasks) | Raw (short; no window reclaim) | **94.4% → 100%** (+5.6 pp) |
-| Long-horizon A (3×24) | Raw + recency instruction | Late probe **0% → 100%**. DynCLM late ctx **−70.8%**; CLM fastest late wall |
-| Long-horizon B (2×20 @ 16k/64k) | Summarize compact + recency | Late probe **0% → 100%** at both limits (baseline answers `WRONG_*`) |
-| SWE-Distill (6 tasks) | Summarize compact + recency | **50% → 100%** (+50 pp); **spec survive 100%** on all arms |
+| Graded quality (18 tasks) | Raw (short; no window reclaim) | **94.4% → 100%** (+5.6 pp). Flat ~162-token context |
+| Long-horizon A (3×24) | Raw + recency | Late FACT probe **0% → 100%**. DynCLM late ctx **−70.8%**; CLM fastest late wall |
+| Long-horizon B (2×20 @ 16k/64k) | Summarize + recency | Late FACT probe **0% → 100%** (baseline answers `WRONG_*`). DynCLM late wall beats compact baseline |
+| SWE-Distill (6 tasks) | Summarize + recency | Final probe **50% → 100%** (+50 pp); **`spec_survive` 100%** on all arms |
 
-**Bottom line.** DynCLM matches CLM on quality (graded, late FACT probes, SWE-Distill) with far fewer rewrites than always-rewrite CLM. Under summarize compaction, SWE-Distill keeps the early SPEC in baseline context (`spec_survive` 100%) but DynCLM/CLM still win by **+50 pp** because soft-invalidation beats recency confusion. Long-horizon B remains a hard FACT canary (baseline late probe 0%).
+**Bottom line.** DynCLM matches CLM on these quality canaries while rewriting far less often than always-rewrite CLM. Under summarize compaction, SWE retains the early SPEC (`spec_survive` 100%) but DynCLM/CLM still win by **+50 pp** via soft-invalidation vs recency confusion. Long-horizon B is the harder FACT canary (baseline late probe 0%).
 
-**Ship recommendation:** **ship**, with the tradeoff that DynCLM pays reclaim prefill vs raw baseline (which never rewrites) and is often slower than CLM on late wall while winning on N/prefill vs CLM.
+**Ship:** **yes**, for this local stack - with tradeoffs: reclaim prefill vs raw baseline; often slower than CLM on late wall; canaries are not TerminalBench / official SWE-Bench / paper FLOP claims.
 
 ---
 
-## Figures (baseline · DynCLM · CLM)
+## Figures
 
-### Long-horizon A (live, vs raw baseline)
+Regenerate with `make charts`.
+
+### Long-horizon A (vs raw)
 
 ![Late probe accuracy](figures/lh_late_probe_accuracy.svg)
 
@@ -63,7 +75,7 @@ Live 3-arm decision suite on oMLX `Qwen3.8-27B-4bit` (Apple M5 Max 128GB, oMLX 8
 
 ![Quality accuracy](figures/quality_accuracy.svg)
 
-### Long-horizon B (compaction matrix)
+### Long-horizon B (summarize matrix)
 
 ![Probe vs max context](figures/compaction_probe_vs_limit.svg)
 
@@ -73,7 +85,15 @@ Live 3-arm decision suite on oMLX `Qwen3.8-27B-4bit` (Apple M5 Max 128GB, oMLX 8
 
 ![Tok/s vs max context](figures/compaction_toks_vs_limit.svg)
 
-Regenerate with `make charts` (`scripts/gen_charts.py`, stdlib SVG - no matplotlib). Sources: decision suite `20261010T145959Z_decision` (gate / quality / LH-A) and `20261013T201630Z_lh_compaction_summary` (LH-B).
+### SWE-Distill
+
+![Probe accuracy](figures/swe_probe_accuracy.svg)
+
+![Final context](figures/swe_final_context.svg)
+
+![Wall-clock](figures/swe_wall.svg)
+
+![Prefill](figures/swe_prefill.svg)
 
 ---
 
@@ -82,30 +102,26 @@ Regenerate with `make charts` (`scripts/gen_charts.py`, stdlib SVG - no matplotl
 | Metric | Value |
 |---|---|
 | r (ms/token) | 2.787 |
-| k_d | 0.0376 |
+| k_d (ms/token/turn) | 0.0376 |
 | C_fixed (ms) | 1111 |
 | ρ = C_fixed/k_d | 29538 |
 
-Microbenchmark via oMLX chat-completions wall-clock on `Qwen3.8-27B-4bit`. Feeds the DynCLM cost-model scheduler (`β`, `γ`, `Δ`).
-
-Artifact: `configs/calibration/m5max-qwen38.json`.
+oMLX chat-completions microbenchmark on `Qwen3.8-27B-4bit` → DynCLM scheduler (`β`, `γ`, `Δ`). Artifact: `configs/calibration/m5max-qwen38.json`.
 
 ---
 
 ## 2. Short live gate (G1–G4)
 
-**What it is.** Fixed 3-arm grid (baseline / immediate-rewrite / dynclm), **8 sessions × 40 turns**, **live** oMLX. Measures context accounting, marker parse rate, shrink error, rewrite prefill, and session wall under SCR-style logical backend (K=6).
-
-**Pass criteria**
+Fixed 3-arm grid, **8 sessions × 40 turns**, live oMLX. Mechanism, marker compliance, harness task success, and rewrite-prefill cost under logical cache accounting.
 
 | ID | Name | Intent |
 |---|---|---|
 | G1 | Mechanism | Markers parse; rewrites fire; post-rewrite shrink within tolerance |
 | G2 | Compliance | Tail/tool spans receive ignore markers as expected |
-| G3 | Quality | DynCLM success ≥ baseline and ≥ immediate (harness task success) |
+| G3 | Quality | DynCLM harness task success ≥ baseline and ≥ immediate |
 | G4 | Cost | DynCLM rewrite prefill **lower** than immediate-rewrite |
 
-**Result (decision suite).** Gate **PASS** (G1–G4).
+**Result:** **PASS** (G1–G4).
 
 | Metric | Baseline | DynCLM | CLM |
 |---|---:|---:|---:|
@@ -115,18 +131,17 @@ Artifact: `configs/calibration/m5max-qwen38.json`.
 | Wall-clock / session (s) | 402.3 | 365.9 | 352.5 |
 | Rewrite prefill / session | 0 | 5340 | 18504 |
 | Rewrites / session | 0.0 | 5.0 | 17.0 |
+| Prompt tokens / session | 79161 | 96850 | 91271 |
 
-DynCLM vs baseline: avg ctx **−53.8%**, wall **−9.0%**. DynCLM vs CLM: rewrite prefill **−71.1%** (5340 vs 18504).
-
-Details: [interim-report.md](interim-report.md), `results/runs/20261010T145959Z_decision/gate/`.
+DynCLM vs baseline: avg ctx **−53.8%**, wall **−9.0%**. DynCLM vs CLM: rewrite prefill **−71.1%**. Prompt tokens can rise vs raw even when live context falls (reclaim / serialization).
 
 ---
 
 ## 3. Live graded quality
 
-**What it is.** 18 deterministic tasks (retention, constraint, recovery, coding, adversarial FACT/coding) run **live** on oMLX. Distractor spans are soft-invalidated for DynCLM/CLM; answers graded by bidirectional substring match after stripping CoT.
+18 deterministic tasks, live oMLX; distractors soft-invalidated for DynCLM/CLM; bidirectional substring grade after stripping CoT.
 
-**Limitation.** Context length is essentially flat across arms (~162 tokens): **no multi-turn reclaim**, so it cannot show size→speed.
+**Limitation:** context ~162 tokens on all arms - **no multi-turn reclaim**; short correctness check, not a size→speed test.
 
 | Arm | Accuracy | Correct/N | Avg wall-s | Avg ctx |
 |---|---:|---:|---:|---:|
@@ -134,24 +149,11 @@ Details: [interim-report.md](interim-report.md), `results/runs/20261010T145959Z_
 | DynCLM | 100.0% | 18/18 | 1.77 | 162 |
 | CLM | 100.0% | 18/18 | 1.83 | 162 |
 
-Details: [quality-report.md](quality-report.md).
-
 ---
 
 ## 4. Long-horizon A - late quality + late speed
 
-**Claim under test.** In long sessions, obsolete tool noise accumulates; soft-invalidation + deferred rewrite improves late-session probe quality and keeps context small vs raw append-only.
-
-**Protocol**
-
-1. Plant authoritative `[FACT]` at turn 1 (`CANARY_*`).
-2. Each turn appends large obsolete tool noise + competing pseudo-FACT (`WRONG_t`).
-3. DynCLM/CLM: harness applies `<<<DYNCLM_IGNORE>>>` on obsolete tool spans; cost model decides rewrite.
-4. Baseline: no markers - instruction says use most recent FACT → recency trap.
-5. Probes every N turns ask for the canary; grade exact token presence.
-6. Windows: early vs late; **late_steady** excludes rewrite spikes (except immediate-rewrite).
-
-**Run.** Live oMLX, **3 sessions × 24 turns × 3 arms**. See [longhorizon-report.md](longhorizon-report.md).
+Plant `[FACT]` canary at turn 1; each turn appends obsolete tool noise + competing `WRONG_t`; DynCLM/CLM soft-ignore obsolete spans; baseline follows “most recent FACT.” Probes grade canary presence. **3 sessions × 24 turns**.
 
 | Arm | Late probe % | Late avg ctx | Late steady wall-s | Late tok/s | Prefill/sess | Rewrites/sess |
 |---|---:|---:|---:|---:|---:|---:|
@@ -159,50 +161,42 @@ Details: [quality-report.md](quality-report.md).
 | DynCLM | 100.0 | 2000 | 3.78 | 1.74 | 144 | 1.0 |
 | CLM | 100.0 | 375 | 1.99 | 2.36 | 2774 | 24.0 |
 
-DynCLM keeps the full late-quality win (+100 pp) with ~1 rewrite/session vs CLM’s 24; CLM is faster on late wall and holds the smallest context.
+DynCLM: full late-quality win (+100 pp) at ~1 rewrite/session vs CLM’s 24. CLM wins late wall and smallest context. DynCLM is slower than raw baseline on late steady wall here.
 
 ---
 
-## 5. Long-horizon B - compaction baseline × max context
+## 5. Long-horizon B - summarize compaction × max context
 
-**Motivation.** Production systems compact when hitting a window. Suite B asks whether DynCLM/CLM still win when the baseline may compact.
-
-**Protocol (delta from A)**: run `20261013T201630Z_lh_compaction_summary`
-
-- Arms: `baseline-compact`, `immediate-rewrite` (CLM), `dynclm`.
-- When over `max_context`, Codex-style rolling summary (keep `sys` + recent raw; fold older spans into `[CONTEXT_SUMMARY]`); charge full re-prefill of survivors.
-- Matrix: **16384, 65536** (2 sessions × 20 turns).
+Same recency-trap session as A, but the reference baseline is **Codex-style rolling summary** when over `max_context`. Matrix **16384 / 65536**, 2 sessions × 20 turns, full 3-arm live run.
 
 | Max ctx | Compact probe% | DynCLM | CLM | Compact ctx | DynCLM ctx | CLM ctx | Compact wall | DynCLM wall | CLM wall |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | 16384 | 0.0 | 100.0 | 100.0 | 14502 | 5154 | 320 | 4.04 | 1.45 | 1.15 |
 | 65536 | 0.0 | 100.0 | 100.0 | 58201 | 19348 | 320 | 3.90 | 1.78 | 1.65 |
 
-**Read.** Late probes stay **0%** for summarize baseline: each turn plants a newer `[FACT] … WRONG_n` and the prompt says to use the most recent FACT, so answers are `WRONG_*`. DynCLM/CLM soft-ignore those dumps and keep **100%**. Harder recency pressure than SWE-Distill (where the same summarize baseline scored **50%** with **100%** SPEC survive). Compact baseline can look fine on wall while answering wrong.
+Summarize baseline late probes stay **0%** (`WRONG_*` under “prefer most recent”). DynCLM/CLM stay at **100%**. DynCLM late wall also beats the compact baseline (still trails CLM). Harder FACT canary than SWE-Distill under the same summarize family.
 
-Details: [longhorizon-compaction-report.md](longhorizon-compaction-report.md) · run `20261013T201630Z_lh_compaction_summary`.
+Details: [longhorizon-compaction-report.md](longhorizon-compaction-report.md).
 
 ---
 
-## 6. SWE-Distill - realistic coding quality (live)
+## 6. SWE-Distill - coding-snippet reclaim under window pressure
 
-Run `20261013T190132Z_swe_distill_summary_baseline` on `Qwen3.8-27B-4bit`, shared `max_context=16384`. Baseline+compact is live under Codex-style rolling summary; DynCLM/CLM cells from `20261010T225155Z_swe_distill` (same reclaim path; reused for the three-arm table). Full write-up: [swe-distill-report.md](swe-distill-report.md).
+SWE-Bench-Lite-**inspired** distill (not official SWE-Bench / TerminalBench / Harbor). Plant correct `[SPEC]` at turn 1; flood wrong SPECs past shared `max_context=16384`; probe `ANSWER: <fragment>`. Baseline uses the same Codex-style summarize compact as LH-B.
 
 | Arm | Final-probe accuracy | Spec survive % | Avg final live | Avg final prompt | Wall (h) |
 |---|---:|---:|---:|---:|---:|
-| Baseline+summary | **50.0%** (3/6) | **100%** | 17540 | 12013 | 0.90 |
+| Baseline+compact | **50.0%** (3/6) | **100%** | 17540 | 12013 | 0.90 |
 | DynCLM | 100.0% (6/6) | **100%** | 1939 | 2524 | **0.34** |
 | CLM | 100.0% (6/6) | **100%** | 1064 | 1454 | 0.44 |
 
-DynCLM/CLM **+50 pp** vs summarize baseline. Spec survive is **100%** on all arms: baseline failures are wrong/confused answers with the fix still in context. Live ctx **−89%** (DynCLM) vs baseline; DynCLM wall under CLM on the reused cells. This is **not** the same as graded quality (+5.6 pp vs raw with no window reclaim).
+**+50 pp** vs summarize baseline. Spec survive **100%** on all arms: baseline failures are recency/confusion with the fix still present. Live ctx **−89%** (DynCLM) vs baseline. Full write-up: [swe-distill-report.md](swe-distill-report.md).
 
-## 7. Learning-900 policy grid (optional / incomplete)
+---
 
-**Plan design** (`configs/learning.yaml`): 3 models × 3 task types × 5 policies × 20 sessions = **900** cells - a **DynCLM policy / βγ sweep**, not the 3-arm Baseline/DynCLM/CLM decision instrument.
+## 7. Learning-900 (optional / incomplete)
 
-**Status.** Paused for disk and archived under `results/runs/20261009T034520Z/archive_learning_900_20261010T145859Z` (~207/900 cells before pause). **Not required** for the ship verdict above.
-
-Resume if needed:
+Plan (`configs/learning.yaml`): 3 models × 3 tasks × 5 policies × 20 sessions = **900** cells (β/γ sweep, not the 3-arm decision instrument). Paused at **207/900**; only `Qwen3.8-27B-4bit` cells on disk. Not required for ship.
 
 ```bash
 bash scripts/resume_live_full.sh results/runs/20261009T034520Z
@@ -210,19 +204,9 @@ bash scripts/resume_live_full.sh results/runs/20261009T034520Z
 
 ---
 
-## 8. Relation to the CLM paper’s coding benchmarks
+## 8. Relation to the CLM paper
 
-The CLM paper ([arXiv:2609.37725](https://arxiv.org/abs/2609.37725)) does **not** evaluate on SWE-Bench Verified / Lite / Multilingual for CLM quality. Coding-adjacent paper evals are:
-
-| Paper benchmark | Role |
-|---|---|
-| **TerminalBench 2.1** + **TBLite** | Terminal-coding quality/efficiency (shared **Mini-SWE-Agent** backbone) |
-| **EdgeBench-10** | 12-hour single-repo optimization |
-| **Software World** | 24-hour multi-repo agent swarm |
-| BrowseComp-Plus | Deep research (primary accuracy/FLOP claim) |
-| ContextBench | Diagnostic context-management tasks |
-
-Our harness measures soft-invalidation + deferred rewrite vs raw / compact / immediate-rewrite on local oMLX; it is **not** a TerminalBench or SWE-Bench reproduction. See [verification.md](verification.md).
+Paper ([arXiv:2609.37725](https://arxiv.org/abs/2609.37725)) coding-adjacent evals: TerminalBench / TBLite, EdgeBench-10, Software World, BrowseComp-Plus, ContextBench - **not** SWE-Bench Verified/Lite for CLM quality. This harness is a local oMLX soft-invalidation vs raw/summarize/immediate-rewrite study with logical cache accounting. See [verification.md](verification.md).
 
 ---
 
@@ -230,26 +214,31 @@ Our harness measures soft-invalidation + deferred rewrite vs raw / compact / imm
 
 | Criterion | Result |
 |---|---|
-| Late-session quality ≥ baseline | **yes** (A + B) |
-| Late-session context vs baseline | **yes** |
-| Session wall (gate) vs baseline | **yes** (−9%) |
-| Late steady wall vs baseline (A) | **no** on this run (DynCLM slower; CLM faster) |
-| Rewrite prefill vs baseline | **no** (baseline is 0) |
-| Rewrite prefill vs CLM | **yes** (−71% on gate) |
-| Full 900-session live grid | **outstanding** (optional) |
-| Paper TerminalBench / BrowseComp reproduction | **not run** |
+| Late FACT probe ≥ baseline (LH-A, LH-B) | **yes** (0% → 100%) |
+| SWE final probe ≥ summarize baseline | **yes** (+50 pp); spec survive 100% |
+| Graded quality ≥ raw baseline | **yes** (+5.6 pp) |
+| Late-session context ≤ baseline (A, B) | **yes** |
+| Session wall (gate) ≤ raw baseline | **yes** (−9%) |
+| Late steady wall ≤ raw baseline (LH-A) | **no** (DynCLM slower; CLM faster) |
+| Late steady wall ≤ summarize baseline (LH-B) | **yes** |
+| Rewrite prefill ≤ raw baseline | **no** (raw is 0) |
+| Rewrite prefill ≤ CLM (gate) | **yes** (−71%) |
+| Learning-900 complete | **no** (optional) |
+| Paper TerminalBench / BrowseComp / EdgeBench | **not run** |
+| Physical SCR on oMLX | **not available** |
 
-Recommendation: **ship** for the DynCLM reclaim policy (quality parity with CLM, much lower rewrite N than CLM, clear win vs raw/compact baselines on late probes).
+**Ship** DynCLM reclaim for this local oMLX stack: quality parity with CLM on the canaries above, much lower rewrite N than CLM, clear win vs raw and summarize baselines on late FACT / SWE probes.
 
 ---
 
 ## Gaps
 
-- Learning-900 policy grid incomplete (archived mid-run).
-- Not TerminalBench / BrowseComp-Plus / EdgeBench paper reproduction.
-- oMLX has no span-level KV API; prefill is logical/SCR-accounting.
-- Decision-suite LH-B used 2 limits (16k/64k), not the older 4-limit exploratory matrix.
+- Learning-900 incomplete (207/900; one model only).
+- Not TerminalBench / BrowseComp-Plus / EdgeBench / official SWE-Bench.
+- Logical cache accounting only; no hybrid recurrent-state SCR path.
+- Single model and single machine for all ship evidence.
 - Late wall/tok/s on small n are directional.
+- Graded quality is not a reclaim test; gate G3 is harness success, not graded answers.
 
 ---
 
@@ -257,11 +246,11 @@ Recommendation: **ship** for the DynCLM reclaim policy (quality parity with CLM,
 
 | What | Where |
 |---|---|
-| Decision suite run | `results/runs/20261010T145959Z_decision/` |
-| Decision report | [decision-report.md](decision-report.md) |
-| SWE-Distill | [swe-distill-report.md](swe-distill-report.md) · `results/runs/20261013T190132Z_swe_distill_summary_baseline/` |
+| Gate / quality / LH-A | `results/runs/20261010T145959Z_decision/` |
+| LH-B summarize | `results/runs/20261013T201630Z_lh_compaction_summary/` · [longhorizon-compaction-report.md](longhorizon-compaction-report.md) |
+| SWE-Distill | `results/runs/20261013T190132Z_swe_distill_summary_baseline/` · [swe-distill-report.md](swe-distill-report.md) |
 | Figures | `docs/figures/*.svg` |
-| Long-horizon A/B | [longhorizon-report.md](longhorizon-report.md), [longhorizon-compaction-report.md](longhorizon-compaction-report.md) · LH-B re-run `results/runs/20261013T201630Z_lh_compaction_summary/` |
-| Gate / quality | [interim-report.md](interim-report.md), [quality-report.md](quality-report.md) |
+| Decision tables | [decision-report.md](decision-report.md) |
+| LH-A detail | [longhorizon-report.md](longhorizon-report.md) |
+| Gate / quality docs | [interim-report.md](interim-report.md), [quality-report.md](quality-report.md) |
 | Learning archive | `results/runs/20261009T034520Z/archive_learning_900_*` |
-| Paper verification | [verification.md](verification.md) |

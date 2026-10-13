@@ -2,7 +2,7 @@
 
 **Run:** `20261010T145959Z_decision` · live=True · status=complete
 
-Efficient decision suite (not the 900-session policy grid): short gate + graded quality + long-horizon A + compaction matrix (16k/64k).
+Efficient decision suite (not the 900-session policy grid): short gate + graded quality + long-horizon A. Long-horizon B below is the **final** summarize-compact matrix (see [report.md](report.md) iterations note).
 
 ## 1. Short live gate - session speed & cost
 
@@ -49,26 +49,25 @@ Sessions/arm: 3 · Turns: 24 · live=True
 | DynCLM | 100.0 | 2000 | 3.78 | 1.74 | 144 | 1.0 |
 | CLM | 100.0 | 375 | 1.99 | 2.36 | 2774 | 24.0 |
 
-## 4. Live long-horizon B (compaction matrix)
+## 4. Live long-horizon B (summarize compaction matrix)
 
-Limits: [16384, 65536] · live=True · this decision-suite snapshot
+Run `20261013T201630Z_lh_compaction_summary` · Codex-style rolling summary baseline · limits [16384, 65536]. Details: [longhorizon-compaction-report.md](longhorizon-compaction-report.md).
 
 | Max ctx | Compact probe% | DynCLM | CLM | Compact ctx | DynCLM ctx | CLM ctx | Compact wall | DynCLM wall | CLM wall |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 16384 | 0.0 | 100.0 | 100.0 | 14154 | 5154 | 320 | 6.23 | 4.18 | 1.75 |
-| 65536 | 0.0 | 100.0 | 100.0 | 57914 | 19348 | 320 | 3.56 | 6.50 | 1.71 |
-
-**Current methodology:** Baseline+compact is Codex-style rolling summary. Fresh matrix with that baseline: [longhorizon-compaction-report.md](longhorizon-compaction-report.md) (`20261013T201630Z_lh_compaction_summary`). Late probes remain **0% → 100%** (recency trap); cite that report for wall/ctx under summarize compact.
+| 16384 | 0.0 | 100.0 | 100.0 | 14502 | 5154 | 320 | 4.04 | 1.45 | 1.15 |
+| 65536 | 0.0 | 100.0 | 100.0 | 58201 | 19348 | 320 | 3.90 | 1.78 | 1.65 |
 
 ## 5. Verdict
 
 | Dimension | Vs baseline | DynCLM vs CLM |
 |---|---|---|
 | Graded accuracy | DynCLM/CLM 5.6 pp | tie (100.0% vs 100.0%) |
-| Late probe quality | DynCLM/CLM 100.0 pp | tie |
-| Late steady wall | DynCLM +45.6%; CLM -23.2% | CLM faster |
+| Late probe quality (LH-A) | DynCLM/CLM 100.0 pp | tie |
+| Late steady wall (LH-A vs raw) | DynCLM +45.6%; CLM -23.2% | CLM faster |
 | Session wall (gate) | DynCLM -9.0%; CLM -12.4% | similar |
 | Rewrite prefill (gate) | both worse than 0 | DynCLM -71.1% vs CLM |
+| LH-B late probe (summarize) | DynCLM/CLM 100.0 pp | tie |
 
 ## Figures
 
