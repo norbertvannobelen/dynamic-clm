@@ -43,12 +43,16 @@ func TestOfflineSuite(t *testing.T) {
 	if bc.AvgCompacts < 1 {
 		t.Fatalf("expected baseline-compact to fire compaction, got avg=%.2f", bc.AvgCompacts)
 	}
-	// Offline recency model: baseline follows wrong_answer after SPEC drop; marker arms keep correct.
-	if bc.AccuracyPct >= dyn.AccuracyPct {
-		t.Fatalf("expected dynclm > baseline-compact offline: dyn=%.1f bc=%.1f", dyn.AccuracyPct, bc.AccuracyPct)
+	// Codex-style summary may retain the early SPEC → baseline can score high offline.
+	// Marker arms should still match or beat baseline (not a blind-drop cliff).
+	if dyn.AccuracyPct < bc.AccuracyPct {
+		t.Fatalf("expected dynclm >= baseline-compact offline: dyn=%.1f bc=%.1f", dyn.AccuracyPct, bc.AccuracyPct)
 	}
 	if imm.AccuracyPct < 100 || dyn.AccuracyPct < 100 {
 		t.Fatalf("expected marker arms 100%% offline: dyn=%.1f imm=%.1f", dyn.AccuracyPct, imm.AccuracyPct)
+	}
+	if bc.SpecSurvivePct < 50 {
+		t.Fatalf("expected summarize baseline to often retain SPEC in summary, got survive=%.1f%%", bc.SpecSurvivePct)
 	}
 	// Headline final_context is live-only; DynCLM may carry dead until deferred rewrite.
 	for _, c := range rep.Cells {

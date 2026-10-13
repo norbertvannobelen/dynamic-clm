@@ -122,8 +122,8 @@ func WriteMarkdownReport(path string, rep Report) error {
 		a := rep.Arms[name]
 		_, _ = fmt.Fprintf(f, "| %s | %.1f | %.2f | %.2f | %.0f |\n", name, a.SpecSurvivePct, a.AvgCompacts, a.AvgRewrites, a.AvgPrefill)
 	}
-	_, _ = fmt.Fprintf(f, "\nBlind compaction can look fast while dropping the early SPEC (spec survive %.1f%%). "+
-		"DynCLM/CLM keep the SPEC via soft-invalidation (%.1f%% / %.1f%%).\n\n",
+	_, _ = fmt.Fprintf(f, "\nCodex-style summarize baseline retains the SPEC in verbatim or summary form "+
+		"(spec survive %.1f%%). DynCLM/CLM keep it via soft-invalidation (%.1f%% / %.1f%%).\n\n",
 		bc.SpecSurvivePct, dyn.SpecSurvivePct, imm.SpecSurvivePct)
 
 	_, _ = fmt.Fprintf(f, "## Figures\n\n")

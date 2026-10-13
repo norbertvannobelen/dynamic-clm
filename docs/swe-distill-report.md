@@ -1,5 +1,7 @@
 # DynCLM SWE-Distill — Extensive Report
 
+> **Stale baseline methodology.** Numbers below are from a live run that used **blind FIFO drop-oldest** compaction. The harness now uses **Codex-style rolling summarization** for Baseline+compact. Do not cite the 16.7%→100% gap as current; re-run and regenerate with `scripts/gen_swe_distill_report.py`.
+
 Generated: 2026-10-13T18:13:18.323331Z · Model `Qwen3.8-27B-4bit` · Hardware `apple-m5-max` · live=True
 
 **Disclaimer:** This is a SWE-Bench-**Lite-inspired** multi-turn coding distill under shared `max_context` with Baseline+compact / DynCLM / CLM. It is **not** an official SWE-Bench resolve-rate number and is not TerminalBench / Harbor.

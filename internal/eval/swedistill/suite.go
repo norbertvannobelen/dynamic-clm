@@ -15,14 +15,18 @@ import (
 )
 
 const Methodology = `SWE-Distill (realistic): SWE-Bench-Lite-inspired multi-turn coding quality + latency.
-Shared max_context forces reclaim. Arms: baseline-compact (blind drop oldest +
+Shared max_context forces reclaim. Arms: baseline-compact (Codex-style rolling
+summary: keep sys + recent raw; fold older spans into a budget-capped
+[CONTEXT_SUMMARY] with early-requirements quota + newest-preferred notes;
 re-prefill), DynCLM (soft-ignore + deferred rewrite), CLM/immediate-rewrite
 (soft-ignore + rewrite every turn). Turn 1 plants an authoritative [SPEC] with a
-real correct fix; later turns append plausible wrong SPECs (recency trap) with
-noise ≳ 1.4× max_context. Instruction: prefer the most recent non-ignored SPEC.
-Chat serving uses ContextTextForServing: dead spans are stubbed (no body) so
-DynCLM/CLM prompts shrink without waiting for Rewrite — matching oMLX Chat
-(no KV soft-ignore). Final probe grades ANSWER: <fragment>. Not official SWE-Bench.`
+real correct fix; later turns append plausible wrong SPECs with noise ≳ 1.4×
+max_context. Instruction: prefer the most recent non-ignored SPEC. Chat serving
+uses ContextTextForServing: dead spans are stubbed (no body) so DynCLM/CLM
+prompts shrink without waiting for Rewrite — matching oMLX Chat (no KV
+soft-ignore). Final probe grades ANSWER: <fragment>. Not official SWE-Bench.
+Paper-adjacent contrast: lossy summary retention vs selective soft-invalidation,
+not blind FIFO drop.`
 
 // Config for the suite.
 type Config struct {
@@ -403,8 +407,8 @@ func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResul
 		}
 
 		if arm == "baseline-compact" && total > cfg.MaxContext {
-			target := (cfg.MaxContext * 4) / 5
-			removed, _, surv := tr.CompactToBudget(target, map[string]bool{"sys": true})
+			target := cfg.MaxContext
+			removed, _, surv := tr.CompactSummarizeToBudget(target, map[string]bool{"sys": true})
 			if removed > 0 {
 				tm.CompactFired = true
 				tm.PrefillTokens = surv
@@ -492,7 +496,8 @@ func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResul
 			promptTok = res.Response.Usage.PromptTokens
 			genTok = res.Response.Usage.CompletionTokens
 		} else {
-			got = syntheticReply(arm, isProbe, fx.ExpectedAnswer, fx.WrongAnswer, turn, specPresent)
+			needlePresent := specPresent || tr.ContentContains(fx.ExpectedAnswer)
+			got = syntheticReply(arm, isProbe, fx.ExpectedAnswer, fx.WrongAnswer, turn, needlePresent)
 			promptTok = contextmgr.EstimateTokens(ctxText) + contextmgr.EstimateTokens(userMsg)
 			genTok = contextmgr.EstimateTokens(got)
 		}
@@ -525,7 +530,9 @@ func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResul
 	out.FinalContext = live
 	out.FinalTotalContext = total
 	out.FinalDeadContext = dead
-	out.SpecSurvived = tr.HasSpanID("spec-0")
+	// Survived = verbatim SPEC span still present, or expected fragment retained
+	// inside the Codex-style rolling summary / other live text.
+	out.SpecSurvived = tr.HasSpanID("spec-0") || tr.ContentContains(fx.ExpectedAnswer)
 	return out, nil
 }
 
@@ -594,12 +601,13 @@ func cellSteadyWall(c CellResult) float64 {
 	return s
 }
 
-func syntheticReply(arm string, probe bool, expected, wrong string, turn int, specPresent bool) string {
+func syntheticReply(arm string, probe bool, expected, wrong string, turn int, needlePresent bool) string {
 	if !probe {
 		return fmt.Sprintf("ACK %d", turn)
 	}
-	// Offline model of the recency trap: without the early SPEC, baseline follows wrong_answer.
-	if arm == "baseline-compact" && !specPresent {
+	// Offline model of lossy summary: answer correctly while the expected fragment
+	// remains in context (verbatim or in [CONTEXT_SUMMARY]); otherwise follow wrong_answer.
+	if arm == "baseline-compact" && !needlePresent {
 		if wrong == "" {
 			wrong = "outdated_fix"
 		}

@@ -11,7 +11,7 @@ Companion: [decision-report.md](decision-report.md) (tables from the same run).
 | Label in charts/tables | Meaning |
 |---|---|
 | **Baseline (raw)** | Append-only context; no markers; no rewrite; no compaction |
-| **Baseline + compaction** | Append-only until `max_context`, then drop oldest spans (system kept when possible) and re-prefill survivors |
+| **Baseline + compaction** | Append-only until `max_context`, then Codex-style rolling summary (keep system + recent raw; fold older spans into a budget-capped `[CONTEXT_SUMMARY]`) and re-prefill survivors |
 | **DynCLM** | Soft-invalidation markers + cost-model deferred rewrite |
 | **CLM (immediate rewrite)** | Soft-invalidation markers + rewrite every turn (paper-style upper bound on reclaim aggressiveness) |
 
@@ -29,9 +29,9 @@ Live 3-arm decision suite on oMLX `Qwen3.8-27B-4bit` (Apple M5 Max): short gate 
 | Graded quality (18 tasks) | Baseline **94.4%** → DynCLM/CLM **100%** (+5.6 pp) |
 | Long-horizon A (3×24) | Late probe **0% → 100%** (DynCLM & CLM). DynCLM late ctx **−70.8%**; CLM fastest late wall |
 | Long-horizon B (2×20 @ 16k/64k) | Compacting baseline late probe **0%**; DynCLM/CLM **100%** at both limits |
-| SWE-Distill (6 coding tasks) | Final probe: Baseline+compact **16.7%** · DynCLM **100%** · CLM **100%** (Baseline = retention failure under blind compact, not coding skill — see §6) |
+| SWE-Distill (6 coding tasks) | Prior live run used **blind FIFO** compact (Baseline **16.7%** · DynCLM/CLM **100%**). Baseline is now **Codex-style rolling summary** — re-run required before quoting new accuracy deltas (see §6) |
 
-**Bottom line.** DynCLM matches CLM on the quality axes that matter here (graded accuracy, late FACT probes, and SWE-Distill probes) while spending far fewer rewrites than always-rewrite CLM. On SWE-Distill (stubbed soft-ignore serving), DynCLM matches CLM at **100%** vs Baseline+compact **16.7%**, with much lower live context and **lower wall than CLM** (0.34h vs 0.44h). Blind compaction can look fine on wall-clock while the early authoritative SPEC is gone (`spec_survive` **0%**) — that is why Baseline accuracy is low, not because the model cannot code when the SPEC remains.
+**Bottom line.** DynCLM matches CLM on the quality axes that matter here (graded accuracy, late FACT probes) while spending far fewer rewrites than always-rewrite CLM. SWE-Distill numbers in archived runs reflect the old blind-drop baseline; the harness now uses a paper-adjacent summarization baseline so accuracy gaps should look like lossy retention, not a designed 0%→100% cliff.
 
 **Ship recommendation:** **ship** with the explicit tradeoff that DynCLM pays reclaim prefill vs raw baseline (which never rewrites) and is usually slower than CLM on late wall while winning on N/prefill vs CLM.
 
@@ -170,7 +170,7 @@ DynCLM keeps the full late-quality win (+100 pp) with ~1 rewrite/session vs CLM�
 **Protocol (delta from A)**
 
 - Arms: `baseline-compact`, `immediate-rewrite` (CLM), `dynclm`.
-- When compact exceeds `max_context`, drop oldest spans (keep `sys` when possible) to ~80% of budget; charge full re-prefill of survivors.
+- When compact exceeds `max_context`, apply Codex-style rolling summary (keep `sys` + recent raw; fold older spans into `[CONTEXT_SUMMARY]`); charge full re-prefill of survivors.
 - Decision-suite matrix: **16384, 65536** (2 sessions × 20 turns).
 
 | Max ctx | Compact probe% | DynCLM | CLM | Compact ctx | DynCLM ctx | CLM ctx | Compact wall | DynCLM wall | CLM wall |
@@ -178,7 +178,7 @@ DynCLM keeps the full late-quality win (+100 pp) with ~1 rewrite/session vs CLM�
 | 16384 | 0.0 | 100.0 | 100.0 | 14154 | 5154 | 320 | 6.23 | 4.18 | 1.75 |
 | 65536 | 0.0 | 100.0 | 100.0 | 57914 | 19348 | 320 | 3.56 | 6.50 | 1.71 |
 
-Blind compaction drops the early FACT → late probes **0%**; DynCLM/CLM keep **100%**. Compaction can look fast while answering wrong — quality-adjusted, DynCLM/CLM dominate.
+Prior live matrix used blind FIFO compact (late probes **0%** vs DynCLM/CLM **100%**). With rolling summary, expect the baseline to retain early FACTs more often; re-run the matrix before treating those probe gaps as current.
 
 Details: [longhorizon-compaction-report.md](longhorizon-compaction-report.md).
 
@@ -188,7 +188,7 @@ Details: [longhorizon-compaction-report.md](longhorizon-compaction-report.md).
 
 Run `20261010T225155Z_swe_distill` on `Qwen3.8-27B-4bit`, shared `max_context=16384`, Baseline+compact / DynCLM / CLM. Full write-up: [swe-distill-report.md](swe-distill-report.md).
 
-**How to read Baseline+compact 16.7% (do not misread).** This is a **retention-under-compaction** score, not “the model only solves 1/6 coding issues.” Protocol: plant the correct `[SPEC]` at turn 1 → flood with plausible wrong SPECs + noise past `max_context` → Baseline blindly drops oldest spans (almost always including the real SPEC; **spec survive 0%**) → instruction prefers the most recent SPEC → probe grades against turn-1 truth. DynCLM/CLM soft-ignore obsolete dumps and keep the early SPEC (**spec survive 100%**), so they hit **100%**. The single Baseline PASS (`matplotlib`) had `spec_survived=false` — luck/format overlap, not retention. Same model on short graded quality (no reclaim trap) is **94.4% → 100%**. Details: [swe-distill-report.md §2](swe-distill-report.md#2-how-to-read-baselinecompact-accuracy-do-not-misread).
+**Baseline+compact methodology (updated).** Baseline is now Codex-style **rolling summarization** (keep recent raw + budget-capped `[CONTEXT_SUMMARY]` with an early-requirements quota), not blind FIFO drop. Archived SWE-Distill **16.7%** was under the old drop-oldest baseline and should not be cited as the current contrast. Re-run SWE-Distill / LH-B for paper-adjacent accuracy deltas. Same model on short graded quality (no reclaim pressure) is **94.4% → 100%**. Details: [swe-distill-report.md](swe-distill-report.md).
 
 Headline context is **final live** (decode-relevant tracker tokens). After `ContextTextForServing` (dead bodies stubbed) and a DynCLM-only re-run, DynCLM matches CLM on quality and is competitive on wall.
 

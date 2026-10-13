@@ -135,7 +135,7 @@ type MatrixReport struct {
 
 const methodologyText = `Long-horizon suite A: early authoritative FACT planted at turn 1; each later turn appends large obsolete tool noise (and competing pseudo-FACTs). Soft-invalidation markers are harness-applied on obsolete spans for DynCLM/immediate (CLM) arms; the cost-model scheduler fires batched rewrites. Periodic probes ask for the early FACT. Metrics per turn: context length, prompt/generated tokens, wall-clock, gen tokens/s. Early vs late windows express the paper claim that smaller context improves late-session quality and generation performance vs raw append-only.`
 
-const methodologyCompaction = `Long-horizon suite B (compaction matrix): same recency-trap session as A, but the raw baseline is replaced by baseline-compact — when context exceeds max_context it drops oldest spans (keeping only the system prompt when possible), forcing a full re-prefill of survivors. DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of blind truncation. Matrix over max_context ∈ {8k,16k,32k,64k}. Per-column noise is sized so cumulative appends exceed that column's limit (~1.4×), ensuring baseline-compact must compact at every limit without forcing 64k-sized prompts into the 8k column.`
+const methodologyCompaction = `Long-horizon suite B (compaction matrix): same session as A, but the raw baseline is replaced by baseline-compact — a Codex-style rolling summary when context exceeds max_context (keep system + recent raw tail; fold older spans into a budget-capped [CONTEXT_SUMMARY] with an early-requirements quota plus newest-preferred notes; re-prefill survivors). DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of lossy summarization. Matrix over max_context ∈ {8k,16k,32k,64k}. Per-column noise is sized so cumulative appends exceed that column's limit (~1.4×), ensuring baseline-compact must compact at every limit without forcing 64k-sized prompts into the 8k column.`
 
 // Run executes the long-horizon suite (variant A by default).
 func Run(cfg Config) (Report, error) {
@@ -348,9 +348,9 @@ func runSession(client *omlx.Client, cfg Config, arm, sid string) (SessionResult
 		}
 
 		if arm == "baseline-compact" && total > cfg.MaxContext {
-			// Blind truncation: drop oldest (keep system when possible) to ~80% of budget.
-			target := (cfg.MaxContext * 4) / 5
-			removed, _, surv := tr.CompactToBudget(target, map[string]bool{"sys": true})
+			// Codex-style rolling summary to ~budget (keep sys + recent raw).
+			target := cfg.MaxContext
+			removed, _, surv := tr.CompactSummarizeToBudget(target, map[string]bool{"sys": true})
 			if removed > 0 {
 				tm.CompactFired = true
 				tm.PrefillTokens = surv // full re-prefill of survivors
@@ -423,7 +423,7 @@ func runSession(client *omlx.Client, cfg Config, arm, sid string) (SessionResult
 			promptTok = res.Response.Usage.PromptTokens
 			genTok = res.Response.Usage.CompletionTokens
 		} else {
-			got = syntheticReply(arm, isProbe, fact, turn, total, factPresent)
+			got = syntheticReply(arm, isProbe, fact, turn, total, factPresent || tr.ContentContains(fact))
 			promptTok = total + contextmgr.EstimateTokens(userMsg)
 			genTok = contextmgr.EstimateTokens(got)
 		}
@@ -463,7 +463,8 @@ func syntheticReply(arm string, probe bool, fact string, turn, ctx int, factPres
 	if arm == "baseline" && turn >= 8 {
 		return fmt.Sprintf("WRONG_%d", turn)
 	}
-	// Compaction baseline loses the early FACT once it falls out of the window.
+	// Summarize baseline: offline oracle answers correctly while the FACT remains
+	// in verbatim span or rolling summary; fails only after lossy fade-out.
 	if arm == "baseline-compact" && !factPresent {
 		return fmt.Sprintf("WRONG_%d", turn)
 	}

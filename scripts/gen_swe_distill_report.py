@@ -180,48 +180,44 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
         f"On this suite, DynCLM final-probe accuracy is **{dyn.get('accuracy_pct', 0):.1f}%** "
         f"({d_acc:+.1f} pp vs Baseline+compact **{bc.get('accuracy_pct', 0):.1f}%**); "
         f"CLM is **{imm.get('accuracy_pct', 0):.1f}%** ({i_acc:+.1f} pp). "
-        f"Baseline+compact keeps the early SPEC in only **{bc.get('spec_survive_pct', 0):.0f}%** "
-        f"of tasks (blind drop), while DynCLM/CLM retain it via soft-invalidation "
-        f"({dyn.get('spec_survive_pct', 0):.0f}% / {imm.get('spec_survive_pct', 0):.0f}%). "
+        f"Baseline+compact retains the early SPEC (verbatim or in rolling summary) in "
+        f"**{bc.get('spec_survive_pct', 0):.0f}%** of tasks; DynCLM/CLM keep it via "
+        f"soft-invalidation ({dyn.get('spec_survive_pct', 0):.0f}% / "
+        f"{imm.get('spec_survive_pct', 0):.0f}%). "
         f"CLM pays the highest rewrite prefill; DynCLM sits between quality parity with CLM "
         f"and much lower rewrite N than always-rewrite.\n\n"
     )
     lines.append(
-        "**Read the Baseline score as retention, not coding skill.** "
-        f"Baseline+compact at **{bc.get('accuracy_pct', 0):.1f}%** means the arm usually "
-        "no longer had the authoritative fix in context at probe time "
-        f"(spec survive **{bc.get('spec_survive_pct', 0):.0f}%**). It is **not** a claim that "
-        "the model solves only ~1/6 SWE-style issues when the correct SPEC is still present. "
-        "See §2.\n\n"
+        "**Paper-adjacent read.** Baseline is Codex-style **lossy summarization**, not blind "
+        "FIFO drop. Expect modest accuracy gaps when the summary still carries the fix, and "
+        "larger gaps only after the early fragment fades from the summary budget. "
+        f"Baseline accuracy **{bc.get('accuracy_pct', 0):.1f}%** with spec survive "
+        f"**{bc.get('spec_survive_pct', 0):.0f}%** — see §2.\n\n"
     )
 
     lines.append("## 2. How to read Baseline+compact accuracy (do not misread)\n\n")
     lines.append(
-        "This suite measures **whether reclaim keeps the turn-1 authoritative `[SPEC]` "
-        "available under window pressure**, not raw single-shot coding ability.\n\n"
+        "This suite measures **reclaim under window pressure** against a competent "
+        "summarization baseline (CLM-paper style), not raw single-shot coding ability.\n\n"
         "Causal chain for Baseline+compact:\n\n"
         "1. **Plant** — turn 1 inserts the correct fix fragment as `[SPEC]`.\n"
         "2. **Flood** — later turns append plausible wrong SPECs (reviewer dumps) plus "
         "padding sized so cumulative tokens exceed `max_context` (~1.4×).\n"
-        "3. **Blind compact** — when over budget, Baseline drops oldest spans (keeps "
-        "`sys` when possible) and re-prefills survivors. The early correct SPEC is "
-        "almost always among the dropped spans.\n"
-        "4. **Recency instruction** — with no ignore markers, the prompt says to use the "
-        "**most recent** SPEC. After compaction, that is a wrong dump.\n"
+        "3. **Rolling summary compact** — when over budget, Baseline keeps `sys` + a "
+        "recent raw tail and folds older spans into a budget-capped `[CONTEXT_SUMMARY]` "
+        "(early-requirements quota + newest-preferred notes), then re-prefills.\n"
+        "4. **Recency instruction** — with no ignore markers, the prompt prefers the "
+        "most recent non-ignored SPEC; a lossy summary may still retain the early fix "
+        "in abbreviated form, or let it fade after repeated compacts.\n"
         "5. **Probe** — final turn grades `ANSWER: <fragment>` against the turn-1 truth.\n\n"
-        "So a low Baseline score is the **designed contrast**: blind truncation + recency "
-        "trap. DynCLM/CLM soft-ignore obsolete dumps and keep the early SPEC "
+        "DynCLM/CLM soft-ignore obsolete dumps and keep the early SPEC verbatim "
         f"(`spec_survive` **{dyn.get('spec_survive_pct', 0):.0f}%** / "
-        f"**{imm.get('spec_survive_pct', 0):.0f}%**), which is why they reach "
-        f"**{dyn.get('accuracy_pct', 0):.1f}%** / **{imm.get('accuracy_pct', 0):.1f}%**.\n\n"
-        "**What 16.7% is not.** It is not “Qwen only codes correctly 1/6 of the time,” "
-        "and it is not comparable to official SWE-Bench resolve rate. Graded short-form "
-        "quality on the same model is **94.4% → 100%** (raw baseline → DynCLM/CLM) when "
-        "context is not under this reclaim trap.\n\n"
-        "**Why one Baseline task can still PASS.** A rare pass with `spec_survived=false` "
-        "(here: `matplotlib__tight-layout-distill-04`) is luck / format overlap after the "
-        "authoritative SPEC was already dropped — not evidence that compaction retained "
-        "the fix. Treat it as noise in a 6-task n.\n\n"
+        f"**{imm.get('spec_survive_pct', 0):.0f}%**). Baseline `spec_survive` counts "
+        "verbatim **or** expected fragment present in the rolling summary "
+        f"(**{bc.get('spec_survive_pct', 0):.0f}%**).\n\n"
+        "This is meant to resemble the paper’s Codex-style summary contrast "
+        "(single-digit to low-teens pp), not a designed 0%→100% FIFO trap. "
+        "Not comparable to official SWE-Bench resolve rate.\n\n"
     )
 
     lines.append("## 3. Methodology\n\n")
@@ -334,9 +330,9 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
 
     lines.append("## 8. Failure analysis\n\n")
     lines.append(
-        "Baseline failures below are **recency-trap / missing-SPEC** answers, not "
-        "evidence that the model cannot emit the correct fragment when that SPEC is "
-        "still in context (DynCLM/CLM prove it can).\n\n"
+        "Baseline failures below are **lossy-summary / recency** mistakes (early fix "
+        "faded or overshadowed), not evidence that the model cannot emit the correct "
+        "fragment when DynCLM/CLM keep the SPEC verbatim.\n\n"
     )
     for title, key in [
         ("Baseline+compact", "baseline-compact"),
@@ -357,20 +353,17 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
         lines.append("\n")
     base_drop = [c for c in cells if c.get("arm") == "baseline-compact" and not c.get("spec_survived")]
     lines.append(
-        f"Baseline+compact dropped the early SPEC in **{len(base_drop)}/{bc.get('n', 0)}** tasks — "
-        "the expected failure mode under blind truncation when noise exceeds the window "
-        "(see §2). Example trap answer: django returned `ANSWER: len(list(self)) > 0`, "
-        "which is a plausible wrong SPEC that remained after compaction, not the "
-        "authoritative turn-1 fix.\n\n"
+        f"Baseline+compact lost the early SPEC (verbatim and summary) in "
+        f"**{len(base_drop)}/{bc.get('n', 0)}** tasks — the lossy-fade failure mode under "
+        "rolling summarization when repeated compacts crowd out the early-requirements "
+        "quota (see §2).\n\n"
     )
 
     lines.append("## 9. Efficiency deep-dive\n\n")
     lines.append(
-        "Quality-adjusted read: Baseline+compact may post competitive wall-clock while answering "
-        "from a recency trap after the SPEC falls out of the window. DynCLM/CLM spend reclaim "
-        "prefill to keep the authoritative snippet. Prefer accuracy-first comparisons; treat "
-        "wall alone as secondary. Do not interpret Baseline wall as “fast and good enough” "
-        "when `spec_survive` is ~0%.\n\n"
+        "Quality-adjusted read: Baseline+compact may look fast while answering from a "
+        "lossy summary; DynCLM/CLM spend reclaim prefill to keep the authoritative "
+        "snippet verbatim. Prefer accuracy-first comparisons; treat wall alone as secondary.\n\n"
     )
     lines.append(
         f"| Arm | Spec survive % | Avg wall/task (s) |\n|---|---:|---:|\n"

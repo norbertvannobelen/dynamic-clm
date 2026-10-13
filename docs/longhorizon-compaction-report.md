@@ -1,8 +1,10 @@
 # DynCLM Long-Horizon B — Compaction Matrix
 
+> **Stale baseline methodology.** Table numbers below are from a live run that used **blind FIFO drop-oldest**. Baseline+compact now uses **Codex-style rolling summarization**; re-run the matrix before citing 0%→100% late-probe gaps.
+
 Generated: 2026-10-10T17:46:57Z
 
-Long-horizon suite B (compaction matrix): same recency-trap session as A, but the raw baseline is replaced by baseline-compact — when context exceeds max_context it drops oldest spans (keeping only the system prompt when possible), forcing a full re-prefill of survivors. DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of blind truncation. Matrix over max_context ∈ {8k,16k,32k,64k}. Per-column noise is sized so cumulative appends exceed that column's limit (~1.4×), ensuring baseline-compact must compact at every limit without forcing 64k-sized prompts into the 8k column.
+Long-horizon suite B (compaction matrix): same session as A, but the raw baseline is replaced by baseline-compact — Codex-style rolling summary when context exceeds max_context (keep system + recent raw; fold older spans into `[CONTEXT_SUMMARY]`; re-prefill). DynCLM and immediate-rewrite (CLM) reclaim via soft-invalidation + rewrite. Matrix over max_context ∈ {8k,16k,32k,64k}. Per-column noise is sized so cumulative appends exceed that column's limit (~1.4×).
 
 - Model: `Qwen3.8-27B-4bit` · Hardware: `apple-m5-max` · Live: true
 - Sessions/arm: 2 · Turns: 20 · NoisePad: 4587 chars
