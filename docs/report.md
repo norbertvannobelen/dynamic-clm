@@ -4,6 +4,18 @@ Generated: 2026-10-13 · Live oMLX `Qwen3.8-27B-4bit` · Apple M5 Max (128GB; oM
 
 Companions: [decision-report.md](decision-report.md) · [dynclm-vs-compaction.md](dynclm-vs-compaction.md) · [verification.md](verification.md)
 
+## What we are trying to achieve
+
+Long agent sessions fill the context window with obsolete tool output, wrong drafts, and stale facts. Something has to reclaim space. Common production practice is **lossy summarization** (fold older turns into a short note). The CLM line of work instead **marks known-stale spans dead** and later **physically drops** them while keeping survivors verbatim. **DynCLM** is that reclaim idea with a **cost-model deferral**: soft-invalidation stays append-only until carrying dead tokens costs more than one batched rewrite.
+
+This report answers a local ship question on oMLX:
+
+1. Does DynCLM **work** (markers, rewrites, shrink) and stay cheaper on rewrite prefill than always-rewrite CLM?
+2. Does it **keep late-session answers correct** when raw append-only or summarize+recency baselines fail FACT/SPEC canaries?
+3. Does it **shrink context** (and sometimes wall-clock) enough to be worth the reclaim prefill vs a never-rewrite baseline?
+
+We are **not** reproducing the CLM paper’s TerminalBench / BrowseComp / EdgeBench numbers, and SWE-Distill here is a Lite-inspired reclaim harness, not official SWE-Bench resolve rate. Mechanism contrast with Codex-style compact: [dynclm-vs-compaction.md](dynclm-vs-compaction.md).
+
 ## Iterations (how we got here)
 
 Early work used a 900-cell policy grid (paused), then an efficient 3-arm decision suite (gate / graded quality / long-horizon A, plus an LH-B matrix under blind FIFO drop-oldest). We then changed the compact baseline to **Codex-style rolling summary** and re-ran long-horizon B and the SWE-Distill baseline under that protocol. Marker-arm SWE cells that already matched the final reclaim path were kept. **Everything below is the final methodology and numbers only**; superseded FIFO LH-B figures are not cited.
