@@ -14,6 +14,9 @@ tmp/
 results/cells/
 results/**/trace.jsonl
 results/**/run.log
+results/*.log
 results/gate-offline-run.log
 results/phaseb-run.log
 results/live-smoke/cells/
+# Local run archives / logs; intentionally tracked runs stay tracked.
+results/runs/
