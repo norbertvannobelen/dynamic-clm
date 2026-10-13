@@ -1,6 +1,6 @@
 # DynCLM Live Intermediate Report
 
-> **Historical note (2026-10-09).** Planning snapshot while learning-900 was paused. For current suite definitions and numbers, use [report.md](report.md) and [dynclm-vs-compaction.md](dynclm-vs-compaction.md). Long-horizon B / SWE-Distill now use Codex-style summarize baselines (see those reports).
+> **Historical note (2026-10-09).** Planning snapshot while learning-900 was paused. For current method and numbers, use [method.md](method.md) and [report.md](report.md). Long-horizon B / SWE-Distill now use Codex-style summarize baselines (see those reports).
 
 **Learning-900 run:** `results/runs/20261009T034520Z` - **paused & archived** at ~207/900  
 **Snapshot:** `archive_learning_900_*` under that run · resume: `bash scripts/resume_live_full.sh results/runs/20261009T034520Z`  

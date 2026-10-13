@@ -2,19 +2,19 @@
 
 Generated: 2026-10-13 · Live oMLX `Qwen3.8-27B-4bit` · Apple M5 Max (128GB; oMLX ~8 GB in-memory cache)
 
-Companions: [method.md](method.md) · [decision-report.md](decision-report.md) · [dynclm-vs-compaction.md](dynclm-vs-compaction.md) · [verification.md](verification.md)
+Companions: [method.md](method.md) · [decision-report.md](decision-report.md) · [verification.md](verification.md)
 
 ## What we are trying to achieve
 
-Long agent sessions fill the context window with obsolete tool output, wrong drafts, and stale facts. Something has to reclaim space. Common production practice is **lossy summarization** (fold older turns into a short note). The CLM line of work instead **marks known-stale spans dead** and later **physically drops** them while keeping survivors verbatim. **DynCLM** is that reclaim idea with a **cost-model deferral**: soft-invalidation stays append-only until carrying dead tokens costs more than one batched rewrite. How we mark spans (`<<<DYNCLM_IGNORE …>>>`), when the cost model fires, and how rewrite rebuilds the context from survivors only: **[method.md](method.md)**.
+**Premise.** CLM soft-marks stale spans and physically rewrites **every turn** that has dead text - selective verbatim reclaim, but constant rewrite/re-prefill cost. **DynCLM** uses that **same** mark → drop → survivors-as-new-context methodology, but keeps marks soft until a cost model says we are tight on budget/memory, then runs one batched rewrite. Where per-turn rewrite is expensive, DynCLM should cut rewrite load versus CLM while matching CLM on quality canaries that need selective ignore. Method + session-load math: **[method.md](method.md)**.
 
-This report answers a local ship question on oMLX:
+This report is the **live proof attempt** of that premise on oMLX (plus quality vs raw append-only and vs Codex-style summarize compact):
 
 1. Does DynCLM **work** (markers, rewrites, shrink) and stay cheaper on rewrite prefill than always-rewrite CLM?
 2. Does it **keep late-session answers correct** when raw append-only or summarize+recency baselines fail FACT/SPEC canaries?
 3. Does it **shrink context** (and sometimes wall-clock) enough to be worth the reclaim prefill vs a never-rewrite baseline?
 
-We are **not** reproducing the CLM paper’s TerminalBench / BrowseComp / EdgeBench numbers, and SWE-Distill here is a Lite-inspired reclaim harness, not official SWE-Bench resolve rate. Mechanism contrast with Codex-style compact: [dynclm-vs-compaction.md](dynclm-vs-compaction.md).
+We are **not** reproducing the CLM paper’s TerminalBench / BrowseComp / EdgeBench numbers, and SWE-Distill here is a Lite-inspired reclaim harness, not official SWE-Bench resolve rate.
 
 ## Iterations (how we got here)
 
@@ -258,6 +258,7 @@ Paper ([arXiv:2609.37725](https://arxiv.org/abs/2609.37725)) coding-adjacent eva
 
 | What | Where |
 |---|---|
+| Method (premise + protocols + math) | [method.md](method.md) |
 | Gate / quality / LH-A | `results/runs/20261010T145959Z_decision/` |
 | LH-B summarize | `results/runs/20261013T201630Z_lh_compaction_summary/` · [longhorizon-compaction-report.md](longhorizon-compaction-report.md) |
 | SWE-Distill | `results/runs/20261013T190132Z_swe_distill_summary_baseline/` · [swe-distill-report.md](swe-distill-report.md) |

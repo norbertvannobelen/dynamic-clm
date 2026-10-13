@@ -1,20 +1,23 @@
 # Dynamic CLM (DynCLM)
 
-A context-management method where the model marks context as dead via append-only soft-invalidation markers, and a cost-model-driven scheduler fires a single batched physical rewrite when the deferred cost of carrying dead tokens exceeds the fixed cost of the rewrite event.
+**Premise.** CLM soft-marks stale context and physically rewrites every turn that has dead text - correct reclaim, but rewrite/re-prefill every time. **DynCLM** uses the **same** mark → drop → verbatim-survivors methodology, but marks internally and **defers** the rewrite until a cost model says we are tight on budget/memory. Where per-turn rewrite is expensive, that should cut rewrite load while keeping CLM-like quality on selective-ignore canaries. Method + math: **[docs/method.md](docs/method.md)**. Live proof attempt: **[docs/report.md](docs/report.md)**.
 
 **Naming:** Spell out "Dynamic CLM" or use **DynCLM** in writeups. Do not abbreviate as DCLM (that name is taken by DataComp-LM).
 
-## DynCLM vs Codex-style compaction
+## Protocols at a glance
 
-DynCLM is still compaction in the broad sense (shrink context under a budget). It is **not** the same as Codex-style summarization: summarizers fold older turns into a **lossy** note; DynCLM/CLM **soft-invalidate** known-stale spans and later **physically drop** them while keeping survivors **verbatim**. DynCLM additionally **defers** that rewrite via a cost model (`β` / `γ` / `Δ`); immediate-rewrite CLM reclaims every edit.
+| | Summarize compact | CLM | DynCLM |
+|---|---|---|---|
+| Reclaim | Lossy `[CONTEXT_SUMMARY]` when over window | Soft-ignore + rewrite every edit | Soft-ignore + **batched** rewrite |
+| Survivors | Paraphrase + recent raw | Verbatim live spans | Verbatim live spans |
 
-Arm definitions and how to read per-suite gaps: **[docs/dynclm-vs-compaction.md](docs/dynclm-vs-compaction.md)**.
+Full comparison and how markers/rewrites work: [docs/method.md](docs/method.md).
 
-## Phases
+## Phases (DynCLM)
 
 1. **Append**: normal operation; prefix cache preserved.
 2. **Soft invalidation**: append `<<<DYNCLM_IGNORE ...>>>` markers; still append-only.
-3. **Deferred rewrite**: one batched physical rewrite when the cost model fires.
+3. **Deferred rewrite**: one batched physical rewrite when the cost model fires (same drop as CLM).
 
 ## Local stack
 
@@ -36,7 +39,7 @@ make learning    # Phase B (only after gate pass)
 ./bin/dynclm-longhorizon -model Qwen3.8-27B-4bit  # long-horizon quality + decode speed
 ```
 
-Reports: `docs/dynclm-vs-compaction.md` (mechanism vs Codex-style compact), `docs/longhorizon-report.md` (primary for paper claim), `docs/quality-report.md`, `docs/interim-report.md`, `docs/report.md`.
+Docs: `docs/method.md` (premise + method), `docs/report.md` (results), `docs/longhorizon-report.md`, `docs/quality-report.md`, `docs/interim-report.md`.
 
 ## Layout
 
