@@ -2,11 +2,11 @@
 
 Generated: 2026-10-13 · Live oMLX `Qwen3.8-27B-4bit` · Apple M5 Max (128GB; oMLX ~8 GB in-memory cache)
 
-Companions: [decision-report.md](decision-report.md) · [dynclm-vs-compaction.md](dynclm-vs-compaction.md) · [verification.md](verification.md)
+Companions: [method.md](method.md) · [decision-report.md](decision-report.md) · [dynclm-vs-compaction.md](dynclm-vs-compaction.md) · [verification.md](verification.md)
 
 ## What we are trying to achieve
 
-Long agent sessions fill the context window with obsolete tool output, wrong drafts, and stale facts. Something has to reclaim space. Common production practice is **lossy summarization** (fold older turns into a short note). The CLM line of work instead **marks known-stale spans dead** and later **physically drops** them while keeping survivors verbatim. **DynCLM** is that reclaim idea with a **cost-model deferral**: soft-invalidation stays append-only until carrying dead tokens costs more than one batched rewrite.
+Long agent sessions fill the context window with obsolete tool output, wrong drafts, and stale facts. Something has to reclaim space. Common production practice is **lossy summarization** (fold older turns into a short note). The CLM line of work instead **marks known-stale spans dead** and later **physically drops** them while keeping survivors verbatim. **DynCLM** is that reclaim idea with a **cost-model deferral**: soft-invalidation stays append-only until carrying dead tokens costs more than one batched rewrite. How we mark spans (`<<<DYNCLM_IGNORE …>>>`), when the cost model fires, and how rewrite rebuilds the context from survivors only: **[method.md](method.md)**.
 
 This report answers a local ship question on oMLX:
 
