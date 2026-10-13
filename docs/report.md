@@ -21,7 +21,7 @@ Every efficiency claim is **versus that suite’s reference baseline** (raw for 
 
 ## Executive summary
 
-Live oMLX `Qwen3.8-27B-4bit` (Apple M5 Max). Gate / quality / long-horizon A from decision suite `20261010T145959Z_decision`. Compaction suites use the current summarize baseline.
+Live 3-arm decision suite on oMLX `Qwen3.8-27B-4bit` (Apple M5 Max 128GB, oMLX 8 GB in memory cache): short gate + graded quality + long-horizon A + compaction matrix (16k / 64k).
 
 | Suite | Ref. baseline | Headline |
 |---|---|---|
@@ -73,7 +73,7 @@ Live oMLX `Qwen3.8-27B-4bit` (Apple M5 Max). Gate / quality / long-horizon A fro
 
 ![Tok/s vs max context](figures/compaction_toks_vs_limit.svg)
 
-Regenerate with `make charts` (`scripts/gen_charts.py`, stdlib SVG - no matplotlib).
+Regenerate with `make charts` (`scripts/gen_charts.py`, stdlib SVG - no matplotlib). Sources: decision suite `20261010T145959Z_decision` (gate / quality / LH-A) and `20261013T201630Z_lh_compaction_summary` (LH-B).
 
 ---
 

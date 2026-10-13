@@ -52,9 +52,13 @@ echo "=== 4/4 LIVE LONG-HORIZON B (16k + 64k) ==="
 cp -f "$RUN_ROOT/longhorizon-compaction-report.md" docs/longhorizon-compaction-report.md || true
 
 # Point chart generator at this run's artifacts via copies into conventional paths used by gen_charts
-mkdir -p results/quality results/longhorizon results/longhorizon_compaction_live
+mkdir -p results/quality results/longhorizon/cells results/longhorizon_compaction_live results/gate
 cp -f "$RUN_ROOT/quality/report.json" results/quality/report.json 2>/dev/null || true
 cp -f "$RUN_ROOT/longhorizon/report.json" results/longhorizon/report.json 2>/dev/null || true
+if [[ -d "$RUN_ROOT/longhorizon/cells" ]]; then
+  rm -rf results/longhorizon/cells
+  cp -R "$RUN_ROOT/longhorizon/cells" results/longhorizon/cells
+fi
 cp -f "$RUN_ROOT/longhorizon_compaction/matrix_report.json" results/longhorizon_compaction_live/matrix_report.json 2>/dev/null || true
 cp -f "$RUN_ROOT/gate/report.json" results/gate/report.json 2>/dev/null || true
 

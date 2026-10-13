@@ -11,6 +11,10 @@ ROOT = Path(__file__).resolve().parents[1]
 FIG = ROOT / "docs" / "figures"
 FIG.mkdir(parents=True, exist_ok=True)
 
+# Canonical runs cited by docs/report.md (prefer these over mutable results/ copies).
+DECISION_RUN = ROOT / "results" / "runs" / "20261010T145959Z_decision"
+LH_B_SUMMARY_RUN = ROOT / "results" / "runs" / "20261013T201630Z_lh_compaction_summary"
+
 COLORS = {
     "baseline": "#6b7280",
     "baseline-compact": "#9ca3af",
@@ -25,6 +29,13 @@ LABELS = {
     "immediate-rewrite": "CLM (immediate rewrite)",
     "clm": "CLM (immediate rewrite)",
 }
+
+
+def first_existing(*paths: Path) -> Path | None:
+    for p in paths:
+        if p is not None and p.exists():
+            return p
+    return None
 
 
 def esc(s: str) -> str:
@@ -158,9 +169,13 @@ def multi_line(path: Path, title: str, curves: dict[str, list[tuple[float, float
 
 
 def from_longhorizon() -> None:
-    p = ROOT / "results" / "longhorizon" / "report.json"
-    if not p.exists():
+    p = first_existing(
+        DECISION_RUN / "longhorizon" / "report.json",
+        ROOT / "results" / "longhorizon" / "report.json",
+    )
+    if p is None:
         return
+    print("longhorizon charts from", p.relative_to(ROOT))
     rep = json.loads(p.read_text())
     arms = rep.get("arms", {})
     # bar charts late metrics
@@ -195,8 +210,11 @@ def from_longhorizon() -> None:
         "Tokens / second",
     )
 
-    # turn curves averaged across sessions
-    cells = ROOT / "results" / "longhorizon" / "cells"
+    # turn curves averaged across sessions (same run as report.json)
+    cells = first_existing(p.parent / "cells", ROOT / "results" / "longhorizon" / "cells")
+    if cells is None:
+        return
+    print("longhorizon turn curves from", cells.relative_to(ROOT))
     curves_ctx: dict[str, list[tuple[float, float]]] = {}
     curves_wall: dict[str, list[tuple[float, float]]] = {}
     for arm_dir in sorted(cells.glob("*")):
@@ -218,9 +236,13 @@ def from_longhorizon() -> None:
 
 
 def from_gate() -> None:
-    p = ROOT / "results" / "gate" / "report.json"
-    if not p.exists():
+    p = first_existing(
+        DECISION_RUN / "gate" / "report.json",
+        ROOT / "results" / "gate" / "report.json",
+    )
+    if p is None:
         return
+    print("gate charts from", p.relative_to(ROOT))
     rep = json.loads(p.read_text())
     stats = rep.get("arm_stats", {})
     grouped_bars(
@@ -244,9 +266,13 @@ def from_gate() -> None:
 
 
 def from_quality() -> None:
-    p = ROOT / "results" / "quality" / "report.json"
-    if not p.exists():
+    p = first_existing(
+        DECISION_RUN / "quality" / "report.json",
+        ROOT / "results" / "quality" / "report.json",
+    )
+    if p is None:
         return
+    print("quality charts from", p.relative_to(ROOT))
     rep = json.loads(p.read_text())
     arms = rep.get("arms", {})
     grouped_bars(
@@ -258,11 +284,11 @@ def from_quality() -> None:
 
 
 def from_compaction() -> None:
-    candidates = [
+    p = first_existing(
+        LH_B_SUMMARY_RUN / "longhorizon_compaction" / "matrix_report.json",
         ROOT / "results" / "longhorizon_compaction_live" / "matrix_report.json",
         ROOT / "results" / "longhorizon_compaction" / "matrix_report.json",
-    ]
-    p = next((c for c in candidates if c.exists()), None)
+    )
     if p is None:
         return
     rep = json.loads(p.read_text())
