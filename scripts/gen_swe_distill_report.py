@@ -162,7 +162,7 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
     per_task_grouped(FIG / "swe_per_task_accuracy.svg", tasks)
 
     lines: list[str] = []
-    lines.append("# DynCLM SWE-Distill — Extensive Report\n\n")
+    lines.append("# DynCLM SWE-Distill  - Extensive Report\n\n")
     lines.append(
         f"Generated: {rep.get('generated_at')} · Model `{rep.get('model_id')}` · "
         f"Hardware `{rep.get('hardware_id')}` · live={rep.get('live')}\n\n"
@@ -192,7 +192,7 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
         "FIFO drop. Expect modest accuracy gaps when the summary still carries the fix, and "
         "larger gaps only after the early fragment fades from the summary budget. "
         f"Baseline accuracy **{bc.get('accuracy_pct', 0):.1f}%** with spec survive "
-        f"**{bc.get('spec_survive_pct', 0):.0f}%** — see §2.\n\n"
+        f"**{bc.get('spec_survive_pct', 0):.0f}%**: see §2.\n\n"
     )
 
     lines.append("## 2. How to read Baseline+compact accuracy (do not misread)\n\n")
@@ -200,16 +200,16 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
         "This suite measures **reclaim under window pressure** against a competent "
         "summarization baseline (CLM-paper style), not raw single-shot coding ability.\n\n"
         "Causal chain for Baseline+compact:\n\n"
-        "1. **Plant** — turn 1 inserts the correct fix fragment as `[SPEC]`.\n"
-        "2. **Flood** — later turns append plausible wrong SPECs (reviewer dumps) plus "
+        "1. **Plant**: turn 1 inserts the correct fix fragment as `[SPEC]`.\n"
+        "2. **Flood**: later turns append plausible wrong SPECs (reviewer dumps) plus "
         "padding sized so cumulative tokens exceed `max_context` (~1.4×).\n"
-        "3. **Rolling summary compact** — when over budget, Baseline keeps `sys` + a "
+        "3. **Rolling summary compact**: when over budget, Baseline keeps `sys` + a "
         "recent raw tail and folds older spans into a budget-capped `[CONTEXT_SUMMARY]` "
         "(early-requirements quota + newest-preferred notes), then re-prefills.\n"
-        "4. **Recency instruction** — with no ignore markers, the prompt prefers the "
+        "4. **Recency instruction**: with no ignore markers, the prompt prefers the "
         "most recent non-ignored SPEC; a lossy summary may still retain the early fix "
         "in abbreviated form, or let it fade after repeated compacts.\n"
-        "5. **Probe** — final turn grades `ANSWER: <fragment>` against the turn-1 truth.\n\n"
+        "5. **Probe**: final turn grades `ANSWER: <fragment>` against the turn-1 truth.\n\n"
         "DynCLM/CLM soft-ignore obsolete dumps and keep the early SPEC verbatim "
         f"(`spec_survive` **{dyn.get('spec_survive_pct', 0):.0f}%** / "
         f"**{imm.get('spec_survive_pct', 0):.0f}%**). Baseline `spec_survive` counts "
@@ -317,7 +317,7 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
     if lucky:
         ids = ", ".join(f"`{c.get('instance_id')}`" for c in lucky)
         lines.append(
-            f"Note: Baseline PASS with `spec_survived=false` on {ids} — lucky/format "
+            f"Note: Baseline PASS with `spec_survived=false` on {ids}  - lucky/format "
             "overlap after the authoritative SPEC was dropped, not retention of the fix.\n\n"
         )
 
@@ -354,7 +354,7 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
     base_drop = [c for c in cells if c.get("arm") == "baseline-compact" and not c.get("spec_survived")]
     lines.append(
         f"Baseline+compact lost the early SPEC (verbatim and summary) in "
-        f"**{len(base_drop)}/{bc.get('n', 0)}** tasks — the lossy-fade failure mode under "
+        f"**{len(base_drop)}/{bc.get('n', 0)}** tasks  - the lossy-fade failure mode under "
         "rolling summarization when repeated compacts crowd out the early-requirements "
         "quota (see §2).\n\n"
     )
@@ -386,7 +386,7 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
         "- Not official SWE-Bench Verified/Lite resolve (no docker, no fail-to-pass).\n"
         "- Baseline+compact accuracy is a **retention-under-compaction** metric; do not "
         "quote it as the model’s coding competence without the SPEC-survive context.\n"
-        "- Model is local `Qwen3.8-27B-4bit` — not paper Qwen3.6-27B full precision.\n"
+        "- Model is local `Qwen3.8-27B-4bit`  - not paper Qwen3.6-27B full precision.\n"
         "- FLOPs are not prefix-reuse PFLOPs; we report wall / tokens / prefill.\n"
         "- Optional later: Harbor DynCLM agent on TBLite if a paper-adjacent coding row is required.\n\n"
     )

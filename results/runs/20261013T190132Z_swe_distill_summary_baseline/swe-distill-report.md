@@ -1,4 +1,4 @@
-# DynCLM SWE-Distill — Extensive Report
+# DynCLM SWE-Distill  -  Extensive Report
 
 Generated: 2026-10-13T20:08:08.358518Z · Model `Qwen3.8-27B-4bit` · Hardware `apple-m5-max` · live=True
 
@@ -8,7 +8,7 @@ Generated: 2026-10-13T20:08:08.358518Z · Model `Qwen3.8-27B-4bit` · Hardware `
 
 On this suite, DynCLM final-probe accuracy is **100.0%** (+50.0 pp vs Baseline+compact **50.0%**); CLM is **100.0%** (+50.0 pp). Baseline+compact retains the early SPEC (verbatim or in rolling summary) in **100%** of tasks; DynCLM/CLM keep it via soft-invalidation (100% / 100%). CLM pays the highest rewrite prefill; DynCLM sits between quality parity with CLM and much lower rewrite N than always-rewrite.
 
-**Paper-adjacent read.** Baseline is Codex-style **lossy summarization**, not blind FIFO drop. Expect modest accuracy gaps when the summary still carries the fix, and larger gaps only after the early fragment fades from the summary budget. Baseline accuracy **50.0%** with spec survive **100%** — see §2.
+**Paper-adjacent read.** Baseline is Codex-style **lossy summarization**, not blind FIFO drop. Expect modest accuracy gaps when the summary still carries the fix, and larger gaps only after the early fragment fades from the summary budget. Baseline accuracy **50.0%** with spec survive **100%**: see §2.
 
 ## 2. How to read Baseline+compact accuracy (do not misread)
 
@@ -16,11 +16,11 @@ This suite measures **reclaim under window pressure** against a competent summar
 
 Causal chain for Baseline+compact:
 
-1. **Plant** — turn 1 inserts the correct fix fragment as `[SPEC]`.
-2. **Flood** — later turns append plausible wrong SPECs (reviewer dumps) plus padding sized so cumulative tokens exceed `max_context` (~1.4×).
-3. **Rolling summary compact** — when over budget, Baseline keeps `sys` + a recent raw tail and folds older spans into a budget-capped `[CONTEXT_SUMMARY]` (early-requirements quota + newest-preferred notes), then re-prefills.
-4. **Recency instruction** — with no ignore markers, the prompt prefers the most recent non-ignored SPEC; a lossy summary may still retain the early fix in abbreviated form, or let it fade after repeated compacts.
-5. **Probe** — final turn grades `ANSWER: <fragment>` against the turn-1 truth.
+1. **Plant**: turn 1 inserts the correct fix fragment as `[SPEC]`.
+2. **Flood**: later turns append plausible wrong SPECs (reviewer dumps) plus padding sized so cumulative tokens exceed `max_context` (~1.4×).
+3. **Rolling summary compact**: when over budget, Baseline keeps `sys` + a recent raw tail and folds older spans into a budget-capped `[CONTEXT_SUMMARY]` (early-requirements quota + newest-preferred notes), then re-prefills.
+4. **Recency instruction**: with no ignore markers, the prompt prefers the most recent non-ignored SPEC; a lossy summary may still retain the early fix in abbreviated form, or let it fade after repeated compacts.
+5. **Probe**: final turn grades `ANSWER: <fragment>` against the turn-1 truth.
 
 DynCLM/CLM soft-ignore obsolete dumps and keep the early SPEC verbatim (`spec_survive` **100%** / **100%**). Baseline `spec_survive` counts verbatim **or** expected fragment present in the rolling summary (**100%**).
 
@@ -37,7 +37,7 @@ re-prefill), DynCLM (soft-ignore + deferred rewrite), CLM/immediate-rewrite
 real correct fix; later turns append plausible wrong SPECs with noise ≳ 1.4×
 max_context. Instruction: prefer the most recent non-ignored SPEC. Chat serving
 uses ContextTextForServing: dead spans are stubbed (no body) so DynCLM/CLM
-prompts shrink without waiting for Rewrite — matching oMLX Chat (no KV
+prompts shrink without waiting for Rewrite  -  matching oMLX Chat (no KV
 soft-ignore). Final probe grades ANSWER: <fragment>. Not official SWE-Bench.
 Paper-adjacent contrast: lossy summary retention vs selective soft-invalidation,
 not blind FIFO drop.
@@ -119,7 +119,7 @@ _None._
 
 _None._
 
-Baseline+compact lost the early SPEC (verbatim and summary) in **0/6** tasks — the lossy-fade failure mode under rolling summarization when repeated compacts crowd out the early-requirements quota (see §2).
+Baseline+compact lost the early SPEC (verbatim and summary) in **0/6** tasks  -  the lossy-fade failure mode under rolling summarization when repeated compacts crowd out the early-requirements quota (see §2).
 
 ## 9. Efficiency deep-dive
 
@@ -143,7 +143,7 @@ Quality-adjusted read: Baseline+compact may look fast while answering from a los
 
 - Not official SWE-Bench Verified/Lite resolve (no docker, no fail-to-pass).
 - Baseline+compact accuracy is a **retention-under-compaction** metric; do not quote it as the model’s coding competence without the SPEC-survive context.
-- Model is local `Qwen3.8-27B-4bit` — not paper Qwen3.6-27B full precision.
+- Model is local `Qwen3.8-27B-4bit`  -  not paper Qwen3.6-27B full precision.
 - FLOPs are not prefix-reuse PFLOPs; we report wall / tokens / prefill.
 - Optional later: Harbor DynCLM agent on TBLite if a paper-adjacent coding row is required.
 

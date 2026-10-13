@@ -2,7 +2,7 @@
 
 Generated: 2026-10-10T17:29:26Z
 
-**Gate verdict: PASS — Phase B continues automatically**
+**Gate verdict: PASS - Phase B continues automatically**
 
 ## Setup
 
@@ -53,10 +53,10 @@ Generated: 2026-10-10T17:29:26Z
 
 ## Gate criteria G1–G4
 
-- **G1 PASS (mechanism)**: parse_rate=1.000 rewrites=5.00 shrink_err=0.0% — PASS
-- **G2 PASS (compliance)**: tail_marker_compliance=100.0% — PASS
-- **G3 PASS (quality)**: dyn=100.0% baseline=100.0% immediate=100.0% — PASS
-- **G4 PASS (cost)**: prefill_reduction=71.1% dyn_avg=5340 imm_avg=18504 — PASS
+- **G1 PASS (mechanism)**: parse_rate=1.000 rewrites=5.00 shrink_err=0.0% - PASS
+- **G2 PASS (compliance)**: tail_marker_compliance=100.0% - PASS
+- **G3 PASS (quality)**: dyn=100.0% baseline=100.0% immediate=100.0% - PASS
+- **G4 PASS (cost)**: prefill_reduction=71.1% dyn_avg=5340 imm_avg=18504 - PASS
 
 ## oMLX cache probe (SCR readiness)
 

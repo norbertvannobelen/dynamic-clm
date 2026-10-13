@@ -1,8 +1,8 @@
-# DynCLM Long-Horizon B — Compaction Matrix
+# DynCLM Long-Horizon B - Compaction Matrix
 
 Generated: 2026-10-13T20:16:31Z · Run `20261013T201630Z_lh_compaction_summary`
 
-Long-horizon suite B (compaction matrix): same session as A, but the raw baseline is replaced by baseline-compact — a Codex-style rolling summary when context exceeds max_context (keep system + recent raw tail; fold older spans into a budget-capped [CONTEXT_SUMMARY] with an early-requirements quota plus newest-preferred notes; re-prefill survivors). DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of lossy summarization. Matrix over max_context ∈ {16k,64k} this run. Per-column noise is sized so cumulative appends exceed that column's limit (~1.4×), ensuring baseline-compact must compact at every limit.
+Long-horizon suite B (compaction matrix): same session as A, but the raw baseline is replaced by baseline-compact - a Codex-style rolling summary when context exceeds max_context (keep system + recent raw tail; fold older spans into a budget-capped [CONTEXT_SUMMARY] with an early-requirements quota plus newest-preferred notes; re-prefill survivors). DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of lossy summarization. Matrix over max_context ∈ {16k,64k} this run. Per-column noise is sized so cumulative appends exceed that column's limit (~1.4×), ensuring baseline-compact must compact at every limit.
 
 **Note.** Late probe **0%** on summarize baseline is the suite’s recency trap (competing `WRONG_n` FACTs + “prefer most recent”), not proof that rolling summary drops the canary the way blind FIFO did. DynCLM/CLM stay at **100%** via soft-invalidation.
 

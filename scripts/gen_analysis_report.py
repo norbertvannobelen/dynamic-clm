@@ -78,7 +78,7 @@ def avg(vals):
 
 def fmt(v, nd=1):
     if v is None:
-        return "—"
+        return "-"
     return f"{v:.{nd}f}"
 
 

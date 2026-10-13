@@ -1,10 +1,10 @@
-# DynCLM Decision Report — Baseline vs DynCLM vs CLM
+# DynCLM Decision Report - Baseline vs DynCLM vs CLM
 
 **Run:** `20261010T145959Z_decision` · live=True · status=complete
 
 Efficient decision suite (not the 900-session policy grid): short gate + graded quality + long-horizon A + compaction matrix (16k/64k).
 
-## 1. Short live gate — session speed & cost
+## 1. Short live gate - session speed & cost
 
 Sessions/arm: 8 · Turns: 40 · live_model=True · passed=True
 
@@ -26,8 +26,8 @@ Sessions/arm: 8 · Turns: 40 · live_model=True · passed=True
 | Avg context | -53.8% (11714 → 5410) | -65.9% (11714 → 3995) |
 | Peak context | -45.1% (23009 → 12630) | -62.8% (23009 → 8556) |
 | Wall-clock / session (s) | -9.0% (402 → 366) | -12.4% (402 → 352) |
-| Rewrite prefill / session | — (0 → 5340) | — (0 → 18504) |
-| Rewrites / session | — (0 → 5) | — (0 → 17) |
+| Rewrite prefill / session | - (0 → 5340) | - (0 → 18504) |
+| Rewrites / session | - (0 → 5) | - (0 → 17) |
 | Prompt tokens / session | +22.3% (79161 → 96850) | +15.3% (79161 → 91271) |
 | Generated tokens / session | -5.3% (4755 → 4504) | -7.8% (4755 → 4386) |
 
@@ -74,4 +74,4 @@ See `docs/figures/`.
 
 ## Note on learning-900
 
-The policy-learning grid was paused/archived under the prior run (`archive_learning_900_*`). Resume with `bash scripts/resume_live_full.sh results/runs/20261009T034520Z` if needed for β/γ fitting — not required for this verdict.
+The policy-learning grid was paused/archived under the prior run (`archive_learning_900_*`). Resume with `bash scripts/resume_live_full.sh results/runs/20261009T034520Z` if needed for β/γ fitting - not required for this verdict.

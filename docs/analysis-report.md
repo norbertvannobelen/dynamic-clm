@@ -6,10 +6,10 @@ Synthetic/offline gate and Phase B results are **invalid for claims** and are ex
 
 ## What changed
 
-1. **Live required by default** — `--offline` disabled; synthetic only with `--allow-synthetic`.
-2. **Learning bug fixed** — previously only the first model was live; all models/policies/sessions now call oMLX.
-3. **Per-run archives** — each pipeline execution lands in `results/runs/<timestamp>/` with `manifest.json`; `results/latest` points at the active/most recent run.
-4. **Analysis** — `scripts/gen_analysis_report.py` averages across archived **live** runs into this file when the pipeline finishes.
+1. **Live required by default**: `--offline` disabled; synthetic only with `--allow-synthetic`.
+2. **Learning bug fixed**: previously only the first model was live; all models/policies/sessions now call oMLX.
+3. **Per-run archives**: each pipeline execution lands in `results/runs/<timestamp>/` with `manifest.json`; `results/latest` points at the active/most recent run.
+4. **Analysis**: `scripts/gen_analysis_report.py` averages across archived **live** runs into this file when the pipeline finishes.
 
 ## Pipeline (`make live-full`)
 

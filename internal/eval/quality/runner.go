@@ -400,7 +400,7 @@ func WriteMarkdownReport(path string, rep Report) error {
 	_, _ = fmt.Fprintf(f, "| Metric | Baseline | DynCLM | Δ | %% change | Better than baseline? |\n")
 	_, _ = fmt.Fprintf(f, "|---|---|---|---|---|---|\n")
 	for _, row := range rep.VsBaseline["dynclm"] {
-		better := "—"
+		better := "-"
 		if row.BetterThanBase != nil {
 			if *row.BetterThanBase {
 				better = "yes"
@@ -416,7 +416,7 @@ func WriteMarkdownReport(path string, rep Report) error {
 	_, _ = fmt.Fprintf(f, "| Metric | Baseline | Immediate | Δ | %% change | Better than baseline? |\n")
 	_, _ = fmt.Fprintf(f, "|---|---|---|---|---|---|\n")
 	for _, row := range rep.VsBaseline["immediate-rewrite"] {
-		better := "—"
+		better := "-"
 		if row.BetterThanBase != nil {
 			if *row.BetterThanBase {
 				better = "yes"

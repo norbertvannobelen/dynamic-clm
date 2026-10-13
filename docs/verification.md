@@ -1,4 +1,4 @@
-# §0 Verification — Context Language Models (CLM)
+# §0 Verification - Context Language Models (CLM)
 
 Verified 2026-10-08 against public sources (arXiv HTML, GitHub, WAI blog).
 
@@ -27,9 +27,9 @@ SCR BrowseComp-Plus serving detail (WAI blog / paper §5.3): accuracy matched at
 
 | Detail | Verified |
 |---|---|
-| K=6 span cap | Yes — "relocates up to K of them, largest first (K=6 in the main text)"; sensitivity over `{1,2,3,6,12,64}` saturates by K=6 |
-| RoPE re-rotation | Yes — "re-rotates the keys' rotary position encodings to their new positions" |
-| Recurrent-state snapshots for hybrid models | Yes — snapshot recurrent state before edit; continue from snapshot for linear-attention layers (e.g. Qwen3.6-27B hybrid) |
+| K=6 span cap | Yes - "relocates up to K of them, largest first (K=6 in the main text)"; sensitivity over `{1,2,3,6,12,64}` saturates by K=6 |
+| RoPE re-rotation | Yes - "re-rotates the keys' rotary position encodings to their new positions" |
+| Recurrent-state snapshots for hybrid models | Yes - snapshot recurrent state before edit; continue from snapshot for linear-attention layers (e.g. Qwen3.6-27B hybrid) |
 
 ## Implication for DynCLM
 

@@ -28,10 +28,10 @@ Live 3-arm decision suite on oMLX `Qwen3.8-27B-4bit` (Apple M5 Max): short gate 
 | Short live gate (8×40) | **PASS** G1–G4. DynCLM avg ctx **−53.8%**, session wall **−9.0%** vs baseline; rewrite prefill **−71.1%** vs CLM |
 | Graded quality (18 tasks) | Baseline **94.4%** → DynCLM/CLM **100%** (+5.6 pp) |
 | Long-horizon A (3×24) | Late probe **0% → 100%** (DynCLM & CLM). DynCLM late ctx **−70.8%**; CLM fastest late wall |
-| Long-horizon B (2×20 @ 16k/64k) | Summarize baseline late probe still **0%**; DynCLM/CLM **100%** at 16k/64k (recency trap under rolling summary — see §5) |
-| SWE-Distill (6 coding tasks) | Codex-style summary baseline **50%** · DynCLM/CLM **100%** (+50 pp); baseline **spec survive 100%** (was 0% under blind FIFO) — see §6 |
+| Long-horizon B (2×20 @ 16k/64k) | Summarize baseline late probe still **0%**; DynCLM/CLM **100%** at 16k/64k (recency trap under rolling summary - see §5) |
+| SWE-Distill (6 coding tasks) | Codex-style summary baseline **50%** · DynCLM/CLM **100%** (+50 pp); baseline **spec survive 100%** (was 0% under blind FIFO) - see §6 |
 
-**Bottom line.** DynCLM matches CLM on the quality axes that matter here (graded accuracy, late FACT probes, and SWE-Distill probes) while spending far fewer rewrites than always-rewrite CLM. On SWE-Distill with a paper-adjacent summarization baseline, DynCLM/CLM still win (**+50 pp**) even though the baseline now **retains** the early SPEC (`spec_survive` **100%**) — failures are recency/confusion under lossy summary, not FIFO wipeout.
+**Bottom line.** DynCLM matches CLM on the quality axes that matter here (graded accuracy, late FACT probes, and SWE-Distill probes) while spending far fewer rewrites than always-rewrite CLM. On SWE-Distill with a paper-adjacent summarization baseline, DynCLM/CLM still win (**+50 pp**) even though the baseline now **retains** the early SPEC (`spec_survive` **100%**) - failures are recency/confusion under lossy summary, not FIFO wipeout.
 
 **Ship recommendation:** **ship** with the explicit tradeoff that DynCLM pays reclaim prefill vs raw baseline (which never rewrites) and is usually slower than CLM on late wall while winning on N/prefill vs CLM.
 
@@ -73,7 +73,7 @@ Live 3-arm decision suite on oMLX `Qwen3.8-27B-4bit` (Apple M5 Max): short gate 
 
 ![Tok/s vs max context](figures/compaction_toks_vs_limit.svg)
 
-Regenerate with `make charts` (`scripts/gen_charts.py`, stdlib SVG — no matplotlib).
+Regenerate with `make charts` (`scripts/gen_charts.py`, stdlib SVG - no matplotlib).
 
 ---
 
@@ -138,7 +138,7 @@ Details: [quality-report.md](quality-report.md).
 
 ---
 
-## 4. Long-horizon A — late quality + late speed
+## 4. Long-horizon A - late quality + late speed
 
 **Claim under test.** In long sessions, obsolete tool noise accumulates; soft-invalidation + deferred rewrite improves late-session probe quality and keeps context small vs raw append-only.
 
@@ -147,7 +147,7 @@ Details: [quality-report.md](quality-report.md).
 1. Plant authoritative `[FACT]` at turn 1 (`CANARY_*`).
 2. Each turn appends large obsolete tool noise + competing pseudo-FACT (`WRONG_t`).
 3. DynCLM/CLM: harness applies `<<<DYNCLM_IGNORE>>>` on obsolete tool spans; cost model decides rewrite.
-4. Baseline: no markers — instruction says use most recent FACT → recency trap.
+4. Baseline: no markers - instruction says use most recent FACT → recency trap.
 5. Probes every N turns ask for the canary; grade exact token presence.
 6. Windows: early vs late; **late_steady** excludes rewrite spikes (except immediate-rewrite).
 
@@ -163,11 +163,11 @@ DynCLM keeps the full late-quality win (+100 pp) with ~1 rewrite/session vs CLM�
 
 ---
 
-## 5. Long-horizon B — compaction baseline × max context
+## 5. Long-horizon B - compaction baseline × max context
 
 **Motivation.** Production systems compact when hitting a window. Suite B asks whether DynCLM/CLM still win when the baseline may compact.
 
-**Protocol (delta from A)** — run `20261013T201630Z_lh_compaction_summary`
+**Protocol (delta from A)**: run `20261013T201630Z_lh_compaction_summary`
 
 - Arms: `baseline-compact`, `immediate-rewrite` (CLM), `dynclm`.
 - When over `max_context`, Codex-style rolling summary (keep `sys` + recent raw; fold older spans into `[CONTEXT_SUMMARY]`); charge full re-prefill of survivors.
@@ -184,11 +184,11 @@ Details: [longhorizon-compaction-report.md](longhorizon-compaction-report.md).
 
 ---
 
-## 6. SWE-Distill — realistic coding quality (live)
+## 6. SWE-Distill - realistic coding quality (live)
 
 Run `20261013T190132Z_swe_distill_summary_baseline` on `Qwen3.8-27B-4bit`, shared `max_context=16384`. **Baseline+compact** re-run live under Codex-style rolling summary; **DynCLM/CLM** cells reused from `20261010T225155Z_swe_distill` (unchanged reclaim path). Full write-up: [swe-distill-report.md](swe-distill-report.md).
 
-Baseline keeps `sys` + recent raw and folds older spans into a budget-capped `[CONTEXT_SUMMARY]` (early-requirements quota + newest-preferred notes). Old blind-FIFO run was Baseline **16.7%** / **0%** survive — do not cite that as current.
+Baseline keeps `sys` + recent raw and folds older spans into a budget-capped `[CONTEXT_SUMMARY]` (early-requirements quota + newest-preferred notes). Old blind-FIFO run was Baseline **16.7%** / **0%** survive - do not cite that as current.
 
 | Arm | Final-probe accuracy | Spec survive % | Avg final live | Avg final prompt | Wall (h) |
 |---|---:|---:|---:|---:|---:|
@@ -196,11 +196,11 @@ Baseline keeps `sys` + recent raw and folds older spans into a budget-capped `[C
 | DynCLM | 100.0% (6/6) | **100%** | 1939 | 2524 | **0.34** |
 | CLM | 100.0% (6/6) | **100%** | 1064 | 1454 | 0.44 |
 
-DynCLM/CLM **+50 pp** vs summarize baseline (parity with each other). Spec survive is **100%** on all arms — baseline failures are wrong/confused answers with the fix still in context, not dropped SPECs. Live ctx **−89%** (DynCLM) vs baseline; DynCLM wall still under CLM on the reused cells.
+DynCLM/CLM **+50 pp** vs summarize baseline (parity with each other). Spec survive is **100%** on all arms - baseline failures are wrong/confused answers with the fix still in context, not dropped SPECs. Live ctx **−89%** (DynCLM) vs baseline; DynCLM wall still under CLM on the reused cells.
 
 ## 7. Learning-900 policy grid (optional / incomplete)
 
-**Plan design** (`configs/learning.yaml`): 3 models × 3 task types × 5 policies × 20 sessions = **900** cells — a **DynCLM policy / βγ sweep**, not the 3-arm Baseline/DynCLM/CLM decision instrument.
+**Plan design** (`configs/learning.yaml`): 3 models × 3 task types × 5 policies × 20 sessions = **900** cells - a **DynCLM policy / βγ sweep**, not the 3-arm Baseline/DynCLM/CLM decision instrument.
 
 **Status.** Paused for disk and archived under `results/runs/20261009T034520Z/archive_learning_900_20261010T145859Z` (~207/900 cells before pause). **Not required** for the ship verdict above.
 

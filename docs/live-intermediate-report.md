@@ -1,6 +1,6 @@
 # DynCLM Live Intermediate Report
 
-**Learning-900 run:** `results/runs/20261009T034520Z` — **paused & archived** at ~207/900  
+**Learning-900 run:** `results/runs/20261009T034520Z` - **paused & archived** at ~207/900  
 **Snapshot:** `archive_learning_900_*` under that run · resume: `bash scripts/resume_live_full.sh results/runs/20261009T034520Z`  
 **Active:** efficient **decision suite** (`make decision-suite` → `docs/decision-report.md`)  
 
@@ -12,10 +12,10 @@ Secondary: what the 900-session grid is for, and whether a cheaper suite can ans
 
 ## 1. Three-arm comparison (use this for Baseline → DynCLM → CLM)
 
-### 1.1 Live gate — speed / cost (this run)
+### 1.1 Live gate - speed / cost (this run)
 
 20 sessions × 50 turns × 3 arms, `Qwen3.8-27B-4bit`, `live_model: true`.  
-Gate “success” = harness task completion (100% all arms) — **weak quality signal**.
+Gate “success” = harness task completion (100% all arms) - **weak quality signal**.
 
 | Metric | Baseline | DynCLM | CLM (immediate) |
 |---|---:|---:|---:|
@@ -40,7 +40,7 @@ Gate “success” = harness task completion (100% all arms) — **weak quality 
 
 **Read:** DynCLM ≈ CLM on graded accuracy; both **+5.6 pp** vs baseline. Single-shot tasks do **not** show the context-size win.
 
-### 1.3 Live long-horizon A (prior archive) — best quality+speed joint test
+### 1.3 Live long-horizon A (prior archive) - best quality+speed joint test
 
 Recency-trap sessions; late window:
 
@@ -52,7 +52,7 @@ Recency-trap sessions; late window:
 
 **Read:** This is the paper-relevant quality separation (0%→100%) plus steady-state speed. CLM is the speed upper bound; DynCLM keeps the quality win with far fewer rewrites.
 
-### 1.4 Live long-horizon B — compaction baseline (prior archive)
+### 1.4 Live long-horizon B - compaction baseline (prior archive)
 
 At 8k/16k/32k/64k: compaction baseline late probes **0%**; DynCLM/CLM **100%**. DynCLM late context ~⅓ of compacting baseline; CLM ~260 tokens.
 
@@ -73,7 +73,7 @@ Sample (DynCLM-only, completed policy blocks on Qwen3.8): lower β → more rewr
 
 ## 3. Can we use a more efficient benchmark for the 3-arm target?
 
-**Yes — and we largely already have one.** The 900-session grid is the wrong tool for “Baseline vs DynCLM vs CLM on speed and quality.”
+**Yes - and we largely already have one.** The 900-session grid is the wrong tool for “Baseline vs DynCLM vs CLM on speed and quality.”
 
 | Suite | Answers 3-arm speed? | Answers 3-arm quality? | Cost (order of magnitude) |
 |---|---|---|---|
@@ -87,9 +87,9 @@ Sample (DynCLM-only, completed policy blocks on Qwen3.8): lower β → more rewr
 
 To decide ship/positioning on **speed + quality** vs baseline and CLM, run (or re-run) only:
 
-1. **Long-horizon A** — 3 sessions × 24 turns × 3 arms (primary quality + late speed)  
-2. **Graded quality** — 18 × 3 (secondary accuracy)  
-3. **Gate or a shortened gate** — 5–10 sessions × 30–50 turns × 3 arms (session-level cost: ctx, prefill, wall)  
+1. **Long-horizon A**: 3 sessions × 24 turns × 3 arms (primary quality + late speed)  
+2. **Graded quality**: 18 × 3 (secondary accuracy)  
+3. **Gate or a shortened gate**: 5–10 sessions × 30–50 turns × 3 arms (session-level cost: ctx, prefill, wall)  
 4. Optional: **LH-B** at 2 limits (e.g. 16k + 64k) if compaction baseline matters  
 
 **Skip or pause the remaining ~700 learning sessions** if the goal is only the 3-arm comparison. Keep learning only if you still want β/γ regime selection across models/tasks.

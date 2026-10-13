@@ -26,17 +26,17 @@ Generated: 2026-10-10T17:34:06Z
 | final_context_tokens | 161.61 | 161.61 | +0.00 | +0.0% | yes |
 | avg_dead_tokens | 0.00 | 146.56 | +146.56 | +100.0% | no |
 | avg_live_tokens | 161.61 | 15.06 | -146.56 | -90.7% | yes |
-| avg_prefill_tokens | 0.00 | 0.00 | +0.00 | +0.0% | — |
+| avg_prefill_tokens | 0.00 | 0.00 | +0.00 | +0.0% | - |
 | avg_prompt_tokens | 405.72 | 548.28 | +142.56 | +35.1% | no |
 | avg_generated_tokens | 5.89 | 5.89 | +0.00 | +0.0% | yes |
 | avg_total_tokens | 411.61 | 554.17 | +142.56 | +34.6% | no |
-| avg_rewrites | 0.00 | 0.00 | +0.00 | +0.0% | — |
-| avg_dead_carried_turn_sum | 0.00 | 0.00 | +0.00 | +0.0% | — |
+| avg_rewrites | 0.00 | 0.00 | +0.00 | +0.0% | - |
+| avg_dead_carried_turn_sum | 0.00 | 0.00 | +0.00 | +0.0% | - |
 | avg_wall_clock_s | 1.55 | 1.77 | +0.23 | +14.6% | no |
 | total_wall_clock_s | 27.86 | 31.92 | +4.05 | +14.6% | no |
 | wall_clock_per_correct_s | 1.64 | 1.77 | +0.13 | +8.2% | no |
 | generated_tokens_per_correct | 6.24 | 5.89 | -0.35 | -5.6% | yes |
-| prefill_tokens_per_correct | 0.00 | 0.00 | +0.00 | +0.0% | — |
+| prefill_tokens_per_correct | 0.00 | 0.00 | +0.00 | +0.0% | - |
 
 ## Immediate-rewrite vs raw baseline
 
@@ -48,17 +48,17 @@ Generated: 2026-10-10T17:34:06Z
 | final_context_tokens | 161.61 | 15.06 | -146.56 | -90.7% | yes |
 | avg_dead_tokens | 0.00 | 146.56 | +146.56 | +100.0% | no |
 | avg_live_tokens | 161.61 | 15.06 | -146.56 | -90.7% | yes |
-| avg_prefill_tokens | 0.00 | 0.00 | +0.00 | +0.0% | — |
+| avg_prefill_tokens | 0.00 | 0.00 | +0.00 | +0.0% | - |
 | avg_prompt_tokens | 405.72 | 548.28 | +142.56 | +35.1% | no |
 | avg_generated_tokens | 5.89 | 5.89 | +0.00 | +0.0% | yes |
 | avg_total_tokens | 411.61 | 554.17 | +142.56 | +34.6% | no |
 | avg_rewrites | 0.00 | 1.00 | +1.00 | +100.0% | no |
-| avg_dead_carried_turn_sum | 0.00 | 0.00 | +0.00 | +0.0% | — |
+| avg_dead_carried_turn_sum | 0.00 | 0.00 | +0.00 | +0.0% | - |
 | avg_wall_clock_s | 1.55 | 1.83 | +0.29 | +18.5% | no |
 | total_wall_clock_s | 27.86 | 33.01 | +5.15 | +18.5% | no |
 | wall_clock_per_correct_s | 1.64 | 1.83 | +0.19 | +11.9% | no |
 | generated_tokens_per_correct | 6.24 | 5.89 | -0.35 | -5.6% | yes |
-| prefill_tokens_per_correct | 0.00 | 0.00 | +0.00 | +0.0% | — |
+| prefill_tokens_per_correct | 0.00 | 0.00 | +0.00 | +0.0% | - |
 
 ## Headlines
 

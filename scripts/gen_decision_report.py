@@ -31,13 +31,13 @@ def pct(a, b):
 
 def fmt(v, nd=1):
     if v is None:
-        return "—"
+        return "-"
     return f"{v:.{nd}f}"
 
 
 def fmt_pct(v):
     if v is None:
-        return "—"
+        return "-"
     return f"{v:+.1f}%"
 
 
@@ -55,7 +55,7 @@ def main() -> None:
     man = load(root / "manifest.json") or {}
 
     lines: list[str] = []
-    lines.append("# DynCLM Decision Report — Baseline vs DynCLM vs CLM\n\n")
+    lines.append("# DynCLM Decision Report  - Baseline vs DynCLM vs CLM\n\n")
     lines.append(f"**Run:** `{root.name}` · live={man.get('live')} · status={man.get('status')}\n\n")
     lines.append(
         "Efficient decision suite (not the 900-session policy grid): "
@@ -63,7 +63,7 @@ def main() -> None:
     )
 
     # Gate
-    lines.append("## 1. Short live gate — session speed & cost\n\n")
+    lines.append("## 1. Short live gate  - session speed & cost\n\n")
     if not gate:
         lines.append("_Gate results missing._\n\n")
     else:
@@ -116,7 +116,7 @@ def main() -> None:
             a = arms.get(arm, {})
             lines.append(
                 f"| {LABELS[arm]} | {fmt(a.get('accuracy_pct'))}% | "
-                f"{a.get('correct','—')}/{a.get('n','—')} | "
+                f"{a.get('correct','-')}/{a.get('n','-')} | "
                 f"{fmt(a.get('avg_wall_clock_s'), 2)} | {fmt(a.get('avg_context_tokens'), 0)} |\n"
             )
 
@@ -208,7 +208,7 @@ def main() -> None:
         "\n## Note on learning-900\n\n"
         "The policy-learning grid was paused/archived under the prior run "
         "(`archive_learning_900_*`). Resume with `bash scripts/resume_live_full.sh "
-        "results/runs/20261009T034520Z` if needed for β/γ fitting — not required for this verdict.\n"
+        "results/runs/20261009T034520Z` if needed for β/γ fitting  - not required for this verdict.\n"
     )
 
     out = Path(args.out)

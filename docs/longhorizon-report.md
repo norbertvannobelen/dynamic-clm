@@ -33,14 +33,14 @@ Long-horizon suite A: early authoritative FACT planted at turn 1; each later tur
 | avg_context_tokens | 6857.33 | 2000.00 | -4857.33 | -70.8% | yes |
 | peak_context_tokens | 8216.00 | 4822.00 | -3394.00 | -41.3% | yes |
 | final_context_tokens | 6857.33 | 2000.00 | -4857.33 | -70.8% | yes |
-| avg_dead_tokens | 0.00 | 0.00 | +0.00 | +0.0% | — |
-| avg_live_tokens | 0.00 | 0.00 | +0.00 | +0.0% | — |
+| avg_dead_tokens | 0.00 | 0.00 | +0.00 | +0.0% | - |
+| avg_live_tokens | 0.00 | 0.00 | +0.00 | +0.0% | - |
 | avg_prefill_tokens | 0.00 | 144.00 | +144.00 | +100.0% | no |
 | avg_prompt_tokens | 4244.78 | 1598.67 | -2646.11 | -62.3% | yes |
 | avg_generated_tokens | 4.33 | 5.00 | +0.67 | +15.4% | no |
 | avg_total_tokens | 4249.11 | 1603.67 | -2645.44 | -62.3% | yes |
 | avg_rewrites | 0.00 | 1.00 | +1.00 | +100.0% | no |
-| avg_dead_carried_turn_sum | 0.00 | 0.00 | +0.00 | +0.0% | — |
+| avg_dead_carried_turn_sum | 0.00 | 0.00 | +0.00 | +0.0% | - |
 | avg_wall_clock_s | 2.60 | 3.78 | +1.19 | +45.6% | no |
 | total_wall_clock_s | 160.03 | 239.33 | +79.31 | +49.6% | no |
 | wall_clock_per_correct_s | 0.00 | 26.59 | +26.59 | +100.0% | no |
@@ -54,6 +54,6 @@ Long-horizon suite A: early authoritative FACT planted at turn 1; each later tur
 - **Late wall-clock vs baseline (all late turns):** +45.6% (2.60s → 3.78s)
 - **Late steady wall-clock vs baseline (exclude rewrite/compact turns):** +45.6% (2.60s → 3.78s)
 - **Late steady gen tok/s vs baseline:** -20.6% (2.19 → 1.74)
-- **Immediate-rewrite (CLM) late steady wall vs baseline:** -23.2% (2.60s → 1.99s) — upper bound if N is high
+- **Immediate-rewrite (CLM) late steady wall vs baseline:** -23.2% (2.60s → 1.99s) - upper bound if N is high
 
 Note: gen tok/s uses completion_tokens/wall_clock (includes prefill). Steady-state excludes rewrite/compact-event turns so generation-under-context is not mixed with reclaim spikes.

@@ -12,9 +12,9 @@ Full delineation, arm definitions, and how to read accuracy gaps (paper-sized vs
 
 ## Phases
 
-1. **Append** — normal operation; prefix cache preserved.
-2. **Soft invalidation** — append `<<<DYNCLM_IGNORE ...>>>` markers; still append-only.
-3. **Deferred rewrite** — one batched physical rewrite when the cost model fires.
+1. **Append**: normal operation; prefix cache preserved.
+2. **Soft invalidation**: append `<<<DYNCLM_IGNORE ...>>>` markers; still append-only.
+3. **Deferred rewrite**: one batched physical rewrite when the cost model fires.
 
 ## Local stack
 

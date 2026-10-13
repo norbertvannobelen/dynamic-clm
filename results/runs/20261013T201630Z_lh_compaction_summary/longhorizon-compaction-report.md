@@ -1,8 +1,8 @@
-# DynCLM Long-Horizon B — Compaction Matrix
+# DynCLM Long-Horizon B  -  Compaction Matrix
 
 Generated: 2026-10-13T20:16:31Z
 
-Long-horizon suite B (compaction matrix): same session as A, but the raw baseline is replaced by baseline-compact — a Codex-style rolling summary when context exceeds max_context (keep system + recent raw tail; fold older spans into a budget-capped [CONTEXT_SUMMARY] with an early-requirements quota plus newest-preferred notes; re-prefill survivors). DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of lossy summarization. Matrix over max_context ∈ {8k,16k,32k,64k}. Per-column noise is sized so cumulative appends exceed that column's limit (~1.4×), ensuring baseline-compact must compact at every limit without forcing 64k-sized prompts into the 8k column.
+Long-horizon suite B (compaction matrix): same session as A, but the raw baseline is replaced by baseline-compact  -  a Codex-style rolling summary when context exceeds max_context (keep system + recent raw tail; fold older spans into a budget-capped [CONTEXT_SUMMARY] with an early-requirements quota plus newest-preferred notes; re-prefill survivors). DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of lossy summarization. Matrix over max_context ∈ {8k,16k,32k,64k}. Per-column noise is sized so cumulative appends exceed that column's limit (~1.4×), ensuring baseline-compact must compact at every limit without forcing 64k-sized prompts into the 8k column.
 
 - Model: `Qwen3.8-27B-4bit` · Hardware: `apple-m5-max` · Live: true
 - Sessions/arm: 2 · Turns: 20 · NoisePad: 4587 chars
