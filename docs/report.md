@@ -29,9 +29,9 @@ Live 3-arm decision suite on oMLX `Qwen3.8-27B-4bit` (Apple M5 Max): short gate 
 | Graded quality (18 tasks) | Baseline **94.4%** → DynCLM/CLM **100%** (+5.6 pp) |
 | Long-horizon A (3×24) | Late probe **0% → 100%** (DynCLM & CLM). DynCLM late ctx **−70.8%**; CLM fastest late wall |
 | Long-horizon B (2×20 @ 16k/64k) | Compacting baseline late probe **0%**; DynCLM/CLM **100%** at both limits |
-| SWE-Distill (6 coding tasks) | Final probe: Baseline+compact **16.7%** · DynCLM **100%** · CLM **100%** |
+| SWE-Distill (6 coding tasks) | Final probe: Baseline+compact **16.7%** · DynCLM **100%** · CLM **100%** (Baseline = retention failure under blind compact, not coding skill — see §6) |
 
-**Bottom line.** DynCLM matches CLM on the quality axes that matter here (graded accuracy, late FACT probes, and SWE-Distill probes) while spending far fewer rewrites than always-rewrite CLM. On SWE-Distill (stubbed soft-ignore serving), DynCLM matches CLM at **100%** vs Baseline+compact **16.7%**, with much lower live context and **lower wall than CLM** (0.34h vs 0.44h). Blind compaction preserves wall-clock but destroys late quality.
+**Bottom line.** DynCLM matches CLM on the quality axes that matter here (graded accuracy, late FACT probes, and SWE-Distill probes) while spending far fewer rewrites than always-rewrite CLM. On SWE-Distill (stubbed soft-ignore serving), DynCLM matches CLM at **100%** vs Baseline+compact **16.7%**, with much lower live context and **lower wall than CLM** (0.34h vs 0.44h). Blind compaction can look fine on wall-clock while the early authoritative SPEC is gone (`spec_survive` **0%**) — that is why Baseline accuracy is low, not because the model cannot code when the SPEC remains.
 
 **Ship recommendation:** **ship** with the explicit tradeoff that DynCLM pays reclaim prefill vs raw baseline (which never rewrites) and is usually slower than CLM on late wall while winning on N/prefill vs CLM.
 
@@ -188,15 +188,17 @@ Details: [longhorizon-compaction-report.md](longhorizon-compaction-report.md).
 
 Run `20261010T225155Z_swe_distill` on `Qwen3.8-27B-4bit`, shared `max_context=16384`, Baseline+compact / DynCLM / CLM. Full write-up: [swe-distill-report.md](swe-distill-report.md).
 
+**How to read Baseline+compact 16.7% (do not misread).** This is a **retention-under-compaction** score, not “the model only solves 1/6 coding issues.” Protocol: plant the correct `[SPEC]` at turn 1 → flood with plausible wrong SPECs + noise past `max_context` → Baseline blindly drops oldest spans (almost always including the real SPEC; **spec survive 0%**) → instruction prefers the most recent SPEC → probe grades against turn-1 truth. DynCLM/CLM soft-ignore obsolete dumps and keep the early SPEC (**spec survive 100%**), so they hit **100%**. The single Baseline PASS (`matplotlib`) had `spec_survived=false` — luck/format overlap, not retention. Same model on short graded quality (no reclaim trap) is **94.4% → 100%**. Details: [swe-distill-report.md §2](swe-distill-report.md#2-how-to-read-baselinecompact-accuracy-do-not-misread).
+
 Headline context is **final live** (decode-relevant tracker tokens). After `ContextTextForServing` (dead bodies stubbed) and a DynCLM-only re-run, DynCLM matches CLM on quality and is competitive on wall.
 
 | Arm | Final-probe accuracy | Spec survive % | Avg final live | Avg final prompt | Wall (h) |
 |---|---:|---:|---:|---:|---:|
-| Baseline+compact | 16.7% (1/6) | 0% | 14714 | 9651 | 1.00 |
-| DynCLM | 100.0% (6/6) | 100% | 1939 | 2524 | **0.34** |
-| CLM | 100.0% (6/6) | 100% | 1064 | 1454 | 0.44 |
+| Baseline+compact | 16.7% (1/6) | **0%** | 14714 | 9651 | 1.00 |
+| DynCLM | 100.0% (6/6) | **100%** | 1939 | 2524 | **0.34** |
+| CLM | 100.0% (6/6) | **100%** | 1064 | 1454 | 0.44 |
 
-DynCLM **+83.3 pp** vs Baseline+compact (parity with CLM). Live ctx **−87%** vs Baseline+compact; wall **faster than CLM** on this suite (deferred rewrite + stubbed soft-ignore prompts).
+DynCLM **+83.3 pp** vs Baseline+compact (parity with CLM) because reclaim kept the authoritative SPEC. Live ctx **−87%** vs Baseline+compact; wall **faster than CLM** on this suite (deferred rewrite + stubbed soft-ignore prompts).
 
 ## 7. Learning-900 policy grid (optional / incomplete)
 

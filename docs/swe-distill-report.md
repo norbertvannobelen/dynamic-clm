@@ -8,7 +8,27 @@ Generated: 2026-10-13T18:13:18.323331Z · Model `Qwen3.8-27B-4bit` · Hardware `
 
 On this suite, DynCLM final-probe accuracy is **100.0%** (+83.3 pp vs Baseline+compact **16.7%**); CLM is **100.0%** (+83.3 pp). Baseline+compact keeps the early SPEC in only **0%** of tasks (blind drop), while DynCLM/CLM retain it via soft-invalidation (100% / 100%). CLM pays the highest rewrite prefill; DynCLM sits between quality parity with CLM and much lower rewrite N than always-rewrite.
 
-## 2. Methodology
+**Read the Baseline score as retention, not coding skill.** Baseline+compact at **16.7%** means the arm usually no longer had the authoritative fix in context at probe time (spec survive **0%**). It is **not** a claim that the model solves only ~1/6 SWE-style issues when the correct SPEC is still present. See §2.
+
+## 2. How to read Baseline+compact accuracy (do not misread)
+
+This suite measures **whether reclaim keeps the turn-1 authoritative `[SPEC]` available under window pressure**, not raw single-shot coding ability.
+
+Causal chain for Baseline+compact:
+
+1. **Plant** — turn 1 inserts the correct fix fragment as `[SPEC]`.
+2. **Flood** — later turns append plausible wrong SPECs (reviewer dumps) plus padding sized so cumulative tokens exceed `max_context` (~1.4×).
+3. **Blind compact** — when over budget, Baseline drops oldest spans (keeps `sys` when possible) and re-prefills survivors. The early correct SPEC is almost always among the dropped spans.
+4. **Recency instruction** — with no ignore markers, the prompt says to use the **most recent** SPEC. After compaction, that is a wrong dump.
+5. **Probe** — final turn grades `ANSWER: <fragment>` against the turn-1 truth.
+
+So a low Baseline score is the **designed contrast**: blind truncation + recency trap. DynCLM/CLM soft-ignore obsolete dumps and keep the early SPEC (`spec_survive` **100%** / **100%**), which is why they reach **100.0%** / **100.0%**.
+
+**What 16.7% is not.** It is not “Qwen only codes correctly 1/6 of the time,” and it is not comparable to official SWE-Bench resolve rate. Graded short-form quality on the same model is **94.4% → 100%** (raw baseline → DynCLM/CLM) when context is not under this reclaim trap.
+
+**Why one Baseline task can still PASS.** A rare pass with `spec_survived=false` (here: `matplotlib__tight-layout-distill-04`) is luck / format overlap after the authoritative SPEC was already dropped — not evidence that compaction retained the fix. Treat it as noise in a 6-task n.
+
+## 3. Methodology
 
 SWE-Distill (realistic): SWE-Bench-Lite-inspired multi-turn coding quality + latency.
 Shared max_context forces reclaim. Arms: baseline-compact (blind drop oldest +
@@ -34,7 +54,7 @@ Wall came in under the 2h/arm budget while still forcing compaction (baseline av
 
 Fixtures live under `testdata/swe_distill/` (paraphrased Lite-inspired excerpts with per-file attribution).
 
-## 3. Headline results
+## 4. Headline results
 
 Context columns: **final live** is decode-relevant tracker live tokens; **final total** is live+dead footprint; **final prompt** is oMLX `prompt_tokens` on the probe (marker arms still serialize ignored dead spans until rewrite). **Steady wall** excludes compact/rewrite turns when present.
 
@@ -44,7 +64,7 @@ Context columns: **final live** is decode-relevant tracker live tokens; **final 
 | DynCLM | 100.0% | 6/6 | 1939 | 8401 | 2524 | 2107 | 0.00 | 2.00 | 1238 | 1222.4 | 189.6 | 0.34 |
 | CLM | 100.0% | 6/6 | 1064 | 1117 | 1454 | 3661 | 0.00 | 28.00 | 5074 | 1572.6 | 262.1 | 0.44 |
 
-## 4. Vs Baseline+compact
+## 5. Vs Baseline+compact
 
 | Metric | DynCLM | CLM |
 |---|---|---|
@@ -56,7 +76,7 @@ Context columns: **final live** is decode-relevant tracker live tokens; **final 
 | Steady wall % | -58.1% | -42.1% |
 | Prefill Δ (avg) | -45547 | -41710 |
 
-## 5. Per-task breakdown
+## 6. Per-task breakdown
 
 | Instance | Expected | Baseline+compact | DynCLM | CLM | Final ctx B/D/C | Reclaim events B/D/C |
 |---|---|:-:|:-:|:-:|---|---|
@@ -67,7 +87,9 @@ Context columns: **final live** is decode-relevant tracker live tokens; **final 
 | `pytest-dev__mark-parametrize-distill-05` | `ids callable must return str` | FAIL | PASS | PASS | 14764 / 1923 / 546 | 4 / 2 / 28 |
 | `sympy__is-polynomial-distill-03` | `except PolynomialError: return False` | FAIL | PASS | PASS | 15055 / 1905 / 534 | 3 / 2 / 28 |
 
-## 6. Figures
+Note: Baseline PASS with `spec_survived=false` on `matplotlib__tight-layout-distill-04` — lucky/format overlap after the authoritative SPEC was dropped, not retention of the fix.
+
+## 7. Figures
 
 ![Probe accuracy](figures/swe_probe_accuracy.svg)
 
@@ -79,7 +101,9 @@ Context columns: **final live** is decode-relevant tracker live tokens; **final 
 
 ![Per-task](figures/swe_per_task_accuracy.svg)
 
-## 7. Failure analysis
+## 8. Failure analysis
+
+Baseline failures below are **recency-trap / missing-SPEC** answers, not evidence that the model cannot emit the correct fragment when that SPEC is still in context (DynCLM/CLM prove it can).
 
 ### Baseline+compact
 
@@ -99,11 +123,11 @@ _None._
 
 _None._
 
-Baseline+compact dropped the early SPEC in **6/6** tasks — the expected failure mode under blind truncation when noise exceeds the window.
+Baseline+compact dropped the early SPEC in **6/6** tasks — the expected failure mode under blind truncation when noise exceeds the window (see §2). Example trap answer: django returned `ANSWER: len(list(self)) > 0`, which is a plausible wrong SPEC that remained after compaction, not the authoritative turn-1 fix.
 
-## 8. Efficiency deep-dive
+## 9. Efficiency deep-dive
 
-Quality-adjusted read: Baseline+compact may post competitive wall-clock while answering from a recency trap after the SPEC falls out of the window. DynCLM/CLM spend reclaim prefill to keep the authoritative snippet. Prefer accuracy-first comparisons; treat wall alone as secondary.
+Quality-adjusted read: Baseline+compact may post competitive wall-clock while answering from a recency trap after the SPEC falls out of the window. DynCLM/CLM spend reclaim prefill to keep the authoritative snippet. Prefer accuracy-first comparisons; treat wall alone as secondary. Do not interpret Baseline wall as “fast and good enough” when `spec_survive` is ~0%.
 
 | Arm | Spec survive % | Avg wall/task (s) |
 |---|---:|---:|
@@ -111,22 +135,23 @@ Quality-adjusted read: Baseline+compact may post competitive wall-clock while an
 | DynCLM | 100.0 | 203.7 |
 | CLM | 100.0 | 262.1 |
 
-## 9. Relation to prior suites
+## 10. Relation to prior suites
 
 | Suite | What it showed | What SWE-Distill adds |
 |---|---|---|
 | Short gate | Mechanism + prefill vs CLM | Coding issue/snippet domain |
-| Graded quality | Short multi-span accuracy | Multi-turn growth + compaction pressure |
+| Graded quality | Short multi-span accuracy (no reclaim trap) | Multi-turn growth + compaction pressure |
 | Long-horizon A/B | FACT canary + compact matrix | SWE-inspired fix fragments under same reclaim physics |
 
-## 10. Limitations & next steps
+## 11. Limitations & next steps
 
 - Not official SWE-Bench Verified/Lite resolve (no docker, no fail-to-pass).
+- Baseline+compact accuracy is a **retention-under-compaction** metric; do not quote it as the model’s coding competence without the SPEC-survive context.
 - Model is local `Qwen3.8-27B-4bit` — not paper Qwen3.6-27B full precision.
 - FLOPs are not prefix-reuse PFLOPs; we report wall / tokens / prefill.
 - Optional later: Harbor DynCLM agent on TBLite if a paper-adjacent coding row is required.
 
-## 11. Artifacts
+## 12. Artifacts
 
 - Source report JSON: `results/runs/20261010T225155Z_swe_distill/swe_distill/report.json`
 - Figures: `docs/figures/swe_*.svg`

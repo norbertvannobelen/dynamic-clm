@@ -186,8 +186,45 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
         f"CLM pays the highest rewrite prefill; DynCLM sits between quality parity with CLM "
         f"and much lower rewrite N than always-rewrite.\n\n"
     )
+    lines.append(
+        "**Read the Baseline score as retention, not coding skill.** "
+        f"Baseline+compact at **{bc.get('accuracy_pct', 0):.1f}%** means the arm usually "
+        "no longer had the authoritative fix in context at probe time "
+        f"(spec survive **{bc.get('spec_survive_pct', 0):.0f}%**). It is **not** a claim that "
+        "the model solves only ~1/6 SWE-style issues when the correct SPEC is still present. "
+        "See §2.\n\n"
+    )
 
-    lines.append("## 2. Methodology\n\n")
+    lines.append("## 2. How to read Baseline+compact accuracy (do not misread)\n\n")
+    lines.append(
+        "This suite measures **whether reclaim keeps the turn-1 authoritative `[SPEC]` "
+        "available under window pressure**, not raw single-shot coding ability.\n\n"
+        "Causal chain for Baseline+compact:\n\n"
+        "1. **Plant** — turn 1 inserts the correct fix fragment as `[SPEC]`.\n"
+        "2. **Flood** — later turns append plausible wrong SPECs (reviewer dumps) plus "
+        "padding sized so cumulative tokens exceed `max_context` (~1.4×).\n"
+        "3. **Blind compact** — when over budget, Baseline drops oldest spans (keeps "
+        "`sys` when possible) and re-prefills survivors. The early correct SPEC is "
+        "almost always among the dropped spans.\n"
+        "4. **Recency instruction** — with no ignore markers, the prompt says to use the "
+        "**most recent** SPEC. After compaction, that is a wrong dump.\n"
+        "5. **Probe** — final turn grades `ANSWER: <fragment>` against the turn-1 truth.\n\n"
+        "So a low Baseline score is the **designed contrast**: blind truncation + recency "
+        "trap. DynCLM/CLM soft-ignore obsolete dumps and keep the early SPEC "
+        f"(`spec_survive` **{dyn.get('spec_survive_pct', 0):.0f}%** / "
+        f"**{imm.get('spec_survive_pct', 0):.0f}%**), which is why they reach "
+        f"**{dyn.get('accuracy_pct', 0):.1f}%** / **{imm.get('accuracy_pct', 0):.1f}%**.\n\n"
+        "**What 16.7% is not.** It is not “Qwen only codes correctly 1/6 of the time,” "
+        "and it is not comparable to official SWE-Bench resolve rate. Graded short-form "
+        "quality on the same model is **94.4% → 100%** (raw baseline → DynCLM/CLM) when "
+        "context is not under this reclaim trap.\n\n"
+        "**Why one Baseline task can still PASS.** A rare pass with `spec_survived=false` "
+        "(here: `matplotlib__tight-layout-distill-04`) is luck / format overlap after the "
+        "authoritative SPEC was already dropped — not evidence that compaction retained "
+        "the fix. Treat it as noise in a 6-task n.\n\n"
+    )
+
+    lines.append("## 3. Methodology\n\n")
     lines.append(str(rep.get("methodology") or "") + "\n\n")
     tw_bc = float(bc.get("total_wall_s") or 0) / 3600
     tw_dyn = float(dyn.get("total_wall_s") or 0) / 3600
@@ -212,7 +249,7 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
         "with per-file attribution).\n\n"
     )
 
-    lines.append("## 3. Headline results\n\n")
+    lines.append("## 4. Headline results\n\n")
     lines.append(
         "Context columns: **final live** is decode-relevant tracker live tokens; "
         "**final total** is live+dead footprint; **final prompt** is oMLX `prompt_tokens` on the probe "
@@ -241,7 +278,7 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
         )
     lines.append("\n")
 
-    lines.append("## 4. Vs Baseline+compact\n\n")
+    lines.append("## 5. Vs Baseline+compact\n\n")
     lines.append("| Metric | DynCLM | CLM |\n|---|---|---|\n")
     vd, vi = vs.get("dynclm") or {}, vs.get("immediate-rewrite") or {}
     lines.append(
@@ -254,7 +291,7 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
         f"| Prefill Δ (avg) | {float(vd.get('prefill_delta') or 0):+.0f} | {float(vi.get('prefill_delta') or 0):+.0f} |\n\n"
     )
 
-    lines.append("## 5. Per-task breakdown\n\n")
+    lines.append("## 6. Per-task breakdown\n\n")
     lines.append(
         "| Instance | Expected | Baseline+compact | DynCLM | CLM | Final ctx B/D/C | Reclaim events B/D/C |\n"
         "|---|---|:-:|:-:|:-:|---|---|\n"
@@ -274,15 +311,33 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
             f"{ev.get('baseline-compact', 0)} / {ev.get('dynclm', 0)} / {ev.get('immediate-rewrite', 0)} |\n"
         )
     lines.append("\n")
+    lucky = [
+        c
+        for c in cells
+        if c.get("arm") == "baseline-compact"
+        and c.get("success")
+        and not c.get("spec_survived")
+    ]
+    if lucky:
+        ids = ", ".join(f"`{c.get('instance_id')}`" for c in lucky)
+        lines.append(
+            f"Note: Baseline PASS with `spec_survived=false` on {ids} — lucky/format "
+            "overlap after the authoritative SPEC was dropped, not retention of the fix.\n\n"
+        )
 
-    lines.append("## 6. Figures\n\n")
+    lines.append("## 7. Figures\n\n")
     lines.append("![Probe accuracy](figures/swe_probe_accuracy.svg)\n\n")
     lines.append("![Final context](figures/swe_final_context.svg)\n\n")
     lines.append("![Wall-clock](figures/swe_wall.svg)\n\n")
     lines.append("![Prefill](figures/swe_prefill.svg)\n\n")
     lines.append("![Per-task](figures/swe_per_task_accuracy.svg)\n\n")
 
-    lines.append("## 7. Failure analysis\n\n")
+    lines.append("## 8. Failure analysis\n\n")
+    lines.append(
+        "Baseline failures below are **recency-trap / missing-SPEC** answers, not "
+        "evidence that the model cannot emit the correct fragment when that SPEC is "
+        "still in context (DynCLM/CLM prove it can).\n\n"
+    )
     for title, key in [
         ("Baseline+compact", "baseline-compact"),
         ("DynCLM", "dynclm"),
@@ -303,15 +358,19 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
     base_drop = [c for c in cells if c.get("arm") == "baseline-compact" and not c.get("spec_survived")]
     lines.append(
         f"Baseline+compact dropped the early SPEC in **{len(base_drop)}/{bc.get('n', 0)}** tasks — "
-        "the expected failure mode under blind truncation when noise exceeds the window.\n\n"
+        "the expected failure mode under blind truncation when noise exceeds the window "
+        "(see §2). Example trap answer: django returned `ANSWER: len(list(self)) > 0`, "
+        "which is a plausible wrong SPEC that remained after compaction, not the "
+        "authoritative turn-1 fix.\n\n"
     )
 
-    lines.append("## 8. Efficiency deep-dive\n\n")
+    lines.append("## 9. Efficiency deep-dive\n\n")
     lines.append(
         "Quality-adjusted read: Baseline+compact may post competitive wall-clock while answering "
         "from a recency trap after the SPEC falls out of the window. DynCLM/CLM spend reclaim "
         "prefill to keep the authoritative snippet. Prefer accuracy-first comparisons; treat "
-        "wall alone as secondary.\n\n"
+        "wall alone as secondary. Do not interpret Baseline wall as “fast and good enough” "
+        "when `spec_survive` is ~0%.\n\n"
     )
     lines.append(
         f"| Arm | Spec survive % | Avg wall/task (s) |\n|---|---:|---:|\n"
@@ -320,24 +379,26 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
         f"| CLM | {float(imm.get('spec_survive_pct') or 0):.1f} | {float(imm.get('avg_wall_s') or 0):.1f} |\n\n"
     )
 
-    lines.append("## 9. Relation to prior suites\n\n")
+    lines.append("## 10. Relation to prior suites\n\n")
     lines.append(
         "| Suite | What it showed | What SWE-Distill adds |\n"
         "|---|---|---|\n"
         "| Short gate | Mechanism + prefill vs CLM | Coding issue/snippet domain |\n"
-        "| Graded quality | Short multi-span accuracy | Multi-turn growth + compaction pressure |\n"
+        "| Graded quality | Short multi-span accuracy (no reclaim trap) | Multi-turn growth + compaction pressure |\n"
         "| Long-horizon A/B | FACT canary + compact matrix | SWE-inspired fix fragments under same reclaim physics |\n\n"
     )
 
-    lines.append("## 10. Limitations & next steps\n\n")
+    lines.append("## 11. Limitations & next steps\n\n")
     lines.append(
         "- Not official SWE-Bench Verified/Lite resolve (no docker, no fail-to-pass).\n"
+        "- Baseline+compact accuracy is a **retention-under-compaction** metric; do not "
+        "quote it as the model’s coding competence without the SPEC-survive context.\n"
         "- Model is local `Qwen3.8-27B-4bit` — not paper Qwen3.6-27B full precision.\n"
         "- FLOPs are not prefix-reuse PFLOPs; we report wall / tokens / prefill.\n"
         "- Optional later: Harbor DynCLM agent on TBLite if a paper-adjacent coding row is required.\n\n"
     )
 
-    lines.append("## 11. Artifacts\n\n")
+    lines.append("## 12. Artifacts\n\n")
     lines.append(f"- Source report JSON: `{report_json}`\n")
     lines.append(f"- Figures: `docs/figures/swe_*.svg`\n")
     lines.append("- Reproduce: `bash scripts/run_swe_distill.sh`\n")
