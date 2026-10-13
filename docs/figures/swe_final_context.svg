@@ -17,8 +17,8 @@
 <rect x="116.5" y="50.0" width="113.66666666666667" height="280.0" fill="#9ca3af" rx="3"/>
 <text x="173.33333333333334" y="44.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11">1.5e+04</text>
 <text x="173.33333333333334" y="350" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11">Baseline+compact</text>
-<rect x="323.16666666666663" y="123.26521827779163" width="113.66666666666667" height="206.73478172220837" fill="#2563eb" rx="3"/>
-<text x="379.99999999999994" y="117.26521827779163" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11">1.1e+04</text>
+<rect x="323.16666666666663" y="293.1009718855486" width="113.66666666666667" height="36.899028114451426" fill="#2563eb" rx="3"/>
+<text x="379.99999999999994" y="287.1009718855486" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11">1.9e+03</text>
 <text x="379.99999999999994" y="350" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11">DynCLM</text>
 <rect x="529.8333333333333" y="309.7553295122448" width="113.66666666666667" height="20.244670487755148" fill="#dc2626" rx="3"/>
 <text x="586.6666666666666" y="303.7553295122448" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11">1.1e+03</text>

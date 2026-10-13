@@ -31,7 +31,7 @@ Live 3-arm decision suite on oMLX `Qwen3.8-27B-4bit` (Apple M5 Max): short gate 
 | Long-horizon B (2×20 @ 16k/64k) | Compacting baseline late probe **0%**; DynCLM/CLM **100%** at both limits |
 | SWE-Distill (6 coding tasks) | Final probe: Baseline+compact **16.7%** · DynCLM **100%** · CLM **100%** |
 
-**Bottom line.** DynCLM matches CLM on the quality axes that matter here (graded accuracy, late FACT probes, and SWE-Distill probes) while spending far less rewrite prefill than always-rewrite CLM. On SWE-inspired multi-turn coding under compaction pressure, DynCLM matches CLM at **100%** vs Baseline+compact **16.7%**, with lower live context than the compacting baseline. CLM remains the speed upper bound on late steady wall. Blind compaction preserves wall-clock but destroys late quality.
+**Bottom line.** DynCLM matches CLM on the quality axes that matter here (graded accuracy, late FACT probes, and SWE-Distill probes) while spending far fewer rewrites than always-rewrite CLM. On SWE-Distill (stubbed soft-ignore serving), DynCLM matches CLM at **100%** vs Baseline+compact **16.7%**, with much lower live context and **lower wall than CLM** (0.34h vs 0.44h). Blind compaction preserves wall-clock but destroys late quality.
 
 **Ship recommendation:** **ship** with the explicit tradeoff that DynCLM pays reclaim prefill vs raw baseline (which never rewrites) and is usually slower than CLM on late wall while winning on N/prefill vs CLM.
 
@@ -188,15 +188,15 @@ Details: [longhorizon-compaction-report.md](longhorizon-compaction-report.md).
 
 Run `20261010T225155Z_swe_distill` on `Qwen3.8-27B-4bit`, shared `max_context=16384`, Baseline+compact / DynCLM / CLM. Full write-up: [swe-distill-report.md](swe-distill-report.md).
 
-Headline context is **final live** (decode-relevant tracker tokens), not live+dead footprint. After the django-only rerun (probe `MaxTokens` headroom), DynCLM and CLM both clear all six probes.
+Headline context is **final live** (decode-relevant tracker tokens). After `ContextTextForServing` (dead bodies stubbed) and a DynCLM-only re-run, DynCLM matches CLM on quality and is competitive on wall.
 
 | Arm | Final-probe accuracy | Spec survive % | Avg final live | Avg final prompt | Wall (h) |
 |---|---:|---:|---:|---:|---:|
 | Baseline+compact | 16.7% (1/6) | 0% | 14714 | 9651 | 1.00 |
-| DynCLM | 100.0% (6/6) | 100% | 10864 | 13517 | 1.36 |
+| DynCLM | 100.0% (6/6) | 100% | 1939 | 2524 | **0.34** |
 | CLM | 100.0% (6/6) | 100% | 1064 | 1454 | 0.44 |
 
-DynCLM **+83.3 pp** vs Baseline+compact (parity with CLM). Live ctx is **−26%** vs Baseline+compact; DynCLM’s higher **prompt** and wall reflect oMLX still serializing soft-ignored dead spans until rewrite (no KV soft-ignore) — prefer live ctx over prompt/wall when reading DynCLM efficiency here.
+DynCLM **+83.3 pp** vs Baseline+compact (parity with CLM). Live ctx **−87%** vs Baseline+compact; wall **faster than CLM** on this suite (deferred rewrite + stubbed soft-ignore prompts).
 
 ## 7. Learning-900 policy grid (optional / incomplete)
 
