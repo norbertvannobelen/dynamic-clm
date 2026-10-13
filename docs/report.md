@@ -28,7 +28,7 @@ Live 3-arm decision suite on oMLX `Qwen3.8-27B-4bit` (Apple M5 Max): short gate 
 | Short live gate (8×40) | **PASS** G1–G4. DynCLM avg ctx **−53.8%**, session wall **−9.0%** vs baseline; rewrite prefill **−71.1%** vs CLM |
 | Graded quality (18 tasks) | Baseline **94.4%** → DynCLM/CLM **100%** (+5.6 pp) |
 | Long-horizon A (3×24) | Late probe **0% → 100%** (DynCLM & CLM). DynCLM late ctx **−70.8%**; CLM fastest late wall |
-| Long-horizon B (2×20 @ 16k/64k) | Compacting baseline late probe **0%**; DynCLM/CLM **100%** at both limits |
+| Long-horizon B (2×20 @ 16k/64k) | Summarize baseline late probe still **0%**; DynCLM/CLM **100%** at 16k/64k (recency trap under rolling summary — see §5) |
 | SWE-Distill (6 coding tasks) | Codex-style summary baseline **50%** · DynCLM/CLM **100%** (+50 pp); baseline **spec survive 100%** (was 0% under blind FIFO) — see §6 |
 
 **Bottom line.** DynCLM matches CLM on the quality axes that matter here (graded accuracy, late FACT probes, and SWE-Distill probes) while spending far fewer rewrites than always-rewrite CLM. On SWE-Distill with a paper-adjacent summarization baseline, DynCLM/CLM still win (**+50 pp**) even though the baseline now **retains** the early SPEC (`spec_survive` **100%**) — failures are recency/confusion under lossy summary, not FIFO wipeout.
@@ -167,18 +167,18 @@ DynCLM keeps the full late-quality win (+100 pp) with ~1 rewrite/session vs CLM�
 
 **Motivation.** Production systems compact when hitting a window. Suite B asks whether DynCLM/CLM still win when the baseline may compact.
 
-**Protocol (delta from A)**
+**Protocol (delta from A)** — run `20261013T201630Z_lh_compaction_summary`
 
 - Arms: `baseline-compact`, `immediate-rewrite` (CLM), `dynclm`.
-- When compact exceeds `max_context`, apply Codex-style rolling summary (keep `sys` + recent raw; fold older spans into `[CONTEXT_SUMMARY]`); charge full re-prefill of survivors.
-- Decision-suite matrix: **16384, 65536** (2 sessions × 20 turns).
+- When over `max_context`, Codex-style rolling summary (keep `sys` + recent raw; fold older spans into `[CONTEXT_SUMMARY]`); charge full re-prefill of survivors.
+- Matrix: **16384, 65536** (2 sessions × 20 turns).
 
 | Max ctx | Compact probe% | DynCLM | CLM | Compact ctx | DynCLM ctx | CLM ctx | Compact wall | DynCLM wall | CLM wall |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 16384 | 0.0 | 100.0 | 100.0 | 14154 | 5154 | 320 | 6.23 | 4.18 | 1.75 |
-| 65536 | 0.0 | 100.0 | 100.0 | 57914 | 19348 | 320 | 3.56 | 6.50 | 1.71 |
+| 16384 | 0.0 | 100.0 | 100.0 | 14502 | 5154 | 320 | 4.04 | 1.45 | 1.15 |
+| 65536 | 0.0 | 100.0 | 100.0 | 58201 | 19348 | 320 | 3.90 | 1.78 | 1.65 |
 
-Prior live matrix used blind FIFO compact (late probes **0%** vs DynCLM/CLM **100%**). With rolling summary, expect the baseline to retain early FACTs more often; re-run the matrix before treating those probe gaps as current.
+**Read.** Even with rolling summary (not blind FIFO), late probes stay **0%** for baseline: the session plants competing `[FACT] … WRONG_n` dumps and instructs “use the most recent FACT,” so the model answers `WRONG_*` while DynCLM/CLM soft-ignore obsolete dumps and keep **100%**. This suite is a stronger recency trap than SWE-Distill (where summarize baseline reached **50%** with **100%** SPEC survive). Quality-adjusted, DynCLM/CLM still dominate; compact baseline can look fine on wall while answering wrong.
 
 Details: [longhorizon-compaction-report.md](longhorizon-compaction-report.md).
 
@@ -263,7 +263,7 @@ Recommendation: **ship** for the DynCLM reclaim policy (quality parity with CLM,
 | Decision report | [decision-report.md](decision-report.md) |
 | SWE-Distill | [swe-distill-report.md](swe-distill-report.md) · `results/runs/20261013T190132Z_swe_distill_summary_baseline/` |
 | Figures | `docs/figures/*.svg` |
-| Long-horizon A/B | [longhorizon-report.md](longhorizon-report.md), [longhorizon-compaction-report.md](longhorizon-compaction-report.md) |
+| Long-horizon A/B | [longhorizon-report.md](longhorizon-report.md), [longhorizon-compaction-report.md](longhorizon-compaction-report.md) · LH-B re-run `results/runs/20261013T201630Z_lh_compaction_summary/` |
 | Gate / quality | [interim-report.md](interim-report.md), [quality-report.md](quality-report.md) |
 | Learning archive | `results/runs/20261009T034520Z/archive_learning_900_*` |
 | Paper verification | [verification.md](verification.md) |

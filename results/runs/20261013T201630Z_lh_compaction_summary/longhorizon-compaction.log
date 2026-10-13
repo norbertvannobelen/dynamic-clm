@@ -1,0 +1,69 @@
+{
+  "by_max_context": {
+    "16384": {
+      "baseline-compact": {
+        "late_avg_context": 14502.5,
+        "late_probe_accuracy": 0,
+        "late_steady_tok_s": 2.407420635203748,
+        "late_steady_wall_s": 4.042778128583334,
+        "peak_context": 16009,
+        "total_prefill": 51608,
+        "total_rewrites": 4
+      },
+      "dynclm": {
+        "late_avg_context": 5154,
+        "late_probe_accuracy": 100,
+        "late_steady_tok_s": 3.3336582508539423,
+        "late_steady_wall_s": 1.4455053333571428,
+        "peak_context": 9708,
+        "total_prefill": 498,
+        "total_rewrites": 4
+      },
+      "immediate-rewrite": {
+        "late_avg_context": 319.5,
+        "late_probe_accuracy": 100,
+        "late_steady_tok_s": 3.8942017875997808,
+        "late_steady_wall_s": 1.1534445103125002,
+        "peak_context": 371,
+        "total_prefill": 3544,
+        "total_rewrites": 40
+      }
+    },
+    "65536": {
+      "baseline-compact": {
+        "late_avg_context": 58201.25,
+        "late_probe_accuracy": 0,
+        "late_steady_tok_s": 1.121584909966326,
+        "late_steady_wall_s": 3.898407506916667,
+        "peak_context": 65133,
+        "total_prefill": 205648,
+        "total_rewrites": 4
+      },
+      "dynclm": {
+        "late_avg_context": 19348.125,
+        "late_probe_accuracy": 100,
+        "late_steady_tok_s": 2.7382887517399856,
+        "late_steady_wall_s": 1.7758122232142857,
+        "peak_context": 37236,
+        "total_prefill": 498,
+        "total_rewrites": 4
+      },
+      "immediate-rewrite": {
+        "late_avg_context": 319.5,
+        "late_probe_accuracy": 100,
+        "late_steady_tok_s": 2.7386530611870534,
+        "late_steady_wall_s": 1.6497525261249997,
+        "peak_context": 371,
+        "total_prefill": 3544,
+        "total_rewrites": 40
+      }
+    }
+  },
+  "live": true,
+  "max_contexts": [
+    16384,
+    65536
+  ],
+  "noise_pad": 4587
+}
+long-horizon B report → results/runs/20261013T201630Z_lh_compaction_summary/longhorizon-compaction-report.md

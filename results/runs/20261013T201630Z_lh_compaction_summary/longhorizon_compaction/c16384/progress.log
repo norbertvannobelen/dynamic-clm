@@ -1,0 +1,12 @@
+2026-10-13T20:16:31Z start baseline-compact-00 live=true max_ctx=16384
+2026-10-13T20:18:09Z finish baseline-compact-00 probes_ok=false turns=20
+2026-10-13T20:18:09Z start baseline-compact-01 live=true max_ctx=16384
+2026-10-13T20:18:49Z finish baseline-compact-01 probes_ok=false turns=20
+2026-10-13T20:18:49Z start immediate-rewrite-00 live=true max_ctx=16384
+2026-10-13T20:19:07Z finish immediate-rewrite-00 probes_ok=true turns=20
+2026-10-13T20:19:07Z start immediate-rewrite-01 live=true max_ctx=16384
+2026-10-13T20:19:25Z finish immediate-rewrite-01 probes_ok=true turns=20
+2026-10-13T20:19:25Z start dynclm-00 live=true max_ctx=16384
+2026-10-13T20:19:47Z finish dynclm-00 probes_ok=true turns=20
+2026-10-13T20:19:47Z start dynclm-01 live=true max_ctx=16384
+2026-10-13T20:20:10Z finish dynclm-01 probes_ok=true turns=20

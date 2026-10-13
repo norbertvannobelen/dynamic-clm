@@ -1,0 +1,11 @@
+{
+  "run_id": "20261013T201630Z_lh_compaction_summary",
+  "started_at": "2026-10-13T20:16:30Z",
+  "live": true,
+  "suites": [
+    "longhorizon_compaction"
+  ],
+  "status": "complete",
+  "notes": "LH-B compaction matrix under Codex-style summarize baseline; limits 16k/64k, 2 sessions \u00d7 20 turns",
+  "finished_at": "2026-10-13T20:26:29Z"
+}
