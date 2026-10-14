@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Agent sessions on Apple Silicon fill the context window with obsolete tool dumps and stale drafts. Reclaim that **rewrites and re-prefills every turn** is especially expensive when **memory bandwidth** is the limit - a common reason people call CLM a poor fit for Mac. This repo measures that tradeoff on the local stack below (**M5 Max** + oMLX today; **M5 Pro** / base **M5** profiles still open): either CLM is usable there, or **DynCLM**'s calibrated **hardware profile** (`ρ`) can defer reclaim until rewrite cost is worth paying.
+Long agent sessions fill the context window with obsolete tool dumps and stale drafts - that is a reclaim problem on any host. What is Mac-specific is the **cost** of reclaim that **rewrites and re-prefills every turn**: on unified-memory Apple Silicon, **memory bandwidth** is often the limit, which is why people call CLM a poor fit for Mac. This repo measures that tradeoff on the local stack below (**M5 Max** + oMLX today; **M5 Pro** / base **M5** profiles still open): either CLM is usable there, or **DynCLM**'s calibrated **hardware profile** (`ρ`) can defer reclaim until rewrite cost is worth paying.
 
 **CLM** soft-marks stale spans and physically rewrites on every turn that has dead text - correct selective reclaim, paid as rewrite/re-prefill each time. **DynCLM** keeps the same mark → drop → verbatim-survivors methodology, but marks internally and **defers** the physical rewrite until a cost model says budget/memory pressure warrants a batch. Where per-turn rewrite is expensive, that should cut rewrite load while matching CLM on selective-ignore quality canaries.
 
