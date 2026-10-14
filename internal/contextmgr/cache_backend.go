@@ -18,7 +18,7 @@ type LogicalCacheBackend struct {
 	K int
 }
 
-// SupportsSCR is false — this is accounting-only.
+// SupportsSCR is false - this is accounting-only.
 func (l *LogicalCacheBackend) SupportsSCR() bool { return false }
 
 // RelocateSpans estimates prefill under an SCR-like K-cap policy.

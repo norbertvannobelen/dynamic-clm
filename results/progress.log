@@ -1,4 +1,4 @@
-2026-10-08T23:10:54Z calibration missing; using prior — run dynclm-calibrate
+2026-10-08T23:10:54Z calibration missing; using prior - run dynclm-calibrate
 2026-10-08T23:10:54Z gate start
 2026-10-08T23:10:54Z start cell arm=baseline session=baseline-000 live=false
 2026-10-08T23:10:54Z finish cell arm=baseline session=baseline-000 success=true prefill=0 rewrites=0
@@ -120,7 +120,7 @@
 2026-10-08T23:10:54Z finish cell arm=dynclm session=dynclm-018 success=true prefill=12612 rewrites=10
 2026-10-08T23:10:54Z start cell arm=dynclm session=dynclm-019 live=false
 2026-10-08T23:10:54Z finish cell arm=dynclm session=dynclm-019 success=true prefill=12612 rewrites=10
-2026-10-08T23:10:54Z GATE PASS — Phase B may continue
+2026-10-08T23:10:54Z GATE PASS - Phase B may continue
 2026-10-08T23:11:21Z gate start
 2026-10-08T23:11:21Z start cell arm=baseline session=baseline-000 live=false
 2026-10-08T23:11:21Z finish cell arm=baseline session=baseline-000 success=true prefill=0 rewrites=0
@@ -242,7 +242,7 @@
 2026-10-08T23:11:21Z finish cell arm=dynclm session=dynclm-018 success=true prefill=17415 rewrites=12
 2026-10-08T23:11:21Z start cell arm=dynclm session=dynclm-019 live=false
 2026-10-08T23:11:21Z finish cell arm=dynclm session=dynclm-019 success=true prefill=17415 rewrites=12
-2026-10-08T23:11:21Z GATE PASS — Phase B may continue
+2026-10-08T23:11:21Z GATE PASS - Phase B may continue
 2026-10-08T23:11:29Z learning start Qwen3.8-27B-4bit/coding/beta04/beta04-000
 2026-10-08T23:11:29Z learning start Qwen3.8-27B-4bit/coding/beta04/beta04-001
 2026-10-08T23:11:29Z learning start Qwen3.8-27B-4bit/coding/beta04/beta04-002
@@ -1264,4 +1264,4 @@
 2026-10-09T00:54:03Z finish cell arm=dynclm session=dynclm-018 success=true prefill=17415 rewrites=12
 2026-10-09T00:54:03Z start cell arm=dynclm session=dynclm-019 live=false
 2026-10-09T00:54:03Z finish cell arm=dynclm session=dynclm-019 success=true prefill=17415 rewrites=12
-2026-10-09T00:54:04Z GATE PASS — Phase B may continue
+2026-10-09T00:54:04Z GATE PASS - Phase B may continue

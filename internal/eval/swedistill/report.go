@@ -20,7 +20,7 @@ func WriteMarkdownReport(path string, rep Report) error {
 
 	_, _ = fmt.Fprintf(f, "# DynCLM SWE-Distill Report\n\n")
 	_, _ = fmt.Fprintf(f, "Generated: %s\n\n", rep.GeneratedAt.Format(time.RFC3339))
-	_, _ = fmt.Fprintf(f, "**Disclaimer:** SWE-Bench-**inspired** distill  - not an official SWE-Bench resolve-rate evaluation.\n\n")
+	_, _ = fmt.Fprintf(f, "**Disclaimer:** SWE-Bench-**inspired** distill - not an official SWE-Bench resolve-rate evaluation.\n\n")
 	_, _ = fmt.Fprintf(f, "- Model: `%s` · Hardware: `%s` · Live: %v\n", rep.ModelID, rep.HardwareID, rep.Live)
 	_, _ = fmt.Fprintf(f, "- max_context: **%d** · turns/task: **%d** · noise_pad: **%d** chars\n",
 		rep.MaxContext, rep.MaxTurns, rep.NoisePad)

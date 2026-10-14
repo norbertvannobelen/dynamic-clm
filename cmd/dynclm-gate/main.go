@@ -31,7 +31,7 @@ type gateYAML struct {
 func main() {
 	cfgPath := flag.String("config", "configs/gate.yaml", "config path")
 	allowSynthetic := flag.Bool("allow-synthetic", false, "permit synthetic gate (no oMLX)")
-	offline := flag.Bool("offline", false, "removed — use --allow-synthetic")
+	offline := flag.Bool("offline", false, "removed - use --allow-synthetic")
 	sessions := flag.Int("sessions", 0, "override sessions per arm")
 	turns := flag.Int("turns", 0, "override max turns")
 	runRoot := flag.String("run-root", "", "optional results/runs/<id> root (created if empty)")
@@ -86,14 +86,14 @@ func main() {
 	if err != nil {
 		fatal(err)
 	}
-	// SuiteDir is .../gate; gate.Run writes into ResultsDir/gate/ — set parent.
+	// SuiteDir is .../gate; gate.Run writes into ResultsDir/gate/ - set parent.
 	resultsForGate := run.Root
 
 	cal := scheduler.DefaultM5MaxPrior(y.ModelID)
 	if c, err := scheduler.LoadCalibration(y.CalibrationPath); err == nil {
 		cal = c
 	} else {
-		tracing.ProgressLog(resultsForGate, "calibration missing; using prior — run dynclm-calibrate")
+		tracing.ProgressLog(resultsForGate, "calibration missing; using prior - run dynclm-calibrate")
 	}
 
 	var cacheProbe map[string]string
@@ -147,7 +147,7 @@ func main() {
 
 	if !rep.Passed {
 		_ = run.Finish(false, "GATE FAIL")
-		tracing.ProgressLog(resultsForGate, "GATE FAIL — stopping before Phase B")
+		tracing.ProgressLog(resultsForGate, "GATE FAIL - stopping before Phase B")
 		os.Exit(2)
 	}
 	// When attached to a multi-suite run root, do not mark the whole run complete.
@@ -161,10 +161,10 @@ func main() {
 		if _, err := run.SuiteDir("gate"); err != nil {
 			tracing.ProgressLog(resultsForGate, "suite dir refresh: "+err.Error())
 		}
-		tracing.ProgressLog(resultsForGate, "GATE PASS — continuing parent run")
+		tracing.ProgressLog(resultsForGate, "GATE PASS - continuing parent run")
 	} else {
 		_ = run.Finish(true, "GATE PASS")
-		tracing.ProgressLog(resultsForGate, "GATE PASS — Phase B may continue")
+		tracing.ProgressLog(resultsForGate, "GATE PASS - Phase B may continue")
 	}
 	fmt.Println("RUN_ID=" + run.ID)
 

@@ -229,7 +229,7 @@ func (t *Tracker) ContextText(includeDead bool) string {
 // ContextTextForServing builds the prompt for Chat/completion backends that cannot
 // mask dead KV. Live spans are emitted in full. Dead spans are replaced by a short
 // ignore stub (no body), so soft-invalidation reduces billed prompt size the way
-// DynCLM intends — without waiting for Rewrite() to drop text.
+// DynCLM intends - without waiting for Rewrite() to drop text.
 //
 // If emitIgnoreStubs is false, dead spans are omitted entirely (baseline path).
 func (t *Tracker) ContextTextForServing(emitIgnoreStubs bool) string {

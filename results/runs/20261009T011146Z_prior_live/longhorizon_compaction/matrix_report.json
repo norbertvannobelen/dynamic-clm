@@ -6,7 +6,7 @@
   "max_turns": 16,
   "sessions_per_arm": 1,
   "noise_pad": 2867,
-  "methodology": "Long-horizon suite B (compaction matrix): same recency-trap session as A, but the raw baseline is replaced by baseline-compact — when context exceeds max_context it drops oldest spans (keeping only the system prompt when possible), forcing a full re-prefill of survivors. DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of blind truncation. Matrix over max_context ∈ {8k,16k,32k,64k}. Noise is sized so cumulative appends exceed the largest limit, ensuring baseline-compact must compact at every limit.",
+  "methodology": "Long-horizon suite B (compaction matrix): same recency-trap session as A, but the raw baseline is replaced by baseline-compact - when context exceeds max_context it drops oldest spans (keeping only the system prompt when possible), forcing a full re-prefill of survivors. DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of blind truncation. Matrix over max_context ∈ {8k,16k,32k,64k}. Noise is sized so cumulative appends exceed the largest limit, ensuring baseline-compact must compact at every limit.",
   "max_contexts": [
     8192,
     16384,
@@ -142,7 +142,7 @@
       "probe_every": 4,
       "early_through_turn": 5,
       "late_from_turn": 10,
-      "methodology": "Long-horizon suite B (compaction matrix): same recency-trap session as A, but the raw baseline is replaced by baseline-compact — when context exceeds max_context it drops oldest spans (keeping only the system prompt when possible), forcing a full re-prefill of survivors. DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of blind truncation. Matrix over max_context ∈ {8k,16k,32k,64k}. Noise is sized so cumulative appends exceed the largest limit, ensuring baseline-compact must compact at every limit.",
+      "methodology": "Long-horizon suite B (compaction matrix): same recency-trap session as A, but the raw baseline is replaced by baseline-compact - when context exceeds max_context it drops oldest spans (keeping only the system prompt when possible), forcing a full re-prefill of survivors. DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of blind truncation. Matrix over max_context ∈ {8k,16k,32k,64k}. Noise is sized so cumulative appends exceed the largest limit, ensuring baseline-compact must compact at every limit.",
       "arms": {
         "baseline-compact": {
           "arm": "baseline-compact",
@@ -1539,7 +1539,7 @@
       "probe_every": 4,
       "early_through_turn": 5,
       "late_from_turn": 10,
-      "methodology": "Long-horizon suite B (compaction matrix): same recency-trap session as A, but the raw baseline is replaced by baseline-compact — when context exceeds max_context it drops oldest spans (keeping only the system prompt when possible), forcing a full re-prefill of survivors. DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of blind truncation. Matrix over max_context ∈ {8k,16k,32k,64k}. Noise is sized so cumulative appends exceed the largest limit, ensuring baseline-compact must compact at every limit.",
+      "methodology": "Long-horizon suite B (compaction matrix): same recency-trap session as A, but the raw baseline is replaced by baseline-compact - when context exceeds max_context it drops oldest spans (keeping only the system prompt when possible), forcing a full re-prefill of survivors. DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of blind truncation. Matrix over max_context ∈ {8k,16k,32k,64k}. Noise is sized so cumulative appends exceed the largest limit, ensuring baseline-compact must compact at every limit.",
       "arms": {
         "baseline-compact": {
           "arm": "baseline-compact",
@@ -2936,7 +2936,7 @@
       "probe_every": 4,
       "early_through_turn": 5,
       "late_from_turn": 10,
-      "methodology": "Long-horizon suite B (compaction matrix): same recency-trap session as A, but the raw baseline is replaced by baseline-compact — when context exceeds max_context it drops oldest spans (keeping only the system prompt when possible), forcing a full re-prefill of survivors. DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of blind truncation. Matrix over max_context ∈ {8k,16k,32k,64k}. Noise is sized so cumulative appends exceed the largest limit, ensuring baseline-compact must compact at every limit.",
+      "methodology": "Long-horizon suite B (compaction matrix): same recency-trap session as A, but the raw baseline is replaced by baseline-compact - when context exceeds max_context it drops oldest spans (keeping only the system prompt when possible), forcing a full re-prefill of survivors. DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of blind truncation. Matrix over max_context ∈ {8k,16k,32k,64k}. Noise is sized so cumulative appends exceed the largest limit, ensuring baseline-compact must compact at every limit.",
       "arms": {
         "baseline-compact": {
           "arm": "baseline-compact",
@@ -4333,7 +4333,7 @@
       "probe_every": 4,
       "early_through_turn": 5,
       "late_from_turn": 10,
-      "methodology": "Long-horizon suite B (compaction matrix): same recency-trap session as A, but the raw baseline is replaced by baseline-compact — when context exceeds max_context it drops oldest spans (keeping only the system prompt when possible), forcing a full re-prefill of survivors. DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of blind truncation. Matrix over max_context ∈ {8k,16k,32k,64k}. Noise is sized so cumulative appends exceed the largest limit, ensuring baseline-compact must compact at every limit.",
+      "methodology": "Long-horizon suite B (compaction matrix): same recency-trap session as A, but the raw baseline is replaced by baseline-compact - when context exceeds max_context it drops oldest spans (keeping only the system prompt when possible), forcing a full re-prefill of survivors. DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of blind truncation. Matrix over max_context ∈ {8k,16k,32k,64k}. Noise is sized so cumulative appends exceed the largest limit, ensuring baseline-compact must compact at every limit.",
       "arms": {
         "baseline-compact": {
           "arm": "baseline-compact",

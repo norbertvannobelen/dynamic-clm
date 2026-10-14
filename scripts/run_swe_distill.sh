@@ -13,7 +13,7 @@ MAX_CTX="${MAX_CTX:-16384}"
 
 code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/health || echo 000)
 if [[ "$code" != "200" ]]; then
-  echo "oMLX health=$code — start with: omlx start" >&2
+  echo "oMLX health=$code - start with: omlx start" >&2
   exit 1
 fi
 

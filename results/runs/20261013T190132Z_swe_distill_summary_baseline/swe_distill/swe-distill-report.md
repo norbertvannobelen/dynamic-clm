@@ -2,7 +2,7 @@
 
 Generated: 2026-10-13T20:08:08Z
 
-**Disclaimer:** SWE-Bench-**inspired** distill  -  not an official SWE-Bench resolve-rate evaluation.
+**Disclaimer:** SWE-Bench-**inspired** distill -  not an official SWE-Bench resolve-rate evaluation.
 
 - Model: `Qwen3.8-27B-4bit` · Hardware: `apple-m5-max` · Live: true
 - max_context: **16384** · turns/task: **28** · noise_pad: **3398** chars
@@ -19,7 +19,7 @@ re-prefill), DynCLM (soft-ignore + deferred rewrite), CLM/immediate-rewrite
 real correct fix; later turns append plausible wrong SPECs with noise ≳ 1.4×
 max_context. Instruction: prefer the most recent non-ignored SPEC. Chat serving
 uses ContextTextForServing: dead spans are stubbed (no body) so DynCLM/CLM
-prompts shrink without waiting for Rewrite  -  matching oMLX Chat (no KV
+prompts shrink without waiting for Rewrite -  matching oMLX Chat (no KV
 soft-ignore). Final probe grades ANSWER: <fragment>. Not official SWE-Bench.
 Paper-adjacent contrast: lossy summary retention vs selective soft-invalidation,
 not blind FIFO drop.

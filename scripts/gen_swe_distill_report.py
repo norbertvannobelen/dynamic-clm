@@ -162,7 +162,7 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
     per_task_grouped(FIG / "swe_per_task_accuracy.svg", tasks)
 
     lines: list[str] = []
-    lines.append("# DynCLM SWE-Distill  - Extensive Report\n\n")
+    lines.append("# DynCLM SWE-Distill - Extensive Report\n\n")
     lines.append(
         f"Generated: {rep.get('generated_at')} · Model `{rep.get('model_id')}` · "
         f"Hardware `{rep.get('hardware_id')}` · live={rep.get('live')}\n\n"
@@ -310,7 +310,7 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
     if lucky:
         ids = ", ".join(f"`{c.get('instance_id')}`" for c in lucky)
         lines.append(
-            f"Note: Baseline PASS with `spec_survived=false` on {ids}  - lucky/format "
+            f"Note: Baseline PASS with `spec_survived=false` on {ids} - lucky/format "
             "overlap after the authoritative SPEC was dropped, not retention of the fix.\n\n"
         )
 
@@ -378,7 +378,7 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
         "- Not official SWE-Bench Verified/Lite resolve (no docker, no fail-to-pass).\n"
         "- Baseline+compact accuracy is a **retention-under-compaction** metric; do not "
         "quote it as the model’s coding competence without the SPEC-survive context.\n"
-        "- Model is local `Qwen3.8-27B-4bit`  - not paper Qwen3.6-27B full precision.\n"
+        "- Model is local `Qwen3.8-27B-4bit` - not paper Qwen3.6-27B full precision.\n"
         "- FLOPs are not prefix-reuse PFLOPs; we report wall / tokens / prefill.\n"
         "- Optional later: Harbor DynCLM agent on TBLite if a paper-adjacent coding row is required.\n\n"
     )

@@ -23,7 +23,7 @@ re-prefill), DynCLM (soft-ignore + deferred rewrite), CLM/immediate-rewrite
 real correct fix; later turns append plausible wrong SPECs with noise ≳ 1.4×
 max_context. Instruction: prefer the most recent non-ignored SPEC. Chat serving
 uses ContextTextForServing: dead spans are stubbed (no body) so DynCLM/CLM
-prompts shrink without waiting for Rewrite  - matching oMLX Chat (no KV
+prompts shrink without waiting for Rewrite - matching oMLX Chat (no KV
 soft-ignore). Final probe grades ANSWER: <fragment>. Not official SWE-Bench.
 Contrast: lossy summary + recency vs selective soft-invalidation.`
 
@@ -466,7 +466,7 @@ func runCell(client *omlx.Client, cfg Config, arm string, fx Fixture) (CellResul
 		start := time.Now()
 		var got string
 		var promptTok, genTok int
-		// oMLX Chat cannot mask dead KV  - stub dead bodies so DynCLM latency tracks
+		// oMLX Chat cannot mask dead KV - stub dead bodies so DynCLM latency tracks
 		// live context (method intent) rather than serializing ignored tool dumps.
 		ctxText := tr.ContextTextForServing(usesMarkers(arm))
 		specPresent := tr.HasSpanID("spec-0")
@@ -582,7 +582,7 @@ func cellPeakLive(c CellResult) int {
 
 func cellSteadyWall(c CellResult) float64 {
 	// Prefer stored value from new cells. CLM rewrites every turn, so "non-reclaim"
-	// can be empty  - fall back to total Chat wall (rewrite itself is in-process).
+	// can be empty - fall back to total Chat wall (rewrite itself is in-process).
 	if c.SteadyWallS > 0 {
 		return c.SteadyWallS
 	}

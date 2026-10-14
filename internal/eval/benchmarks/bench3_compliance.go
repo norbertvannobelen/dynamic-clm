@@ -98,6 +98,6 @@ func oneComplianceTrial(client *omlx.Client, model, pos string, delay int, live 
 	if strings.Contains(text, secret) {
 		return false, nil
 	}
-	// Ambiguous — count as compliant if secret not echoed.
+	// Ambiguous - count as compliant if secret not echoed.
 	return true, nil
 }

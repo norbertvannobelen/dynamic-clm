@@ -1,7 +1,7 @@
 {
   "instance_id": "astropy__units-compose-distill-06",
   "repo": "astropy/astropy (inspired)",
-  "issue": "Unit composition should cancel identical bases in numerator and denominator, then simplify scale — not return a blank unit.",
+  "issue": "Unit composition should cancel identical bases in numerator and denominator, then simplify scale - not return a blank unit.",
   "correct_snippet": "def compose(unit):\n    num, den = list(unit.bases), []\n    for b, p in zip(unit.bases, unit.powers):\n        if p < 0:\n            den.append((b, -p))\n            num.remove(b)\n    return simplify(num, den, unit.scale)",
   "wrong_snippets": [
     "def compose(unit):\n    return unit.scale * unit",

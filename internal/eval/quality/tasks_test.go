@@ -7,7 +7,7 @@ func TestGrade(t *testing.T) {
 		t.Fatal("expected match")
 	}
 	if Grade("NEPTUNIA", "FAKE_NEPTUNIA_0") {
-		// substring would match — use careful expected answers without being substrings of fakes
+		// substring would match - use careful expected answers without being substrings of fakes
 		// Our fakes are FAKE_<answer>_N so "NEPTUNIA" is substring of FAKE_NEPTUNIA_0.
 		// Documented: Grade uses Contains; tasks should avoid that pitfall for live grading.
 	}

@@ -335,9 +335,9 @@ func WriteInterimMarkdown(path string, rep Report, cacheProbe map[string]string)
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}
-	passFail := "FAIL  - Phase B will not run"
+	passFail := "FAIL - Phase B will not run"
 	if rep.Passed {
-		passFail = "PASS  - Phase B continues automatically"
+		passFail = "PASS - Phase B continues automatically"
 	}
 	f, err := os.Create(path)
 	if err != nil {
@@ -393,7 +393,7 @@ func WriteInterimMarkdown(path string, rep Report, cacheProbe map[string]string)
 		if c.Pass {
 			mark = "PASS"
 		}
-		_, _ = fmt.Fprintf(f, "- **%s %s (%s)**: %s  - %s\n", c.ID, mark, c.Name, c.Detail, mark)
+		_, _ = fmt.Fprintf(f, "- **%s %s (%s)**: %s - %s\n", c.ID, mark, c.Name, c.Detail, mark)
 	}
 
 	_, _ = fmt.Fprintf(f, "\n## oMLX cache probe (SCR readiness)\n\n")

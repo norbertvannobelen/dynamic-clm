@@ -20,8 +20,8 @@ import (
 // context small (via deferred rewrite after soft invalidation) improves (1) late-
 // session answer quality and (2) generation latency because decode attention
 // scales with KV length. Prior suites were weak on this:
-//   - Gate: showed context shrink but used a synthetic agent (no live decode).
-//   - Quality: live graded answers but single-shot (no growing context).
+// - Gate: showed context shrink but used a synthetic agent (no live decode).
+// - Quality: live graded answers but single-shot (no growing context).
 // This suite is multi-turn + live oMLX, with early facts, growing tool noise,
 // periodic probes, and per-turn wall-clock / tokens/s under measured context length.
 // Soft-invalidation markers on obsolete tool spans are harness-applied so the
@@ -135,7 +135,7 @@ type MatrixReport struct {
 
 const methodologyText = `Long-horizon suite A: early authoritative FACT planted at turn 1; each later turn appends large obsolete tool noise (and competing pseudo-FACTs). Soft-invalidation markers are harness-applied on obsolete spans for DynCLM/immediate (CLM) arms; the cost-model scheduler fires batched rewrites. Periodic probes ask for the early FACT. Metrics per turn: context length, prompt/generated tokens, wall-clock, gen tokens/s. Early vs late windows express the paper claim that smaller context improves late-session quality and generation performance vs raw append-only.`
 
-const methodologyCompaction = `Long-horizon suite B (compaction matrix): same session as A, but the raw baseline is replaced by baseline-compact  - a Codex-style rolling summary when context exceeds max_context (keep system + recent raw tail; fold older spans into a budget-capped [CONTEXT_SUMMARY] with an early-requirements quota plus newest-preferred notes; re-prefill survivors). DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of lossy summarization. Matrix over max_context ∈ {8k,16k,32k,64k}. Per-column noise is sized so cumulative appends exceed that column's limit (~1.4×), ensuring baseline-compact must compact at every limit without forcing 64k-sized prompts into the 8k column.`
+const methodologyCompaction = `Long-horizon suite B (compaction matrix): same session as A, but the raw baseline is replaced by baseline-compact - a Codex-style rolling summary when context exceeds max_context (keep system + recent raw tail; fold older spans into a budget-capped [CONTEXT_SUMMARY] with an early-requirements quota plus newest-preferred notes; re-prefill survivors). DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of lossy summarization. Matrix over max_context ∈ {8k,16k,32k,64k}. Per-column noise is sized so cumulative appends exceed that column's limit (~1.4×), ensuring baseline-compact must compact at every limit without forcing 64k-sized prompts into the 8k column.`
 
 // Run executes the long-horizon suite (variant A by default).
 func Run(cfg Config) (Report, error) {
@@ -303,7 +303,7 @@ func runSession(client *omlx.Client, cfg Config, arm, sid string) (SessionResult
 	label := "session canary token"
 	tr := &contextmgr.Tracker{}
 	// Recency trap: without ignore markers, the model is told to trust the most
-	// recent FACT  - which is poisoned tool noise. With markers, obsolete FACTs
+	// recent FACT - which is poisoned tool noise. With markers, obsolete FACTs
 	// are ignored and the early authoritative FACT remains.
 	sys := "You are a careful assistant in a long coding session. " +
 		"When FACT lines conflict, use the most recent FACT that is not covered by <<<DYNCLM_IGNORE ...>>>. " +
@@ -732,7 +732,7 @@ func WriteMarkdownReport(path string, rep Report) error {
 	_, _ = fmt.Fprintf(f, "- **Late steady gen tok/s vs %s:** %+.1f%% (%.2f → %.2f)\n",
 		baseName, pct(d.LateSteady.AvgGenTokensPerSec, b.LateSteady.AvgGenTokensPerSec), b.LateSteady.AvgGenTokensPerSec, d.LateSteady.AvgGenTokensPerSec)
 	if imm, ok := rep.Arms["immediate-rewrite"]; ok {
-		_, _ = fmt.Fprintf(f, "- **Immediate-rewrite (CLM) late steady wall vs %s:** %+.1f%% (%.2fs → %.2fs)  - upper bound if N is high\n",
+		_, _ = fmt.Fprintf(f, "- **Immediate-rewrite (CLM) late steady wall vs %s:** %+.1f%% (%.2fs → %.2fs) - upper bound if N is high\n",
 			baseName, pct(imm.LateSteady.AvgWallClockS, b.LateSteady.AvgWallClockS),
 			b.LateSteady.AvgWallClockS, imm.LateSteady.AvgWallClockS)
 	}
@@ -770,7 +770,7 @@ func WriteMatrixMarkdownReport(path string, m MatrixReport) error {
 	}
 	defer f.Close()
 
-	_, _ = fmt.Fprintf(f, "# DynCLM Long-Horizon B  - Compaction Matrix\n\n")
+	_, _ = fmt.Fprintf(f, "# DynCLM Long-Horizon B - Compaction Matrix\n\n")
 	_, _ = fmt.Fprintf(f, "Generated: %s\n\n", m.GeneratedAt.Format(time.RFC3339))
 	_, _ = fmt.Fprintf(f, "%s\n\n", m.Methodology)
 	_, _ = fmt.Fprintf(f, "- Model: `%s` · Hardware: `%s` · Live: %v\n", m.ModelID, m.HardwareID, m.Live)

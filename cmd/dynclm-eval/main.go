@@ -39,7 +39,7 @@ func main() {
 	mode := flag.String("mode", "learning", "learning|report|benchmarks")
 	cfgPath := flag.String("config", "configs/learning.yaml", "learning config")
 	allowSynthetic := flag.Bool("allow-synthetic", false, "permit synthetic / no live model")
-	offline := flag.Bool("offline", false, "removed — use --allow-synthetic")
+	offline := flag.Bool("offline", false, "removed - use --allow-synthetic")
 	runRoot := flag.String("run-root", "", "results/runs/<id> root for this execution")
 	flag.Parse()
 
@@ -158,7 +158,7 @@ func runLearning(cfgPath string, allowSynthetic bool, runRoot string) error {
 						},
 						DeviceCosts:  costs,
 						ResultsDir:   run.Root,
-						UseLiveModel: live, // all models live — no primary-only shortcut
+						UseLiveModel: live, // all models live - no primary-only shortcut
 					})
 					if err != nil {
 						tracing.ProgressLog(run.Root, "learning fail: "+err.Error())
@@ -332,7 +332,7 @@ func writeFinalReport() error {
 	opt := scheduler.OptimalGarbage(cal.ToDeviceCosts(), 200, 50)
 	_, _ = fmt.Fprintf(f, "Optimal garbage window L−L′ ≈ %.1f tokens (g=200, T=50).\n\n", opt)
 	if math.IsInf(opt, 0) || math.IsNaN(opt) {
-		_, _ = fmt.Fprintf(f, "(degenerate — check calibration)\n\n")
+		_, _ = fmt.Fprintf(f, "(degenerate - check calibration)\n\n")
 	}
 	_, _ = fmt.Fprintf(f, "## Ship / no-ship (§7.3)\n\n")
 	_, _ = fmt.Fprintf(f, "- Recommendation: **%v**\n", ship.Ship)

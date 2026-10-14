@@ -25,21 +25,21 @@ EOF
 ln -sfn "runs/${RUN_ID}" results/latest
 echo "RUN_ROOT=$RUN_ROOT"
 
-# Health check — fail fast if oMLX down
+# Health check - fail fast if oMLX down
 code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/health || echo 000)
 if [[ "$code" != "200" ]]; then
-  echo "oMLX health=$code — start with: omlx start" >&2
+  echo "oMLX health=$code - start with: omlx start" >&2
   exit 1
 fi
 
 echo "=== 1/4 SHORT LIVE GATE (8 sessions × 40 turns × 3 arms) ==="
-# Skip Bench3 here — it is a 50-call compliance curve and blocked the suite after cells finished.
+# Skip Bench3 here - it is a 50-call compliance curve and blocked the suite after cells finished.
 ./bin/dynclm-gate -config configs/gate.yaml -sessions 8 -turns 40 -skip-bench3 \
   -run-root "$RUN_ROOT" 2>&1 | tee "$RUN_ROOT/gate.log"
 cp -f "$RUN_ROOT/interim-report.md" "$RUN_ROOT/decision-gate-interim.md" 2>/dev/null || true
 
 echo "=== 2/4 LIVE GRADED QUALITY ==="
-# Keep flags on one line — a broken "\\n" continuation previously aborted the suite after quality.
+# Keep flags on one line - a broken "\\n" continuation previously aborted the suite after quality.
 ./bin/dynclm-quality -model Qwen3.8-27B-4bit -fresh -results "$RUN_ROOT/quality" -out "$RUN_ROOT/quality-report.md" 2>&1 | tee "$RUN_ROOT/quality.log"
 cp -f "$RUN_ROOT/quality-report.md" docs/quality-report.md || true
 

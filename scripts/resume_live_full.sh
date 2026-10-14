@@ -54,7 +54,7 @@ if [[ ! -f results/gate/PASSED ]]; then
     cp -f "$RUN_ROOT/gate/PASSED" results/gate/PASSED
     [[ -f "$RUN_ROOT/gate/report.json" ]] && cp -f "$RUN_ROOT/gate/report.json" results/gate/report.json
   else
-    echo "No gate PASSED — re-running live gate into this run root"
+    echo "No gate PASSED - re-running live gate into this run root"
     ./bin/dynclm-gate -config configs/gate.yaml -run-root "$RUN_ROOT" 2>&1 | tee -a "$RUN_ROOT/gate.log"
   fi
 fi

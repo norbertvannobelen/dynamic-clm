@@ -15,7 +15,7 @@ This report is the **live proof attempt** of that premise on oMLX / **Apple M5 M
 1. Does DynCLM **work** (markers, rewrites, shrink) and stay cheaper on rewrite prefill than always-rewrite CLM?
 2. Does it **keep late-session answers correct** when raw append-only or summarize+recency baselines fail FACT/SPEC canaries?
 3. Does it **shrink context** (and sometimes wall-clock) enough to be worth the reclaim prefill vs a never-rewrite baseline?
-4. On this Mac SKU, is **always-rewrite CLM** still usable — or do we need DynCLM’s **hardware profile** so narrower-bandwidth chips can defer?
+4. On this Mac SKU, is **always-rewrite CLM** still usable - or do we need DynCLM’s **hardware profile** so narrower-bandwidth chips can defer?
 
 We are **not** reproducing the CLM paper’s TerminalBench / BrowseComp / EdgeBench numbers, and SWE-Distill here is a Lite-inspired reclaim harness, not official SWE-Bench resolve rate.
 

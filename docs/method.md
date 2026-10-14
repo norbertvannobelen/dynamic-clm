@@ -21,10 +21,10 @@ A competing take is that **CLM is a poor fit for Mac** because of **memory-bandw
 
 This project’s second question is that claim, tested on Apple Silicon (evidence so far: **M5 Max** + oMLX). Either outcome is useful:
 
-1. **CLM works on Mac** at usable quality and cost on the measured SKU — a direct counter to a blanket “CLM unsuitable for Mac” conclusion; and/or
-2. **DynCLM carries a hardware profile** — calibrate rewrite vs carry costs per device (`r`, `k_d`, `C_fixed` → `ρ` in `configs/calibration/`) so *when* reclaim fires depends on the machine. Narrower-bandwidth SKUs (**M5 Pro**, base **M5**) may still hit that bandwidth ceiling more than M5 Max; on those, deferred rewrite should matter more.
+1. **CLM works on Mac** at usable quality and cost on the measured SKU - a direct counter to a blanket “CLM unsuitable for Mac” conclusion; and/or
+2. **DynCLM carries a hardware profile** - calibrate rewrite vs carry costs per device (`r`, `k_d`, `C_fixed` → `ρ` in `configs/calibration/`) so *when* reclaim fires depends on the machine. Narrower-bandwidth SKUs (**M5 Pro**, base **M5**) may still hit that bandwidth ceiling more than M5 Max; on those, deferred rewrite should matter more.
 
-So DynCLM is not only “defer when rewrite is expensive in the abstract” — it is a path to **device-aware** reclaim timing if the Mac SKU split is real. Cross-SKU profiles (Pro / base M5) are still open; ship numbers today are M5 Max only.
+So DynCLM is not only “defer when rewrite is expensive in the abstract” - it is a path to **device-aware** reclaim timing if the Mac SKU split is real. Cross-SKU profiles (Pro / base M5) are still open; ship numbers today are M5 Max only.
 
 DynCLM is still a context manager (it shrinks context under a budget). It is **not** “anti-compaction.” The question is *which reclaim protocol*, *when* it fires, and *on which hardware profile*.
 

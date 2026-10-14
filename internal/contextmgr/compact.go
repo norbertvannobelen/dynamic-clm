@@ -15,7 +15,7 @@ const summarySpanID = "compact-summary"
 //     so authoritative early requirements often survive in abbreviated form;
 //   - the rest prefers newest notes so recent wrong dumps also appear.
 // Over many compacts, early detail can still fade when the early quota is
-// overcrowded — mild information loss, not a guaranteed recency trap.
+// overcrowded - mild information loss, not a guaranteed recency trap.
 //
 // Returns tokens removed from dropped spans (before summary insert), spans
 // removed, and surviving token count (re-prefill estimate).
@@ -46,7 +46,7 @@ func (t *Tracker) CompactSummarizeToBudget(budget int, keepIDs map[string]bool) 
 
 	// Keep a contiguous recent suffix that fits rawBudget, plus keepIDs
 	// (even if they sit earlier). Do not skip oversized middle spans to
-	// "reach" older needles — that would not match Codex-style compact.
+	// "reach" older needles - that would not match Codex-style compact.
 	n := len(t.spans)
 	keepIdx := make([]bool, n)
 	rawUsed := 0
@@ -78,7 +78,7 @@ func (t *Tracker) CompactSummarizeToBudget(budget int, keepIDs map[string]bool) 
 		removedSpans++
 	}
 	if removedSpans == 0 {
-		// Nothing droppable under raw policy — fall back to dropping oldest non-keep.
+		// Nothing droppable under raw policy - fall back to dropping oldest non-keep.
 		for i, sp := range t.spans {
 			if keep[sp.ID] {
 				continue
@@ -124,7 +124,7 @@ func (t *Tracker) CompactSummarizeToBudget(budget int, keepIDs map[string]bool) 
 		kept = append(kept, sp)
 	}
 	if !inserted {
-		// All dropped spans were after the last kept — append summary before tail.
+		// All dropped spans were after the last kept - append summary before tail.
 		out := make([]Span, 0, len(kept)+1)
 		// Place summary after system/keep prefix.
 		prefix := 0
