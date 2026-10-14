@@ -8,11 +8,14 @@ Companions: [method.md](method.md) · [decision-report.md](decision-report.md) �
 
 **Premise.** CLM soft-marks stale spans and physically rewrites **every turn** that has dead text - selective verbatim reclaim, but constant rewrite/re-prefill cost. **DynCLM** uses that **same** mark → drop → survivors-as-new-context methodology, but keeps marks soft until a cost model says we are tight on budget/memory, then runs one batched rewrite. Where per-turn rewrite is expensive, DynCLM should cut rewrite load versus CLM while matching CLM on quality canaries that need selective ignore. Method + session-load math: **[method.md](method.md)**.
 
-This report is the **live proof attempt** of that premise on oMLX (plus quality vs raw append-only and vs Codex-style summarize compact):
+**Mac / bandwidth.** A competing view is that CLM is unsuitable for Mac because always-rewrite/re-prefill hits **memory-bandwidth** limits on unified memory. This report is the M5 Max side of that comparison: either CLM is viable here, or DynCLM’s per-device calibration (`ρ`) is the lever for SKUs that do suffer (hypothesized: **M5 Pro**, base **M5**). Full framing: [method.md § Hardware framing](method.md#hardware-framing-mac--apple-silicon).
+
+This report is the **live proof attempt** of that premise on oMLX / **Apple M5 Max** (plus quality vs raw append-only and vs Codex-style summarize compact):
 
 1. Does DynCLM **work** (markers, rewrites, shrink) and stay cheaper on rewrite prefill than always-rewrite CLM?
 2. Does it **keep late-session answers correct** when raw append-only or summarize+recency baselines fail FACT/SPEC canaries?
 3. Does it **shrink context** (and sometimes wall-clock) enough to be worth the reclaim prefill vs a never-rewrite baseline?
+4. On this Mac SKU, is **always-rewrite CLM** still usable — or do we need DynCLM’s **hardware profile** so narrower-bandwidth chips can defer?
 
 We are **not** reproducing the CLM paper’s TerminalBench / BrowseComp / EdgeBench numbers, and SWE-Distill here is a Lite-inspired reclaim harness, not official SWE-Bench resolve rate.
 
@@ -248,7 +251,7 @@ Paper ([arXiv:2609.37725](https://arxiv.org/abs/2609.37725)) coding-adjacent eva
 - Learning-900 incomplete (207/900; one model only).
 - Not TerminalBench / BrowseComp-Plus / EdgeBench / official SWE-Bench.
 - Logical cache accounting only; no hybrid recurrent-state SCR path.
-- Single model and single machine for all ship evidence.
+- Single model and single machine for all ship evidence (**M5 Max** only; no M5 Pro / base M5 hardware-profile comparison yet).
 - Late wall/tok/s on small n are directional.
 - Graded quality is not a reclaim test; gate G3 is harness success, not graded answers.
 

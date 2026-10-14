@@ -15,7 +15,18 @@ Long agent sessions fill the context window with obsolete tool output, wrong dra
 
 On systems where **per-turn rewrite is expensive** relative to carrying soft-dead for a while, DynCLM should beat CLM on rewrite count and rewrite-prefill while matching CLM on the quality canaries that need selective ignore. The [math below](#dynclm-vs-clm-session-context-load) isolates that tradeoff; [report.md](report.md) is the live proof attempt on oMLX.
 
-DynCLM is still a context manager (it shrinks context under a budget). It is **not** “anti-compaction.” The question is *which reclaim protocol* and *when* it fires.
+### Hardware framing (Mac / Apple Silicon)
+
+A competing take is that **CLM is a poor fit for Mac** because of **memory-bandwidth** limits: every-turn rewrite / re-prefill is bandwidth-heavy on unified memory, so Mac looks like a bad host for always-rewrite CLM.
+
+This project’s second question is that claim, tested on Apple Silicon (evidence so far: **M5 Max** + oMLX). Either outcome is useful:
+
+1. **CLM works on Mac** at usable quality and cost on the measured SKU — a direct counter to a blanket “CLM unsuitable for Mac” conclusion; and/or
+2. **DynCLM carries a hardware profile** — calibrate rewrite vs carry costs per device (`r`, `k_d`, `C_fixed` → `ρ` in `configs/calibration/`) so *when* reclaim fires depends on the machine. Narrower-bandwidth SKUs (**M5 Pro**, base **M5**) may still hit that bandwidth ceiling more than M5 Max; on those, deferred rewrite should matter more.
+
+So DynCLM is not only “defer when rewrite is expensive in the abstract” — it is a path to **device-aware** reclaim timing if the Mac SKU split is real. Cross-SKU profiles (Pro / base M5) are still open; ship numbers today are M5 Max only.
+
+DynCLM is still a context manager (it shrinks context under a budget). It is **not** “anti-compaction.” The question is *which reclaim protocol*, *when* it fires, and *on which hardware profile*.
 
 ---
 
@@ -179,7 +190,7 @@ DynCLM may **raise** cumulative soft-dead footprint \(\Lambda\) while **cutting*
 
 ## What the benchmarks prove
 
-Live suites on oMLX are the proof attempt for the premise (plus quality vs raw / summarize). Do **not** mix suite deltas; each has its own reference baseline.
+Live suites on oMLX / M5 Max are the proof attempt for the deferral premise and the Mac-bandwidth question (plus quality vs raw / summarize). They do **not** yet include M5 Pro or base M5 profiles. Do **not** mix suite deltas; each has its own reference baseline.
 
 | Suite | Reference baseline | What it tests |
 |---|---|---|
