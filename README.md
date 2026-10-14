@@ -31,29 +31,11 @@ Full comparison and how markers/rewrites work: [docs/method.md](docs/method.md).
 
 Set `OMLX_API_KEY` (or rely on `~/.omlx/settings.json`).
 
-## Commands
-
-Ship evidence is the efficient 3-arm decision suite (not the optional 900-cell Phase B grid):
-
-```bash
-make build
-make test
-make calibrate       # measure r, k_d, C_fixed → ρ
-make gate            # short hypothesis gate
-make quality         # graded quality suite
-make longhorizon     # long-horizon A (vs raw)
-make longhorizon-b   # long-horizon B (vs summarize compact)
-make swe-distill     # SWE-Distill reclaim harness
-# or: make decision-suite   # gate + quality + LH A/B in one script
-```
-
-Optional / omitted: `make learning` is the Phase B β/γ policy grid (900 cells). Paused; not required for ship. See [docs/report.md](docs/report.md) § Learning-900.
-
 ## Documents
 
 ### Canonical
 
-- [docs/method.md](docs/method.md) - Premise, mark/rewrite protocols, cost-model math, what each suite proves.
+- [docs/method.md](docs/method.md) - Premise, mark/rewrite protocols, cost-model math, what each suite proves, [make commands](docs/method.md#commands).
 - [docs/report.md](docs/report.md) - Final live proof write-up: headlines, ship table, gaps (M5 Max / oMLX).
 - [docs/verification.md](docs/verification.md) - CLM paper identity and public claims treated as reproduction targets (not our numbers).
 

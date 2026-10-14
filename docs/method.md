@@ -208,3 +208,23 @@ Headline numbers and ship table live in [report.md](report.md). Suite write-ups:
 | Long-horizon / SWE-Distill | Harness applies `FormatIgnore` on obsolete dumps | Same policies; baseline(-compact) never soft-marks |
 
 Code: `internal/session/runner.go`, `internal/eval/longhorizon`, `internal/eval/swedistill`, `internal/eval/quality`, `internal/scheduler`, `internal/contextmgr`.
+
+---
+
+## Commands
+
+Ship evidence is the efficient 3-arm decision suite (not the optional 900-cell Phase B grid):
+
+```bash
+make build
+make test
+make calibrate       # measure r, k_d, C_fixed → ρ
+make gate            # short hypothesis gate
+make quality         # graded quality suite
+make longhorizon     # long-horizon A (vs raw)
+make longhorizon-b   # long-horizon B (vs summarize compact)
+make swe-distill     # SWE-Distill reclaim harness
+# or: make decision-suite   # gate + quality + LH A/B in one script
+```
+
+Optional / omitted: `make learning` is the Phase B β/γ policy grid (900 cells). Paused; not required for ship. See [report.md](report.md) § Learning-900.
