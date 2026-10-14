@@ -217,43 +217,22 @@ def from_longhorizon() -> None:
     print("longhorizon turn curves from", cells.relative_to(ROOT))
     curves_ctx: dict[str, list[tuple[float, float]]] = {}
     curves_wall: dict[str, list[tuple[float, float]]] = {}
-    curves_cum_wall: dict[str, list[tuple[float, float]]] = {}
     for arm_dir in sorted(cells.glob("*")):
         if not arm_dir.is_dir():
             continue
         arm = arm_dir.name
         acc: dict[int, list[float]] = {}
         wall: dict[int, list[float]] = {}
-        cum_wall: dict[int, list[float]] = {}
         for f in arm_dir.glob("*.json"):
             s = json.loads(f.read_text())
-            running = 0.0
             for t in s.get("turns", []):
                 turn = t["turn"]
-                w = float(t["wall_clock_s"])
-                running += w
                 acc.setdefault(turn, []).append(t["context_tokens"])
-                wall.setdefault(turn, []).append(w)
-                cum_wall.setdefault(turn, []).append(running)
+                wall.setdefault(turn, []).append(t["wall_clock_s"])
         curves_ctx[arm] = [(k, sum(v) / len(v)) for k, v in sorted(acc.items())]
         curves_wall[arm] = [(k, sum(v) / len(v)) for k, v in sorted(wall.items())]
-        curves_cum_wall[arm] = [(k, sum(v) / len(v)) for k, v in sorted(cum_wall.items())]
     multi_line(FIG / "lh_context_vs_turn.svg", "Long-horizon A: context length vs turn", curves_ctx, "Turn", "Context tokens")
     multi_line(FIG / "lh_wall_vs_turn.svg", "Long-horizon A: wall-clock vs turn", curves_wall, "Turn", "Seconds")
-    # Hypothesis frame: effective cost = cumulative wall (CLM vs DynCLM only).
-    cum_pair = {
-        a: curves_cum_wall[a]
-        for a in ("immediate-rewrite", "dynclm")
-        if a in curves_cum_wall
-    }
-    if cum_pair:
-        multi_line(
-            FIG / "lh_cum_wall_vs_turn.svg",
-            "Long-horizon A: cumulative wall vs turn",
-            cum_pair,
-            "Turn",
-            "Cumulative wall (s)",
-        )
 
 
 def from_gate() -> None:
