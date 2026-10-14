@@ -6,6 +6,8 @@ Long agent sessions fill the context window with obsolete tool output, wrong dra
 
 **CLM** (Context Language Models) soft-marks known-stale spans, then **physically rewrites** the context to drop them while keeping survivors **verbatim**. That reclaim is correct for selective deletion - but if you run it **every turn** that has dead text, you pay rewrite / re-prefill cost constantly.
 
+**DynCLM** is based on **garbage collection**: soft-mark dead spans (like marking unreachable objects), keep running while that garbage is cheap to carry, then reclaim in a batched physical rewrite when pressure warrants it (like a GC cycle) rather than collecting on every allocation.
+
 **DynCLM** uses the **same mark → drop → survivors-as-new-context methodology as CLM**. The premise is different timing:
 
 - Mark obsolete spans internally (`<<<DYNCLM_IGNORE …>>>`) and keep operating append-only while soft-dead is cheap to carry.
