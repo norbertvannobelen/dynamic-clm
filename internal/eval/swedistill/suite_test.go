@@ -34,11 +34,15 @@ func TestOfflineSuite(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	fixtures, err := LoadFixtures(fxDir)
+	if err != nil {
+		t.Fatal(err)
+	}
 	bc := rep.Arms["baseline-compact"]
 	dyn := rep.Arms["dynclm"]
 	imm := rep.Arms["immediate-rewrite"]
-	if bc.N != 6 || dyn.N != 6 || imm.N != 6 {
-		t.Fatalf("arm counts: bc=%d dyn=%d imm=%d", bc.N, dyn.N, imm.N)
+	if want := len(fixtures); bc.N != want || dyn.N != want || imm.N != want {
+		t.Fatalf("arm counts: want=%d bc=%d dyn=%d imm=%d", want, bc.N, dyn.N, imm.N)
 	}
 	if bc.AvgCompacts < 1 {
 		t.Fatalf("expected baseline-compact to fire compaction, got avg=%.2f", bc.AvgCompacts)

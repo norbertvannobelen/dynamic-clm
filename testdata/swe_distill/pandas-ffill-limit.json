@@ -1,0 +1,15 @@
+{
+  "instance_id": "pandas__ffill-limit-distill-08",
+  "repo": "pandas-dev/pandas (inspired)",
+  "issue": "Series.ffill must forward-fill at most `limit` consecutive NaN runs and leave longer gaps untouched; pass the limit through to fillna.",
+  "correct_snippet": "def ffill(self, limit=None):\n    return self.fillna(method=\"ffill\", limit=limit)",
+  "wrong_snippets": [
+    "def ffill(self, limit=None):\n    # reviewer: limit handled by caller\n    return self.fillna(method=\"ffill\")",
+    "def ffill(self, limit=None):\n    return self.fillna(method=\"bfill\", limit=limit)",
+    "def ffill(self, limit=None):\n    return self.fillna(method=\"ffill\", limit=max(limit, 1))"
+  ],
+  "expected_answer": "self.fillna(method=\"ffill\", limit=limit)",
+  "wrong_answer": "self.fillna(method=\"ffill\")",
+  "probe_question": "What call forward-fills at most limit consecutive NaNs? Reply with ONLY that call.",
+  "attribution": "SWE-Bench-Lite-inspired realistic distill; paraphrased. Not an official SWE-Bench instance."
+}
