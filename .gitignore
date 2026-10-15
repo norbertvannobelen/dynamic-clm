@@ -20,3 +20,4 @@ results/phaseb-run.log
 results/superseded/live-smoke/cells/
 # Local run archives / logs; intentionally tracked runs stay tracked.
 results/runs/
+__pycache__/

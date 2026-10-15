@@ -1,26 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="720" height="420" viewBox="0 0 720 420">
 <rect width="100%" height="100%" fill="#fafafa"/>
-<text x="360.0" y="28" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="16" font-weight="700">Gate (short multi-turn): avg prompt tokens / session</text>
+<text x="360.0" y="28" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="16" font-weight="700">Gate (short multi-turn): avg prompt tokens / session (bootstrap 95% CI)</text>
 <text x="18" y="190.0" transform="rotate(-90 18,190.0)" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#374151">Tokens</text>
 <line x1="70" y1="50" x2="70" y2="330" stroke="#111827" stroke-width="1.5"/>
 <line x1="70" y1="330" x2="690" y2="330" stroke="#111827" stroke-width="1.5"/>
 <line x1="70" y1="50.0" x2="690" y2="50.0" stroke="#e5e7eb"/>
-<text x="62" y="54.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6b7280">9.7e+04</text>
+<text x="62" y="54.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6b7280">1e+05</text>
 <line x1="70" y1="120.0" x2="690" y2="120.0" stroke="#e5e7eb"/>
-<text x="62" y="124.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6b7280">7.3e+04</text>
+<text x="62" y="124.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6b7280">7.5e+04</text>
 <line x1="70" y1="190.0" x2="690" y2="190.0" stroke="#e5e7eb"/>
-<text x="62" y="194.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6b7280">4.8e+04</text>
+<text x="62" y="194.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6b7280">5e+04</text>
 <line x1="70" y1="260.0" x2="690" y2="260.0" stroke="#e5e7eb"/>
-<text x="62" y="264.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6b7280">2.4e+04</text>
+<text x="62" y="264.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6b7280">2.5e+04</text>
 <line x1="70" y1="330.0" x2="690" y2="330.0" stroke="#e5e7eb"/>
 <text x="62" y="334.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6b7280">0</text>
-<rect x="116.5" y="101.13873404586221" width="113.66666666666667" height="228.8612659541378" fill="#6b7280" rx="3"/>
-<text x="173.33333333333334" y="95.13873404586221" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#111827">7.9e+04</text>
+<rect x="116.5" y="107.91063394887928" width="113.66666666666667" height="222.08936605112072" fill="#6b7280" rx="3"/>
+<line x1="173.33333333333334" y1="111.13137881626807" x2="173.33333333333334" y2="104.80351292045327" stroke="#111827" stroke-width="1.5"/><line x1="167.33333333333334" y1="111.13137881626807" x2="179.33333333333334" y2="111.13137881626807" stroke="#111827" stroke-width="1.5"/><line x1="167.33333333333334" y1="104.80351292045327" x2="179.33333333333334" y2="104.80351292045327" stroke="#111827" stroke-width="1.5"/>
+<text x="173.33333333333334" y="101.91063394887928" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#111827">7.9e+04</text>
 <text x="173.33333333333334" y="350" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#111827">Baseline (raw)</text>
-<rect x="323.16666666666663" y="50.0" width="113.66666666666667" height="280.0" fill="#2563eb" rx="3"/>
-<text x="379.99999999999994" y="44.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#111827">9.7e+04</text>
+<rect x="323.16666666666663" y="58.28507159103435" width="113.66666666666667" height="271.71492840896565" fill="#2563eb" rx="3"/>
+<line x1="379.99999999999994" y1="67.02989890083467" x2="379.99999999999994" y2="50.0" stroke="#111827" stroke-width="1.5"/><line x1="373.99999999999994" y1="67.02989890083467" x2="385.99999999999994" y2="67.02989890083467" stroke="#111827" stroke-width="1.5"/><line x1="373.99999999999994" y1="50.0" x2="385.99999999999994" y2="50.0" stroke="#111827" stroke-width="1.5"/>
+<text x="379.99999999999994" y="52.28507159103435" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#111827">9.7e+04</text>
 <text x="379.99999999999994" y="350" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#111827">DynCLM</text>
-<rect x="529.8333333333333" y="66.12857011947614" width="113.66666666666667" height="263.87142988052386" fill="#dc2626" rx="3"/>
-<text x="586.6666666666666" y="60.12857011947614" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#111827">9.1e+04</text>
+<rect x="529.8333333333333" y="73.93640471729304" width="113.66666666666667" height="256.06359528270696" fill="#dc2626" rx="3"/>
+<line x1="586.6666666666666" y1="81.161688526397" x2="586.6666666666666" y2="67.07163111329322" stroke="#111827" stroke-width="1.5"/><line x1="580.6666666666666" y1="81.161688526397" x2="592.6666666666666" y2="81.161688526397" stroke="#111827" stroke-width="1.5"/><line x1="580.6666666666666" y1="67.07163111329322" x2="592.6666666666666" y2="67.07163111329322" stroke="#111827" stroke-width="1.5"/>
+<text x="586.6666666666666" y="67.93640471729304" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#111827">9.1e+04</text>
 <text x="586.6666666666666" y="350" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#111827">CLM (immediate rewrite)</text>
 </svg>

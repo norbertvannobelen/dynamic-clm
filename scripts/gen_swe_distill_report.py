@@ -5,7 +5,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from stats_utils import fisher_exact_greater, fmt_p, wilson_ci  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 FIG = ROOT / "docs" / "figures"
@@ -33,7 +37,8 @@ def esc(s: str) -> str:
     )
 
 
-def grouped_bars(path: Path, title: str, series: dict[str, float], ylabel: str) -> None:
+def grouped_bars(path: Path, title: str, series: dict[str, float], ylabel: str,
+                 errors: dict[str, tuple[float, float]] | None = None) -> None:
     arms = [a for a in ORDER if a in series]
     w, h = 720, 420
     pad_l, pad_r, pad_t, pad_b = 70, 30, 50, 90
@@ -41,6 +46,8 @@ def grouped_bars(path: Path, title: str, series: dict[str, float], ylabel: str) 
     plot_h = h - pad_t - pad_b
     vals = [series[a] for a in arms]
     vmax = max(vals) if vals else 1.0
+    if errors:
+        vmax = max([vmax] + [hi for _, hi in errors.values()])
     if vmax <= 0:
         vmax = 1.0
     n = max(len(arms), 1)
@@ -69,6 +76,16 @@ def grouped_bars(path: Path, title: str, series: dict[str, float], ylabel: str) 
         parts.append(
             f'<rect x="{x}" y="{y}" width="{bar_w}" height="{bh}" fill="{COLORS.get(arm, "#111")}" rx="3"/>'
         )
+        if errors and arm in errors:
+            lo, hi = errors[arm]
+            y_lo = pad_t + plot_h - (min(lo, vmax) / vmax) * plot_h
+            y_hi = pad_t + plot_h - (min(hi, vmax) / vmax) * plot_h
+            xc = x + bar_w / 2
+            parts.append(
+                f'<line x1="{xc}" y1="{y_lo}" x2="{xc}" y2="{y_hi}" stroke="#111827" stroke-width="1.5"/>'
+                f'<line x1="{xc-6}" y1="{y_lo}" x2="{xc+6}" y2="{y_lo}" stroke="#111827" stroke-width="1.5"/>'
+                f'<line x1="{xc-6}" y1="{y_hi}" x2="{xc+6}" y2="{y_hi}" stroke="#111827" stroke-width="1.5"/>'
+            )
         parts.append(
             f'<text x="{x + bar_w/2}" y="{y-6}" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11">{v:.2g}</text>'
         )
@@ -134,12 +151,17 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
 
     bc, dyn, imm = arm("baseline-compact"), arm("dynclm"), arm("immediate-rewrite")
 
+    def wilson_err(a: dict) -> tuple[float, float]:
+        lo, hi = wilson_ci(int(a.get("correct") or 0), int(a.get("n") or 0))
+        return (100 * lo, 100 * hi)
+
     # figures
     grouped_bars(
         FIG / "swe_probe_accuracy.svg",
-        "SWE-Distill final probe accuracy",
+        "SWE-Distill final probe accuracy (error bars: Wilson 95% CI)",
         {k: float((arms.get(k) or {}).get("accuracy_pct") or 0) for k in ORDER if k in arms},
         "Accuracy %",
+        errors={k: wilson_err(arms[k]) for k in ORDER if k in arms},
     )
     grouped_bars(
         FIG / "swe_final_context.svg",
@@ -187,6 +209,18 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
         f"CLM pays the highest rewrite prefill; DynCLM sits between quality parity with CLM "
         f"and much lower rewrite N than always-rewrite.\n\n"
     )
+    k_bc, n_bc = int(bc.get("correct") or 0), int(bc.get("n") or 0)
+    k_d, n_d = int(dyn.get("correct") or 0), int(dyn.get("n") or 0)
+    k_i, n_i = int(imm.get("correct") or 0), int(imm.get("n") or 0)
+    if n_bc and n_d and n_i:
+        p_d = fisher_exact_greater(k_d, n_d - k_d, k_bc, n_bc - k_bc)
+        p_i = fisher_exact_greater(k_i, n_i - k_i, k_bc, n_bc - k_bc)
+        lines.append(
+            "Pre-registered statistics (docs/analysis-plan.md), task-level pass, "
+            "one-sided Fisher exact: DynCLM vs Baseline+compact "
+            f"**p={fmt_p(p_d)}**; CLM vs Baseline+compact **p={fmt_p(p_i)}**. "
+            "Wilson 95% CIs in §4.\n\n"
+        )
     lines.append(
         "**Read.** Baseline is Codex-style **lossy summarization**. Quote accuracy with "
         f"`spec_survive` (**{bc.get('spec_survive_pct', 0):.0f}%** here). Gaps with high "
@@ -246,16 +280,18 @@ def write_extensive(rep: dict, out: Path, report_json: Path) -> None:
         "**Steady wall** excludes compact/rewrite turns when present.\n\n"
     )
     lines.append(
-        "| Arm | Accuracy | Correct/N | Avg final live | Avg final total | Avg final prompt | Peak live | Avg compacts | Avg rewrites | Avg prefill | Total wall (s) | Steady wall/task (s) | Wall (h) |\n"
+        "| Arm | Accuracy [Wilson 95% CI] | Correct/N | Avg final live | Avg final total | Avg final prompt | Peak live | Avg compacts | Avg rewrites | Avg prefill | Total wall (s) | Steady wall/task (s) | Wall (h) |\n"
         "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n"
     )
     for name in ORDER:
         a = arm(name)
         if not a:
             continue
+        lo_w, hi_w = wilson_ci(int(a.get("correct") or 0), int(a.get("n") or 0))
         tw = float(a.get("total_wall_s") or 0)
         lines.append(
-            f"| {LABELS[name]} | {float(a.get('accuracy_pct') or 0):.1f}% | "
+            f"| {LABELS[name]} | {float(a.get('accuracy_pct') or 0):.1f}% "
+            f"[{100 * lo_w:.1f}, {100 * hi_w:.1f}] | "
             f"{a.get('correct', 0)}/{a.get('n', 0)} | "
             f"{float(a.get('avg_final_context') or 0):.0f} | "
             f"{float(a.get('avg_final_total') or a.get('avg_final_context') or 0):.0f} | "

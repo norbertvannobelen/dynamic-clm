@@ -5,7 +5,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from stats_utils import (  # noqa: E402
+    bootstrap_ci_diff,
+    fisher_exact_greater,
+    fmt_mean_ci,
+    fmt_p,
+    fmt_prop_ci,
+    lh_pass_counts,
+    welch_t,
+)
 
 
 LABELS = {
@@ -39,6 +51,35 @@ def fmt_pct(v):
     if v is None:
         return "-"
     return f"{v:+.1f}%"
+
+
+def fisher_line(counts: dict[str, tuple[int, int]], arm: str, ref: str) -> str | None:
+    if arm not in counts or ref not in counts:
+        return None
+    k1, n1 = counts[arm]
+    k2, n2 = counts[ref]
+    p = fisher_exact_greater(k1, n1 - k1, k2, n2 - k2)
+    return f"Fisher one-sided {LABELS.get(arm, arm)} vs {LABELS.get(ref, ref)}: **p={fmt_p(p)}**"
+
+
+def gate_metric_samples(root: Path) -> dict[str, dict[str, list[float]]]:
+    """arm -> metric -> per-session values from gate cells (cells/<hw>/<model>/<task>/<arm>/*.json)."""
+    cells_root = root / "cells"
+    out: dict[str, dict[str, list[float]]] = {}
+    if not cells_root.exists():
+        return out
+    for f in sorted(cells_root.glob("*/*/*/*/*.json")):
+        arm = f.parent.name
+        try:
+            cell = json.loads(f.read_text())
+        except json.JSONDecodeError:
+            continue
+        bucket = out.setdefault(arm, {})
+        for m in ("avg_context_tokens", "wall_clock_s", "total_prefill_tokens", "total_prompt_tokens"):
+            v = cell.get(m)
+            if isinstance(v, (int, float)):
+                bucket.setdefault(m, []).append(float(v))
+    return out
 
 
 def main() -> None:
@@ -105,20 +146,65 @@ def main() -> None:
                 f"{fmt_pct(pct(c, b))} ({fmt(b,0)} → {fmt(c,0)}) |\n"
             )
 
+        samples = gate_metric_samples(root)
+        if samples:
+            lines.append(
+                "\n### Uncertainty (per-session percentile-bootstrap 95% CI of the mean)\n\n"
+            )
+            lines.append("| Metric | Baseline | DynCLM | CLM |\n|---|---:|---:|---:|\n")
+            for m, label, nd in [
+                ("avg_context_tokens", "Avg context", 0),
+                ("wall_clock_s", "Wall-clock / session (s)", 1),
+                ("total_prefill_tokens", "Rewrite prefill / session", 0),
+                ("total_prompt_tokens", "Prompt tokens / session", 0),
+            ]:
+                row = [label]
+                for arm in ORDER:
+                    row.append(fmt_mean_ci(samples.get(arm, {}).get(m, []), nd))
+                lines.append("| " + " | ".join(row) + " |\n")
+            d_pf = samples.get("dynclm", {}).get("total_prefill_tokens", [])
+            c_pf = samples.get("immediate-rewrite", {}).get("total_prefill_tokens", [])
+            if d_pf and c_pf:
+                t, df, p2 = welch_t(d_pf, c_pf)
+                lo, hi = bootstrap_ci_diff(d_pf, c_pf)
+                lines.append(
+                    f"\nRewrite prefill DynCLM vs CLM (primary, one-sided Welch t={t:.2f}, "
+                    f"df={df:.1f}): **p={fmt_p(p2 / 2)}**; mean diff "
+                    f"{sum(d_pf) / len(d_pf) - sum(c_pf) / len(c_pf):.0f} tokens "
+                    f"[bootstrap 95% CI {lo:.0f}, {hi:.0f}].\n"
+                )
+            d_w = samples.get("dynclm", {}).get("wall_clock_s", [])
+            b_w = samples.get("baseline", {}).get("wall_clock_s", [])
+            if d_w and b_w:
+                t, df, p2 = welch_t(d_w, b_w)
+                lo, hi = bootstrap_ci_diff(d_w, b_w)
+                lines.append(
+                    f"\nSession wall DynCLM vs baseline (secondary, two-sided Welch "
+                    f"t={t:.2f}, df={df:.1f}): **p={fmt_p(p2)}**; mean diff "
+                    f"{sum(d_w) / len(d_w) - sum(b_w) / len(b_w):.1f}s "
+                    f"[bootstrap 95% CI {lo:.1f}, {hi:.1f}].\n"
+                )
+
     # Quality
     lines.append("\n## 2. Live graded quality\n\n")
     if not quality:
         lines.append("_Quality results missing._\n\n")
     else:
         arms = quality.get("arms", {})
-        lines.append("| Arm | Accuracy | Correct/N | Avg wall-s | Avg ctx |\n|---|---:|---:|---:|---:|\n")
+        lines.append(
+            "| Arm | Accuracy [Wilson 95% CI] | Correct/N | Avg wall-s | Avg ctx |\n|---|---:|---:|---:|---:|\n"
+        )
         for arm in ORDER:
             a = arms.get(arm, {})
             lines.append(
-                f"| {LABELS[arm]} | {fmt(a.get('accuracy_pct'))}% | "
+                f"| {LABELS[arm]} | {fmt_prop_ci(int(a.get('correct') or 0), int(a.get('n') or 0), show_n=False)} | "
                 f"{a.get('correct','-')}/{a.get('n','-')} | "
                 f"{fmt(a.get('avg_wall_clock_s'), 2)} | {fmt(a.get('avg_context_tokens'), 0)} |\n"
             )
+        lines.append(
+            "\n_Parity check only: ~162-token contexts, no multi-turn reclaim; "
+            "single-task margins are not statistically meaningful._\n"
+        )
 
     # Long-horizon A
     lines.append("\n## 3. Live long-horizon A (primary quality + late speed)\n\n")
@@ -146,6 +232,25 @@ def main() -> None:
                 f"{fmt((a.get('total_prefill_tokens') or 0) / n, 0)} | "
                 f"{fmt((a.get('total_rewrites') or 0) / n, 1)} |\n"
             )
+        late_from = int(lh.get("late_from_turn") or 0)
+        counts = lh_pass_counts(root / "longhorizon" / "cells", late_from)
+        if counts:
+            lines.append(
+                "\n**Session-level strict pass** (all late-window probes correct; "
+                "pre-registered unit of analysis; Wilson 95% CI):\n\n"
+            )
+            for arm in ORDER:
+                if arm in counts:
+                    k, n = counts[arm]
+                    lines.append(f"- {LABELS[arm]}: {fmt_prop_ci(k, n)}\n")
+            for arm in ("dynclm", "immediate-rewrite"):
+                fl = fisher_line(counts, arm, "baseline")
+                if fl:
+                    lines.append(f"- {fl}\n")
+            lines.append(
+                "\n_Probe-level percentages above pool correlated probes within "
+                "sessions; the session-level counts are the confirmatory numbers._\n"
+            )
 
     # Compaction B
     lines.append("\n## 4. Live long-horizon B (compaction matrix)\n\n")
@@ -158,6 +263,7 @@ def main() -> None:
             "Compact wall | DynCLM wall | CLM wall |\n"
             "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n"
         )
+        limit_notes: list[str] = []
         for lim in matrix.get("max_contexts", []):
             arms = matrix.get("by_max_context", {}).get(str(lim), {})
             bc = arms.get("baseline-compact", {})
@@ -170,6 +276,23 @@ def main() -> None:
                 f"{fmt(bc.get('late_steady_wall_s'),2)} | {fmt(d.get('late_steady_wall_s'),2)} | "
                 f"{fmt(imm.get('late_steady_wall_s'),2)} |\n"
             )
+            lim_dir = root / "longhorizon_compaction" / f"c{lim}"
+            lim_rep = load(lim_dir / "report.json") or {}
+            counts_b = lh_pass_counts(lim_dir / "cells", int(lim_rep.get("late_from_turn") or 0))
+            if counts_b:
+                limit_notes.append(
+                    f"\nSession-level strict pass at max_context={lim} (Wilson 95% CI):\n\n"
+                )
+                for arm in ("baseline-compact", "dynclm", "immediate-rewrite"):
+                    if arm in counts_b:
+                        k, n = counts_b[arm]
+                        limit_notes.append(f"- {LABELS[arm]}: {fmt_prop_ci(k, n)}\n")
+                for arm in ("dynclm", "immediate-rewrite"):
+                    fl = fisher_line(counts_b, arm, "baseline-compact")
+                    if fl:
+                        limit_notes.append(f"- {fl}\n")
+                limit_notes.append("\n")
+        lines.extend(limit_notes)
 
     lines.append("\n## 5. Verdict\n\n")
     lines.append("| Dimension | Vs baseline | DynCLM vs CLM |\n|---|---|---|\n")
