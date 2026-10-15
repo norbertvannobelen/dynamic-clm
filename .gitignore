@@ -17,6 +17,6 @@ results/**/run.log
 results/*.log
 results/gate-offline-run.log
 results/phaseb-run.log
-results/live-smoke/cells/
+results/superseded/live-smoke/cells/
 # Local run archives / logs; intentionally tracked runs stay tracked.
 results/runs/
