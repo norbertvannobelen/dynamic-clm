@@ -111,3 +111,19 @@ Every headline percentage in README.md and docs/report.md carries its n and a 95
 every decisive comparison carries the pre-registered p-value. A "Statistical methods"
 section in report.md links back to this document. Superseded/offline data lives only
 under `results/superseded/` and is never cited.
+
+## Amendments
+
+**2026-10-15 (before any interleaved data was collected): session-major round-robin
+execution.** The gate, quality, and long-horizon harnesses previously executed
+arm-major (`for arm { for session }`), so slow hardware drift within a run
+(e.g. sustained thermal load) systematically biased wall-clock for whichever arm ran
+last. An aborted arm-major run at n=16 (run `20261015T141933Z_decision`, 22/48 gate
+cells complete) showed exactly this: a ~12% upward wall-clock drift across the run
+(duration-matched to the Oct 10 evidence, which used the same arm order). The harnesses
+now iterate session-major round-robin (`for session { for arm }`), matching
+SWE-Distill's existing task-major design, so drift is distributed approximately evenly
+across arms within each session block. The aborted run is retained on disk
+(git-ignored) and excluded from analysis. No endpoint, test, n, or ship criterion
+changes; this strengthens the secondary wall-clock endpoint's validity and leaves the
+primary (non-wall-clock) endpoints unaffected.

@@ -158,8 +158,10 @@ func Run(cfg Config) (Report, error) {
 	}
 
 	var all []SessionResult
-	for _, arm := range cfg.Arms {
-		for i := 0; i < cfg.Sessions; i++ {
+	// Round-robin by session across arms (amendment 2026-10-15, docs/analysis-plan.md):
+	// arm-major order let slow hardware drift (e.g. thermal) bias the arm that ran last.
+	for i := 0; i < cfg.Sessions; i++ {
+		for _, arm := range cfg.Arms {
 			sid := fmt.Sprintf("%s-%02d", arm, i)
 			cell := filepath.Join(cfg.ResultsDir, "cells", arm, sid+".json")
 			if tracing.CellDone(cell) {
