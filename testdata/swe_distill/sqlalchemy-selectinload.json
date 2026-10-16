@@ -1,0 +1,15 @@
+{
+  "instance_id": "sqlalchemy__selectinload-distill-15",
+  "repo": "sqlalchemy/sqlalchemy (inspired)",
+  "issue": "Loading a collection of parents plus their children causes an N+1 query storm; eager-load the children in a single additional SELECT ... WHERE id IN (...) batch instead of a giant JOIN or per-parent lazy loads.",
+  "correct_snippet": "stmt = select(Parent).options(selectinload(Parent.children))",
+  "wrong_snippets": [
+    "stmt = select(Parent).options(joinedload(Parent.children))",
+    "stmt = select(Parent).options(subqueryload(Parent.children))",
+    "parents = session.scalars(select(Parent)).all(); [p.children for p in parents]"
+  ],
+  "expected_answer": "selectinload",
+  "wrong_answer": "joinedload",
+  "probe_question": "Which SQLAlchemy loader option eager-loads a collection with one extra batched SELECT IN query? Reply with ONLY that option name.",
+  "attribution": "SWE-Bench-Lite-inspired realistic distill; paraphrased. Not an official SWE-Bench instance."
+}

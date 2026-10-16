@@ -1,0 +1,15 @@
+{
+  "instance_id": "pandas__merge-validate-distill-13",
+  "repo": "pandas-dev/pandas (inspired)",
+  "issue": "Merging two frames on a key that is accidentally duplicated in one side silently fans out rows; the merge itself should assert the expected one-to-one cardinality instead of checking shapes by hand afterwards.",
+  "correct_snippet": "merged = left.merge(right, on=\"user_id\", validate=\"one_to_one\")",
+  "wrong_snippets": [
+    "merged = left.merge(right, on=\"user_id\", validate=\"many_to_one\")",
+    "merged = left.merge(right, on=\"user_id\", validate=\"one_to_many\")",
+    "merged = left.merge(right, on=\"user_id\"); assert len(merged) == len(left)"
+  ],
+  "expected_answer": "validate=\"one_to_one\"",
+  "wrong_answer": "validate=\"many_to_one\"",
+  "probe_question": "Which merge keyword argument asserts one-to-one cardinality of the join keys and raises MergeError otherwise? Reply with ONLY that keyword argument.",
+  "attribution": "SWE-Bench-Lite-inspired realistic distill; paraphrased. Not an official SWE-Bench instance."
+}
