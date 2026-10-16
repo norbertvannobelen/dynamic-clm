@@ -1,13 +1,11 @@
 # DynCLM Long-Horizon B - Compaction Matrix
 
-Generated: 2026-10-13T20:16:31Z · Run `20261013T201630Z_lh_compaction_summary`
+Generated: 2026-10-15T22:01:12Z
 
-Long-horizon suite B (compaction matrix): same session as A, but the raw baseline is replaced by baseline-compact - a Codex-style rolling summary when context exceeds max_context (keep system + recent raw tail; fold older spans into a budget-capped [CONTEXT_SUMMARY] with an early-requirements quota plus newest-preferred notes; re-prefill survivors). DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of lossy summarization. Matrix over max_context ∈ {16k,64k} this run. Per-column noise is sized so cumulative appends exceed that column's limit (~1.4×), ensuring baseline-compact must compact at every limit.
-
-**Note.** Late probe **0%** on the summarize baseline is this suite’s recency trap: competing `WRONG_n` FACTs plus “prefer most recent.” DynCLM/CLM stay at **100%** by soft-ignoring obsolete dumps.
+Long-horizon suite B (compaction matrix): same session as A, but the raw baseline is replaced by baseline-compact - a Codex-style rolling summary when context exceeds max_context (keep system + recent raw tail; fold older spans into a budget-capped [CONTEXT_SUMMARY] with an early-requirements quota plus newest-preferred notes; re-prefill survivors). DynCLM and immediate-rewrite (CLM) use the same max_context for the scheduler β threshold and reclaim via soft-invalidation + rewrite instead of lossy summarization. Matrix over max_context ∈ {8k,16k,32k,64k}. Per-column noise is sized so cumulative appends exceed that column's limit (~1.4×), ensuring baseline-compact must compact at every limit without forcing 64k-sized prompts into the 8k column.
 
 - Model: `Qwen3.8-27B-4bit` · Hardware: `apple-m5-max` · Live: true
-- Sessions/arm: 2 · Turns: 20 · NoisePad: 4587 chars
+- Sessions/arm: 10 · Turns: 20 · NoisePad: 4587 chars
 - Max context limits: [16384 65536]
 
 ## Late probe accuracy (%) by max context
@@ -28,15 +26,15 @@ Long-horizon suite B (compaction matrix): same session as A, but the raw baselin
 
 | Max context | baseline-compact | DynCLM | CLM (immediate) |
 |---|---|---|---|
-| 16384 | 4.04 | 1.45 | 1.15 |
-| 65536 | 3.90 | 1.78 | 1.65 |
+| 16384 | 2.11 | 1.52 | 1.34 |
+| 65536 | 2.96 | 1.49 | 1.32 |
 
 ## Late steady gen tok/s by max context
 
 | Max context | baseline-compact | DynCLM | CLM (immediate) |
 |---|---|---|---|
-| 16384 | 2.41 | 3.33 | 3.89 |
-| 65536 | 1.12 | 2.74 | 2.74 |
+| 16384 | 3.49 | 3.16 | 3.36 |
+| 65536 | 1.48 | 3.23 | 3.41 |
 
 ## Figures
 

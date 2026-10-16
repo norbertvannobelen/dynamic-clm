@@ -16,8 +16,8 @@ FIG = ROOT / "docs" / "figures"
 FIG.mkdir(parents=True, exist_ok=True)
 
 # Canonical runs cited by docs/report.md (prefer these over mutable results/ copies).
-DECISION_RUN = ROOT / "results" / "runs" / "20261010T145959Z_decision"
-LH_B_SUMMARY_RUN = ROOT / "results" / "runs" / "20261013T201630Z_lh_compaction_summary"
+DECISION_RUN = ROOT / "results" / "runs" / "20261015T165854Z_decision"
+LH_B_SUMMARY_RUN = ROOT / "results" / "runs" / "20261015T165854Z_decision"
 
 COLORS = {
     "baseline": "#6b7280",

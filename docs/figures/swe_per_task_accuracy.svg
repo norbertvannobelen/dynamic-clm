@@ -1,32 +1,56 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="420" viewBox="0 0 900 420">
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="420" viewBox="0 0 1080 420">
 <rect width="100%" height="100%" fill="#fafafa"/>
-<text x="450.0" y="28" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="16" font-weight="700">Per-task probe pass (1=pass)</text>
+<text x="540.0" y="28" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="16" font-weight="700">Per-task probe pass (1=pass)</text>
 <line x1="60" y1="50" x2="60" y2="310" stroke="#111827"/>
-<line x1="60" y1="310" x2="870" y2="310" stroke="#111827"/>
-<rect x="76.875" y="310.0" width="28.6875" height="0.0" fill="#9ca3af" rx="2"/>
-<rect x="110.625" y="76.0" width="28.6875" height="234.0" fill="#2563eb" rx="2"/>
-<rect x="144.375" y="76.0" width="28.6875" height="234.0" fill="#dc2626" rx="2"/>
-<text x="127.5" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 127.5,326)">astropy__units-compose</text>
-<rect x="211.875" y="310.0" width="28.6875" height="0.0" fill="#9ca3af" rx="2"/>
-<rect x="245.625" y="76.0" width="28.6875" height="234.0" fill="#2563eb" rx="2"/>
-<rect x="279.375" y="76.0" width="28.6875" height="234.0" fill="#dc2626" rx="2"/>
-<text x="262.5" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 262.5,326)">django__queryset-exist</text>
-<rect x="346.875" y="76.0" width="28.6875" height="234.0" fill="#9ca3af" rx="2"/>
-<rect x="380.625" y="76.0" width="28.6875" height="234.0" fill="#2563eb" rx="2"/>
-<rect x="414.375" y="76.0" width="28.6875" height="234.0" fill="#dc2626" rx="2"/>
-<text x="397.5" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 397.5,326)">matplotlib__tight-layo</text>
-<rect x="481.875" y="310.0" width="28.6875" height="0.0" fill="#9ca3af" rx="2"/>
-<rect x="515.625" y="76.0" width="28.6875" height="234.0" fill="#2563eb" rx="2"/>
-<rect x="549.375" y="76.0" width="28.6875" height="234.0" fill="#dc2626" rx="2"/>
-<text x="532.5" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 532.5,326)">psf__requests-timeout-</text>
-<rect x="616.875" y="76.0" width="28.6875" height="234.0" fill="#9ca3af" rx="2"/>
-<rect x="650.625" y="76.0" width="28.6875" height="234.0" fill="#2563eb" rx="2"/>
-<rect x="684.375" y="76.0" width="28.6875" height="234.0" fill="#dc2626" rx="2"/>
-<text x="667.5" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 667.5,326)">pytest-dev__mark-param</text>
-<rect x="751.875" y="76.0" width="28.6875" height="234.0" fill="#9ca3af" rx="2"/>
-<rect x="785.625" y="76.0" width="28.6875" height="234.0" fill="#2563eb" rx="2"/>
-<rect x="819.375" y="76.0" width="28.6875" height="234.0" fill="#dc2626" rx="2"/>
-<text x="802.5" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 802.5,326)">sympy__is-polynomial-d</text>
+<line x1="60" y1="310" x2="1050" y2="310" stroke="#111827"/>
+<rect x="70.3125" y="76.0" width="17.53125" height="234.0" fill="#9ca3af" rx="2"/>
+<rect x="90.9375" y="76.0" width="17.53125" height="234.0" fill="#2563eb" rx="2"/>
+<rect x="111.5625" y="76.0" width="17.53125" height="234.0" fill="#dc2626" rx="2"/>
+<text x="101.25" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 101.25,326)">astropy__units-compose</text>
+<rect x="152.8125" y="310.0" width="17.53125" height="0.0" fill="#9ca3af" rx="2"/>
+<rect x="173.4375" y="76.0" width="17.53125" height="234.0" fill="#2563eb" rx="2"/>
+<rect x="194.0625" y="76.0" width="17.53125" height="234.0" fill="#dc2626" rx="2"/>
+<text x="183.75" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 183.75,326)">django__queryset-exist</text>
+<rect x="235.3125" y="76.0" width="17.53125" height="234.0" fill="#9ca3af" rx="2"/>
+<rect x="255.9375" y="76.0" width="17.53125" height="234.0" fill="#2563eb" rx="2"/>
+<rect x="276.5625" y="76.0" width="17.53125" height="234.0" fill="#dc2626" rx="2"/>
+<text x="266.25" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 266.25,326)">matplotlib__tight-layo</text>
+<rect x="317.8125" y="76.0" width="17.53125" height="234.0" fill="#9ca3af" rx="2"/>
+<rect x="338.4375" y="76.0" width="17.53125" height="234.0" fill="#2563eb" rx="2"/>
+<rect x="359.0625" y="76.0" width="17.53125" height="234.0" fill="#dc2626" rx="2"/>
+<text x="348.75" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 348.75,326)">numpy__clip-nan-propag</text>
+<rect x="400.3125" y="76.0" width="17.53125" height="234.0" fill="#9ca3af" rx="2"/>
+<rect x="420.9375" y="76.0" width="17.53125" height="234.0" fill="#2563eb" rx="2"/>
+<rect x="441.5625" y="76.0" width="17.53125" height="234.0" fill="#dc2626" rx="2"/>
+<text x="431.25" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 431.25,326)">pandas__ffill-limit-di</text>
+<rect x="482.8125" y="76.0" width="17.53125" height="234.0" fill="#9ca3af" rx="2"/>
+<rect x="503.4375" y="76.0" width="17.53125" height="234.0" fill="#2563eb" rx="2"/>
+<rect x="524.0625" y="76.0" width="17.53125" height="234.0" fill="#dc2626" rx="2"/>
+<text x="513.75" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 513.75,326)">psf__requests-timeout-</text>
+<rect x="565.3125" y="310.0" width="17.53125" height="0.0" fill="#9ca3af" rx="2"/>
+<rect x="585.9375" y="76.0" width="17.53125" height="234.0" fill="#2563eb" rx="2"/>
+<rect x="606.5625" y="76.0" width="17.53125" height="234.0" fill="#dc2626" rx="2"/>
+<text x="596.25" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 596.25,326)">pytest-dev__fixture-mo</text>
+<rect x="647.8125" y="310.0" width="17.53125" height="0.0" fill="#9ca3af" rx="2"/>
+<rect x="668.4375" y="76.0" width="17.53125" height="234.0" fill="#2563eb" rx="2"/>
+<rect x="689.0625" y="76.0" width="17.53125" height="234.0" fill="#dc2626" rx="2"/>
+<text x="678.75" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 678.75,326)">pytest-dev__mark-param</text>
+<rect x="730.3125" y="76.0" width="17.53125" height="234.0" fill="#9ca3af" rx="2"/>
+<rect x="750.9375" y="76.0" width="17.53125" height="234.0" fill="#2563eb" rx="2"/>
+<rect x="771.5625" y="76.0" width="17.53125" height="234.0" fill="#dc2626" rx="2"/>
+<text x="761.25" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 761.25,326)">requests__session-retr</text>
+<rect x="812.8125" y="310.0" width="17.53125" height="0.0" fill="#9ca3af" rx="2"/>
+<rect x="833.4375" y="310.0" width="17.53125" height="0.0" fill="#2563eb" rx="2"/>
+<rect x="854.0625" y="76.0" width="17.53125" height="234.0" fill="#dc2626" rx="2"/>
+<text x="843.75" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 843.75,326)">scipy__solve-assume-po</text>
+<rect x="895.3125" y="310.0" width="17.53125" height="0.0" fill="#9ca3af" rx="2"/>
+<rect x="915.9375" y="310.0" width="17.53125" height="0.0" fill="#2563eb" rx="2"/>
+<rect x="936.5625" y="76.0" width="17.53125" height="234.0" fill="#dc2626" rx="2"/>
+<text x="926.25" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 926.25,326)">sqlalchemy__lazy-raise</text>
+<rect x="977.8125" y="76.0" width="17.53125" height="234.0" fill="#9ca3af" rx="2"/>
+<rect x="998.4375" y="76.0" width="17.53125" height="234.0" fill="#2563eb" rx="2"/>
+<rect x="1019.0625" y="76.0" width="17.53125" height="234.0" fill="#dc2626" rx="2"/>
+<text x="1008.75" y="326" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9" transform="rotate(25 1008.75,326)">sympy__is-polynomial-d</text>
 <rect x="60" y="392" width="12" height="12" fill="#9ca3af"/>
 <text x="76" y="402" font-family="Helvetica,Arial,sans-serif" font-size="11">Baseline+compact</text>
 <rect x="200" y="392" width="12" height="12" fill="#2563eb"/>
