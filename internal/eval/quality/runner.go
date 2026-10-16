@@ -125,8 +125,10 @@ func Run(cfg Config) (Report, error) {
 	arms := []string{"baseline", "immediate-rewrite", "dynclm"}
 	var results []ArmResult
 
-	for _, arm := range arms {
-		for _, task := range tasks {
+	// Round-robin by task across arms (amendment 2026-10-15, docs/analysis-plan.md):
+	// arm-major order let slow hardware drift (e.g. thermal) bias the arm that ran last.
+	for _, task := range tasks {
+		for _, arm := range arms {
 			cell := filepath.Join(cfg.ResultsDir, "cells", arm, task.ID+".json")
 			if tracing.CellDone(cell) {
 				var existing ArmResult

@@ -1,0 +1,15 @@
+{
+  "instance_id": "scipy__minimize-bounds-distill-18",
+  "repo": "scipy/scipy (inspired)",
+  "issue": "Minimizing a cost function where each parameter must stay inside a box (e.g. rates in [0, 1]) needs a quasi-Newton method that natively supports simple bound constraints; the default unconstrained methods wander out of range.",
+  "correct_snippet": "res = scipy.optimize.minimize(cost, x0, method=\"L-BFGS-B\", bounds=[(0, 1)] * len(x0))",
+  "wrong_snippets": [
+    "res = scipy.optimize.minimize(cost, x0, method=\"BFGS\", bounds=[(0, 1)] * len(x0))",
+    "res = scipy.optimize.minimize(cost, x0, method=\"Nelder-Mead\", bounds=[(0, 1)] * len(x0))",
+    "res = scipy.optimize.minimize(cost, x0, method=\"CG\", bounds=[(0, 1)] * len(x0))"
+  ],
+  "expected_answer": "L-BFGS-B",
+  "wrong_answer": "Nelder-Mead",
+  "probe_question": "Which scipy.optimize.minimize method natively supports simple box bounds on the parameters? Reply with ONLY that method name.",
+  "attribution": "SWE-Bench-Lite-inspired realistic distill; paraphrased. Not an official SWE-Bench instance."
+}

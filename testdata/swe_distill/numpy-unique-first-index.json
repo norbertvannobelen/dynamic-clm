@@ -1,0 +1,15 @@
+{
+  "instance_id": "numpy__unique-first-index-distill-14",
+  "repo": "numpy/numpy (inspired)",
+  "issue": "Deduplicating an array while keeping the position of each value's first occurrence (e.g. to reorder a matching metadata array) needs indices, not just the sorted unique values; np.unique can return them directly.",
+  "correct_snippet": "uniq, first_idx = np.unique(labels, return_index=True)",
+  "wrong_snippets": [
+    "uniq, first_idx = np.unique(labels, return_counts=True)",
+    "uniq, first_idx = np.unique(labels, return_inverse=True)",
+    "uniq = sorted(set(labels)); first_idx = [list(labels).index(u) for u in uniq]"
+  ],
+  "expected_answer": "return_index=True",
+  "wrong_answer": "return_counts=True",
+  "probe_question": "Which np.unique keyword returns the indices of the first occurrences of the unique values? Reply with ONLY that keyword argument.",
+  "attribution": "SWE-Bench-Lite-inspired realistic distill; paraphrased. Not an official SWE-Bench instance."
+}

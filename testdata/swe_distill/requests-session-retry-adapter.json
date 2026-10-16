@@ -1,0 +1,15 @@
+{
+  "instance_id": "requests__session-retry-adapter-distill-10",
+  "repo": "psf/requests (inspired)",
+  "issue": "Retries on a Session must be wired through a mounted HTTPAdapter carrying a urllib3 Retry policy; assigning a retry object to the session attribute does nothing.",
+  "correct_snippet": "retry = Retry(total=3, backoff_factor=0.3, status_forcelist=[500, 502, 503, 504])\nsession.mount(\"https://\", HTTPAdapter(max_retries=retry))",
+  "wrong_snippets": [
+    "retry = Retry(total=3, backoff_factor=0.3)\nsession.max_retries = retry",
+    "retry = Retry(total=3, backoff_factor=0.3)\nsession.mount(\"https://\", HTTPAdapter())\nsession.retry = retry",
+    "retry = Retry(total=3, backoff_factor=0.3)\nrequests.adapters.DEFAULT_RETRIES = retry"
+  ],
+  "expected_answer": "HTTPAdapter(max_retries=retry)",
+  "wrong_answer": "session.max_retries = retry",
+  "probe_question": "Which adapter construction wires the Retry policy into the session mount? Reply with ONLY that expression.",
+  "attribution": "SWE-Bench-Lite-inspired realistic distill; paraphrased. Not an official SWE-Bench instance."
+}

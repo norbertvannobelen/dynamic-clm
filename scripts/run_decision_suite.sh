@@ -4,6 +4,16 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# Session/turn counts (env-overridable; defaults reproduce the original decision suite).
+GATE_SESSIONS="${GATE_SESSIONS:-8}"
+GATE_TURNS="${GATE_TURNS:-40}"
+LH_A_SESSIONS="${LH_A_SESSIONS:-3}"
+LH_A_TURNS="${LH_A_TURNS:-24}"
+LH_B_SESSIONS="${LH_B_SESSIONS:-2}"
+LH_B_TURNS="${LH_B_TURNS:-20}"
+LH_B_LIMITS="${LH_B_LIMITS:-16384,65536}"
+echo "config: gate=${GATE_SESSIONS}x${GATE_TURNS} lh-a=${LH_A_SESSIONS}x${LH_A_TURNS} lh-b=${LH_B_SESSIONS}x${LH_B_TURNS}@${LH_B_LIMITS}"
+
 mkdir -p bin results/runs
 go build -o bin/dynclm-gate ./cmd/dynclm-gate
 go build -o bin/dynclm-quality ./cmd/dynclm-quality
@@ -32,9 +42,9 @@ if [[ "$code" != "200" ]]; then
   exit 1
 fi
 
-echo "=== 1/4 SHORT LIVE GATE (8 sessions × 40 turns × 3 arms) ==="
+echo "=== 1/4 SHORT LIVE GATE (${GATE_SESSIONS} sessions × ${GATE_TURNS} turns × 3 arms) ==="
 # Skip Bench3 here - it is a 50-call compliance curve and blocked the suite after cells finished.
-./bin/dynclm-gate -config configs/gate.yaml -sessions 8 -turns 40 -skip-bench3 \
+./bin/dynclm-gate -config configs/gate.yaml -sessions "$GATE_SESSIONS" -turns "$GATE_TURNS" -skip-bench3 \
   -run-root "$RUN_ROOT" 2>&1 | tee "$RUN_ROOT/gate.log"
 cp -f "$RUN_ROOT/interim-report.md" "$RUN_ROOT/decision-gate-interim.md" 2>/dev/null || true
 
@@ -43,12 +53,12 @@ echo "=== 2/4 LIVE GRADED QUALITY ==="
 ./bin/dynclm-quality -model Qwen3.8-27B-4bit -fresh -results "$RUN_ROOT/quality" -out "$RUN_ROOT/quality-report.md" 2>&1 | tee "$RUN_ROOT/quality.log"
 cp -f "$RUN_ROOT/quality-report.md" docs/quality-report.md || true
 
-echo "=== 3/4 LIVE LONG-HORIZON A ==="
-./bin/dynclm-longhorizon -mode a -model Qwen3.8-27B-4bit -sessions 3 -turns 24 -results "$RUN_ROOT/longhorizon" -out "$RUN_ROOT/longhorizon-report.md" 2>&1 | tee "$RUN_ROOT/longhorizon-a.log"
+echo "=== 3/4 LIVE LONG-HORIZON A (${LH_A_SESSIONS} sessions × ${LH_A_TURNS} turns × 3 arms) ==="
+./bin/dynclm-longhorizon -mode a -model Qwen3.8-27B-4bit -sessions "$LH_A_SESSIONS" -turns "$LH_A_TURNS" -results "$RUN_ROOT/longhorizon" -out "$RUN_ROOT/longhorizon-report.md" 2>&1 | tee "$RUN_ROOT/longhorizon-a.log"
 cp -f "$RUN_ROOT/longhorizon-report.md" docs/longhorizon-report.md || true
 
-echo "=== 4/4 LIVE LONG-HORIZON B (16k + 64k) ==="
-./bin/dynclm-longhorizon -mode b -model Qwen3.8-27B-4bit -sessions 2 -turns 20 -limits 16384,65536 -results "$RUN_ROOT/longhorizon_compaction" -out "$RUN_ROOT/longhorizon-compaction-report.md" 2>&1 | tee "$RUN_ROOT/longhorizon-b.log"
+echo "=== 4/4 LIVE LONG-HORIZON B (${LH_B_SESSIONS} sessions × ${LH_B_TURNS} turns @ ${LH_B_LIMITS}) ==="
+./bin/dynclm-longhorizon -mode b -model Qwen3.8-27B-4bit -sessions "$LH_B_SESSIONS" -turns "$LH_B_TURNS" -limits "$LH_B_LIMITS" -results "$RUN_ROOT/longhorizon_compaction" -out "$RUN_ROOT/longhorizon-compaction-report.md" 2>&1 | tee "$RUN_ROOT/longhorizon-b.log"
 cp -f "$RUN_ROOT/longhorizon-compaction-report.md" docs/longhorizon-compaction-report.md || true
 
 # Point chart generator at this run's artifacts via copies into conventional paths used by gen_charts

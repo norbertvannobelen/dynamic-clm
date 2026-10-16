@@ -1,0 +1,15 @@
+{
+  "instance_id": "numpy__clip-nan-propagate-distill-07",
+  "repo": "numpy/numpy (inspired)",
+  "issue": "np.clip should propagate NaN inputs instead of silently clamping them to the interval bounds; implement it via the ufunc pair that preserves NaN.",
+  "correct_snippet": "def clip(a, a_min, a_max):\n    # minimum/maximum propagate NaN, unlike fmin/fmax\n    return np.minimum(np.maximum(a, a_min), a_max)",
+  "wrong_snippets": [
+    "def clip(a, a_min, a_max):\n    # reviewer: branchless scalar path\n    return np.where(a < a_min, a_min, np.where(a > a_max, a_max, a))",
+    "def clip(a, a_min, a_max):\n    return np.fmin(np.fmax(a, a_min), a_max)",
+    "def clip(a, a_min, a_max):\n    return np.sort(np.stack([np.broadcast_to(a_min, a.shape), a, np.broadcast_to(a_max, a.shape)]), axis=0)[1]"
+  ],
+  "expected_answer": "np.minimum(np.maximum(a, a_min), a_max)",
+  "wrong_answer": "np.fmin(np.fmax(a, a_min), a_max)",
+  "probe_question": "Which NumPy expression implements clip so that NaN propagates (not fmin/fmax)? Reply with ONLY that expression.",
+  "attribution": "SWE-Bench-Lite-inspired realistic distill; paraphrased. Not an official SWE-Bench instance."
+}

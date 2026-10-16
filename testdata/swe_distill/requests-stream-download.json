@@ -1,0 +1,15 @@
+{
+  "instance_id": "requests__stream-download-distill-16",
+  "repo": "psf/requests (inspired)",
+  "issue": "Downloading a multi-GB artifact with requests.get() buffers the entire body in memory before a single byte can be written to disk; the response must be streamed and consumed in chunks.",
+  "correct_snippet": "with requests.get(url, stream=True) as r:\n    for chunk in r.iter_content(chunk_size=8192):\n        f.write(chunk)",
+  "wrong_snippets": [
+    "r = requests.get(url); f.write(r.content)",
+    "with requests.get(url, stream=False) as r:\n    f.write(r.content)",
+    "r = requests.get(url, allow_redirects=True); f.write(r.text)"
+  ],
+  "expected_answer": "stream=True",
+  "wrong_answer": "stream=False",
+  "probe_question": "Which requests.get() keyword defers downloading the response body so it can be consumed in chunks? Reply with ONLY that keyword argument.",
+  "attribution": "SWE-Bench-Lite-inspired realistic distill; paraphrased. Not an official SWE-Bench instance."
+}

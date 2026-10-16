@@ -1,0 +1,15 @@
+{
+  "instance_id": "sqlalchemy__lazy-raise-distill-09",
+  "repo": "sqlalchemy/sqlalchemy (inspired)",
+  "issue": "Accessing an unloaded relationship outside a session must raise instead of silently emitting a lazy SELECT (N+1 guard); set the relationship loading strategy accordingly.",
+  "correct_snippet": "children = relationship(\"Child\", back_populates=\"parent\", lazy=\"raise\")",
+  "wrong_snippets": [
+    "children = relationship(\"Child\", back_populates=\"parent\", lazy=\"select\")",
+    "children = relationship(\"Child\", back_populates=\"parent\", lazy=\"joined\")",
+    "children = relationship(\"Child\", back_populates=\"parent\", lazy=\"dynamic\")"
+  ],
+  "expected_answer": "lazy=\"raise\"",
+  "wrong_answer": "lazy=\"select\"",
+  "probe_question": "Which relationship lazy option raises on unloaded access instead of emitting a lazy SELECT? Reply with ONLY that option.",
+  "attribution": "SWE-Bench-Lite-inspired realistic distill; paraphrased. Not an official SWE-Bench instance."
+}

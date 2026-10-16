@@ -1,29 +1,29 @@
 # DynCLM Long-Horizon Report
 
-Generated: 2026-10-10T17:46:57Z
+Generated: 2026-10-15T22:01:12Z
 
 ## Why this suite exists (methodology re-evaluation)
 
 Long-horizon suite A: early authoritative FACT planted at turn 1; each later turn appends large obsolete tool noise (and competing pseudo-FACTs). Soft-invalidation markers are harness-applied on obsolete spans for DynCLM/immediate (CLM) arms; the cost-model scheduler fires batched rewrites. Periodic probes ask for the early FACT. Metrics per turn: context length, prompt/generated tokens, wall-clock, gen tokens/s. Early vs late windows express the paper claim that smaller context improves late-session quality and generation performance vs raw append-only.
 
 - Model: `Qwen3.8-27B-4bit` · Hardware: `apple-m5-max` · Live: true
-- Sessions/arm: 3 · Turns: 24 · Probe every: 4
+- Sessions/arm: 8 · Turns: 24 · Probe every: 4
 - Early window: turns 1–8 · Late window: turns 16–24
 
 ## Late-session results (the paper-relevant window)
 
 | Arm | Late probe accuracy | Late avg ctx | Late avg prompt | Late wall-s | Late steady wall-s | Late gen tok/s | Prefill/session | Rewrites/session |
 |---|---|---|---|---|---|---|---|---|
-| baseline | **0.0%** (0/9) | 6857 | 4245 | 2.60 | 2.60 | 2.19 | 0 | 0.0 |
-| immediate-rewrite | **100.0%** (9/9) | 375 | 618 | 1.99 | 1.99 | 2.36 | 2774 | 24.0 |
-| dynclm | **100.0%** (9/9) | 2000 | 1599 | 3.78 | 3.78 | 1.74 | 144 | 1.0 |
+| baseline | **0.0%** (0/24) | 6857 | 4245 | 2.49 | 2.49 | 2.45 | 0 | 0.0 |
+| immediate-rewrite | **100.0%** (24/24) | 375 | 618 | 1.50 | 1.50 | 3.12 | 2774 | 24.0 |
+| dynclm | **100.0%** (24/24) | 2000 | 729 | 1.71 | 1.71 | 2.96 | 144 | 1.0 |
 
 ## Early vs late (DynCLM vs baseline)
 
 | Window | baseline probe% | DynCLM probe% | baseline ctx | DynCLM ctx | baseline wall-s | DynCLM wall-s | baseline tok/s | DynCLM tok/s |
 |---|---|---|---|---|---|---|---|---|
-| early | 0.0 | 100.0 | 1586 | 1587 | 1.92 | 3.29 | 1.99 | 1.36 |
-| late | 0.0 | 100.0 | 6857 | 2000 | 2.60 | 3.78 | 2.19 | 1.74 |
+| early | 0.0 | 100.0 | 1586 | 1587 | 2.22 | 0.97 | 1.71 | 4.19 |
+| late | 0.0 | 100.0 | 6857 | 2000 | 2.49 | 1.71 | 2.45 | 2.96 |
 
 ## DynCLM vs baseline (late-window metrics)
 
@@ -36,14 +36,14 @@ Long-horizon suite A: early authoritative FACT planted at turn 1; each later tur
 | avg_dead_tokens | 0.00 | 0.00 | +0.00 | +0.0% | - |
 | avg_live_tokens | 0.00 | 0.00 | +0.00 | +0.0% | - |
 | avg_prefill_tokens | 0.00 | 144.00 | +144.00 | +100.0% | no |
-| avg_prompt_tokens | 4244.78 | 1598.67 | -2646.11 | -62.3% | yes |
+| avg_prompt_tokens | 4244.78 | 728.67 | -3516.11 | -82.8% | yes |
 | avg_generated_tokens | 4.33 | 5.00 | +0.67 | +15.4% | no |
-| avg_total_tokens | 4249.11 | 1603.67 | -2645.44 | -62.3% | yes |
+| avg_total_tokens | 4249.11 | 733.67 | -3515.44 | -82.7% | yes |
 | avg_rewrites | 0.00 | 1.00 | +1.00 | +100.0% | no |
 | avg_dead_carried_turn_sum | 0.00 | 0.00 | +0.00 | +0.0% | - |
-| avg_wall_clock_s | 2.60 | 3.78 | +1.19 | +45.6% | no |
-| total_wall_clock_s | 160.03 | 239.33 | +79.31 | +49.6% | no |
-| wall_clock_per_correct_s | 0.00 | 26.59 | +26.59 | +100.0% | no |
+| avg_wall_clock_s | 2.49 | 1.71 | -0.78 | -31.3% | yes |
+| total_wall_clock_s | 435.09 | 268.07 | -167.02 | -38.4% | yes |
+| wall_clock_per_correct_s | 0.00 | 11.17 | +11.17 | +100.0% | no |
 | generated_tokens_per_correct | 0.00 | 5.00 | +5.00 | +100.0% | no |
 | prefill_tokens_per_correct | 0.00 | 144.00 | +144.00 | +100.0% | no |
 
@@ -51,9 +51,9 @@ Long-horizon suite A: early authoritative FACT planted at turn 1; each later tur
 
 - **Late quality vs baseline:** +100.0 pp (0.0% → 100.0%)
 - **Late context vs baseline:** -70.8% (6857 → 2000)
-- **Late wall-clock vs baseline (all late turns):** +45.6% (2.60s → 3.78s)
-- **Late steady wall-clock vs baseline (exclude rewrite/compact turns):** +45.6% (2.60s → 3.78s)
-- **Late steady gen tok/s vs baseline:** -20.6% (2.19 → 1.74)
-- **Immediate-rewrite (CLM) late steady wall vs baseline:** -23.2% (2.60s → 1.99s) - upper bound if N is high
+- **Late wall-clock vs baseline (all late turns):** -31.3% (2.49s → 1.71s)
+- **Late steady wall-clock vs baseline (exclude rewrite/compact turns):** -31.3% (2.49s → 1.71s)
+- **Late steady gen tok/s vs baseline:** +21.0% (2.45 → 2.96)
+- **Immediate-rewrite (CLM) late steady wall vs baseline:** -39.6% (2.49s → 1.50s) - upper bound if N is high
 
 Note: gen tok/s uses completion_tokens/wall_clock (includes prefill). Steady-state excludes rewrite/compact-event turns so generation-under-context is not mixed with reclaim spikes.

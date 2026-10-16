@@ -1,0 +1,15 @@
+{
+  "instance_id": "scipy__solve-assume-pos-distill-12",
+  "repo": "scipy/scipy (inspired)",
+  "issue": "Solving a symmetric positive definite system should take the Cholesky path for speed and stability instead of generic LU; declare the matrix structure to linalg.solve.",
+  "correct_snippet": "x = scipy.linalg.solve(A, b, assume_a=\"pos\")",
+  "wrong_snippets": [
+    "x = scipy.linalg.solve(A, b, assume_a=\"sym\")",
+    "x = scipy.linalg.solve(A, b, assume_a=\"gen\")",
+    "x = scipy.linalg.lu_solve(scipy.linalg.lu_factor(A), b)"
+  ],
+  "expected_answer": "assume_a=\"pos\"",
+  "wrong_answer": "assume_a=\"sym\"",
+  "probe_question": "Which solve keyword selects the Cholesky path for a symmetric positive definite matrix? Reply with ONLY that keyword argument.",
+  "attribution": "SWE-Bench-Lite-inspired realistic distill; paraphrased. Not an official SWE-Bench instance."
+}

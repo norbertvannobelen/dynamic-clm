@@ -1,0 +1,15 @@
+{
+  "instance_id": "pytest-dev__capfd-distill-17",
+  "repo": "pytest-dev/pytest (inspired)",
+  "issue": "A test asserting on output produced by a C extension (which writes straight to OS file descriptors, bypassing Python's sys.stdout) sees an empty capture with the default sys-level fixture; the capture must happen at the file-descriptor level.",
+  "correct_snippet": "def test_native_log(capfd):\n    emit_from_c_extension()\n    out, err = capfd.readouterr()\n    assert \"ready\" in out",
+  "wrong_snippets": [
+    "def test_native_log(capsys):\n    emit_from_c_extension()\n    out, err = capsys.readouterr()\n    assert \"ready\" in out",
+    "def test_native_log(capsysbinary):\n    emit_from_c_extension()\n    out, err = capsysbinary.readouterr()\n    assert b\"ready\" in out",
+    "def test_native_log(monkeypatch, capsys):\n    emit_from_c_extension()\n    out, err = capsys.readouterr()\n    assert \"ready\" in out"
+  ],
+  "expected_answer": "capfd",
+  "wrong_answer": "capsys",
+  "probe_question": "Which pytest fixture captures output written directly to OS-level file descriptors, e.g. from C extensions? Reply with ONLY that fixture name.",
+  "attribution": "SWE-Bench-Lite-inspired realistic distill; paraphrased. Not an official SWE-Bench instance."
+}

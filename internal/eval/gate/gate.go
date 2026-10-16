@@ -114,8 +114,10 @@ func Run(cfg Config) (Report, error) {
 	}
 	defer rec.Close()
 
-	for _, arm := range arms {
-		for i := 0; i < cfg.Sessions; i++ {
+	// Round-robin by session across arms (amendment 2026-10-15, docs/analysis-plan.md):
+	// arm-major order let slow hardware drift (e.g. thermal) bias the arm that ran last.
+	for i := 0; i < cfg.Sessions; i++ {
+		for _, arm := range arms {
 			sid := fmt.Sprintf("%s-%03d", arm, i)
 			cell := tracing.CellPath(cfg.ResultsDir, cfg.HardwareID, cfg.ModelID, "coding", string(arm), sid)
 			if tracing.CellDone(cell) {

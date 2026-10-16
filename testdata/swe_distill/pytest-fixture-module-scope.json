@@ -1,0 +1,15 @@
+{
+  "instance_id": "pytest-dev__fixture-module-scope-distill-11",
+  "repo": "pytest-dev/pytest (inspired)",
+  "issue": "The expensive database fixture must be created once per test module instead of once per test function; change the fixture scope.",
+  "correct_snippet": "@pytest.fixture(scope=\"module\")\ndef db_connection():\n    conn = create_engine(DB_URL).connect()\n    yield conn\n    conn.close()",
+  "wrong_snippets": [
+    "@pytest.fixture(scope=\"function\")\ndef db_connection():\n    conn = create_engine(DB_URL).connect()\n    yield conn\n    conn.close()",
+    "@pytest.fixture(autouse=True)\ndef db_connection():\n    conn = create_engine(DB_URL).connect()\n    yield conn\n    conn.close()",
+    "@pytest.fixture(scope=\"session\", autouse=True)\ndef db_connection():\n    conn = create_engine(DB_URL).connect()\n    yield conn\n    conn.close()"
+  ],
+  "expected_answer": "@pytest.fixture(scope=\"module\")",
+  "wrong_answer": "@pytest.fixture(scope=\"function\")",
+  "probe_question": "Which decorator line makes the fixture run once per module? Reply with ONLY that decorator line.",
+  "attribution": "SWE-Bench-Lite-inspired realistic distill; paraphrased. Not an official SWE-Bench instance."
+}

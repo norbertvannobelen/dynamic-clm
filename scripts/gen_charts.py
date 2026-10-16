@@ -5,15 +5,19 @@ from __future__ import annotations
 
 import json
 import math
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from stats_utils import bootstrap_ci_mean, lh_pass_counts, wilson_ci  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 FIG = ROOT / "docs" / "figures"
 FIG.mkdir(parents=True, exist_ok=True)
 
 # Canonical runs cited by docs/report.md (prefer these over mutable results/ copies).
-DECISION_RUN = ROOT / "results" / "runs" / "20261010T145959Z_decision"
-LH_B_SUMMARY_RUN = ROOT / "results" / "runs" / "20261013T201630Z_lh_compaction_summary"
+DECISION_RUN = ROOT / "results" / "runs" / "20261015T165854Z_decision"
+LH_B_SUMMARY_RUN = ROOT / "results" / "runs" / "20261015T165854Z_decision"
 
 COLORS = {
     "baseline": "#6b7280",
@@ -47,8 +51,9 @@ def esc(s: str) -> str:
     )
 
 
-def grouped_bars(path: Path, title: str, series: dict[str, float], ylabel: str) -> None:
-    """series: arm -> value"""
+def grouped_bars(path: Path, title: str, series: dict[str, float], ylabel: str,
+                 errors: dict[str, tuple[float, float]] | None = None) -> None:
+    """series: arm -> value; errors: arm -> (lo, hi) absolute error-bar bounds"""
     arms = [a for a in ["baseline", "baseline-compact", "dynclm", "immediate-rewrite"] if a in series]
     if not arms:
         arms = list(series.keys())
@@ -58,6 +63,8 @@ def grouped_bars(path: Path, title: str, series: dict[str, float], ylabel: str) 
     plot_h = h - pad_t - pad_b
     vals = [series[a] for a in arms]
     vmax = max(vals) if vals else 1
+    if errors:
+        vmax = max([vmax] + [hi for _, hi in errors.values()])
     if vmax <= 0:
         vmax = 1
     n = len(arms)
@@ -92,6 +99,16 @@ def grouped_bars(path: Path, title: str, series: dict[str, float], ylabel: str) 
         parts.append(
             f'<rect x="{x}" y="{y}" width="{bar_w}" height="{bh}" fill="{color}" rx="3"/>'
         )
+        if errors and arm in errors:
+            lo, hi = errors[arm]
+            y_lo = pad_t + plot_h - (min(lo, vmax) / vmax) * plot_h
+            y_hi = pad_t + plot_h - (min(hi, vmax) / vmax) * plot_h
+            xc = x + bar_w / 2
+            parts.append(
+                f'<line x1="{xc}" y1="{y_lo}" x2="{xc}" y2="{y_hi}" stroke="#111827" stroke-width="1.5"/>'
+                f'<line x1="{xc-6}" y1="{y_lo}" x2="{xc+6}" y2="{y_lo}" stroke="#111827" stroke-width="1.5"/>'
+                f'<line x1="{xc-6}" y1="{y_hi}" x2="{xc+6}" y2="{y_hi}" stroke="#111827" stroke-width="1.5"/>'
+            )
         parts.append(
             f'<text x="{x + bar_w/2}" y="{y-6}" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#111827">{v:.2g}</text>'
         )
@@ -104,8 +121,9 @@ def grouped_bars(path: Path, title: str, series: dict[str, float], ylabel: str) 
     path.write_text("\n".join(parts), encoding="utf-8")
 
 
-def multi_line(path: Path, title: str, curves: dict[str, list[tuple[float, float]]], xlabel: str, ylabel: str) -> None:
-    """curves: arm -> list of (x,y)"""
+def multi_line(path: Path, title: str, curves: dict[str, list[tuple[float, float]]], xlabel: str, ylabel: str,
+               errors: dict[str, list[tuple[float, float, float]]] | None = None) -> None:
+    """curves: arm -> list of (x,y); errors: arm -> list of (x, lo, hi)"""
     w, h = 780, 440
     pad_l, pad_r, pad_t, pad_b = 70, 40, 50, 70
     plot_w = w - pad_l - pad_r
@@ -115,6 +133,11 @@ def multi_line(path: Path, title: str, curves: dict[str, list[tuple[float, float
         for x, y in pts:
             all_x.append(x)
             all_y.append(y)
+    if errors:
+        for pts in errors.values():
+            for x, lo, hi in pts:
+                all_x.append(x)
+                all_y.extend([lo, hi])
     if not all_x:
         return
     xmin, xmax = min(all_x), max(all_x)
@@ -157,6 +180,13 @@ def multi_line(path: Path, title: str, curves: dict[str, list[tuple[float, float
         parts.append(f'<path d="{d}" fill="none" stroke="{color}" stroke-width="2.5"/>')
         for x, y in pts:
             parts.append(f'<circle cx="{sx(x):.1f}" cy="{sy(y):.1f}" r="3" fill="{color}"/>')
+        if errors and arm in errors:
+            for x, lo, hi in errors[arm]:
+                parts.append(
+                    f'<line x1="{sx(x):.1f}" y1="{sy(lo):.1f}" x2="{sx(x):.1f}" y2="{sy(hi):.1f}" stroke="{color}" stroke-width="1.5"/>'
+                    f'<line x1="{sx(x)-5:.1f}" y1="{sy(lo):.1f}" x2="{sx(x)+5:.1f}" y2="{sy(lo):.1f}" stroke="{color}" stroke-width="1.5"/>'
+                    f'<line x1="{sx(x)-5:.1f}" y1="{sy(hi):.1f}" x2="{sx(x)+5:.1f}" y2="{sy(hi):.1f}" stroke="{color}" stroke-width="1.5"/>'
+                )
         parts.append(
             f'<rect x="{legend_x}" y="{legend_y + j*18 - 8}" width="12" height="12" fill="{color}"/>'
         )
@@ -178,12 +208,22 @@ def from_longhorizon() -> None:
     print("longhorizon charts from", p.relative_to(ROOT))
     rep = json.loads(p.read_text())
     arms = rep.get("arms", {})
+    cells = first_existing(p.parent / "cells", ROOT / "results" / "longhorizon" / "cells")
+    probe_errors = None
+    if cells is not None:
+        counts = lh_pass_counts(cells, int(rep.get("late_from_turn") or 0))
+        if counts:
+            probe_errors = {
+                a: (100 * wilson_ci(k, n)[0], 100 * wilson_ci(k, n)[1])
+                for a, (k, n) in counts.items()
+            }
     # bar charts late metrics
     grouped_bars(
         FIG / "lh_late_probe_accuracy.svg",
-        "Long-horizon A: late probe accuracy",
+        "Long-horizon A: late probe accuracy (session-level Wilson 95% CI)",
         {a: arms[a]["late"]["probe_accuracy_pct"] for a in arms},
         "Accuracy (%)",
+        errors=probe_errors,
     )
     grouped_bars(
         FIG / "lh_late_context.svg",
@@ -211,7 +251,6 @@ def from_longhorizon() -> None:
     )
 
     # turn curves averaged across sessions (same run as report.json)
-    cells = first_existing(p.parent / "cells", ROOT / "results" / "longhorizon" / "cells")
     if cells is None:
         return
     print("longhorizon turn curves from", cells.relative_to(ROOT))
@@ -245,23 +284,44 @@ def from_gate() -> None:
     print("gate charts from", p.relative_to(ROOT))
     rep = json.loads(p.read_text())
     stats = rep.get("arm_stats", {})
+
+    # per-session bootstrap CIs from the run's gate cells (cells/<hw>/<model>/<task>/<arm>/*.json)
+    samples: dict[str, dict[str, list[float]]] = {}
+    cells_root = p.parent.parent / "cells"
+    if cells_root.exists():
+        for f in sorted(cells_root.glob("*/*/*/*/*.json")):
+            cell = json.loads(f.read_text())
+            bucket = samples.setdefault(f.parent.name, {})
+            for m in ("avg_context_tokens", "total_prefill_tokens", "total_prompt_tokens"):
+                v = cell.get(m)
+                if isinstance(v, (int, float)):
+                    bucket.setdefault(m, []).append(float(v))
+
+    def boot_errors(metric: str) -> dict[str, tuple[float, float]] | None:
+        errs = {a: bootstrap_ci_mean(s[metric]) for a, s in samples.items() if s.get(metric)}
+        return errs or None
+
+    ci_note = " (bootstrap 95% CI)" if samples else ""
     grouped_bars(
         FIG / "gate_context.svg",
-        "Gate (short multi-turn): avg context length",
+        f"Gate (short multi-turn): avg context length{ci_note}",
         {a: stats[a]["avg_context_tokens"] for a in stats},
         "Tokens",
+        errors=boot_errors("avg_context_tokens"),
     )
     grouped_bars(
         FIG / "gate_prefill.svg",
-        "Gate (short multi-turn): avg rewrite prefill tokens",
+        f"Gate (short multi-turn): avg rewrite prefill tokens{ci_note}",
         {a: stats[a]["avg_prefill_tokens"] for a in stats},
         "Tokens",
+        errors=boot_errors("total_prefill_tokens"),
     )
     grouped_bars(
         FIG / "gate_prompt.svg",
-        "Gate (short multi-turn): avg prompt tokens / session",
+        f"Gate (short multi-turn): avg prompt tokens / session{ci_note}",
         {a: stats[a]["avg_prompt_tokens"] for a in stats},
         "Tokens",
+        errors=boot_errors("total_prompt_tokens"),
     )
 
 
@@ -275,11 +335,18 @@ def from_quality() -> None:
     print("quality charts from", p.relative_to(ROOT))
     rep = json.loads(p.read_text())
     arms = rep.get("arms", {})
+    q_errors = {
+        a: (100 * wilson_ci(int(arms[a].get("correct") or 0), int(arms[a].get("n") or 0))[0],
+            100 * wilson_ci(int(arms[a].get("correct") or 0), int(arms[a].get("n") or 0))[1])
+        for a in arms
+        if arms[a].get("n")
+    } or None
     grouped_bars(
         FIG / "quality_accuracy.svg",
-        "Short quality suite: graded accuracy",
+        "Short quality suite: graded accuracy (Wilson 95% CI)",
         {a: arms[a]["accuracy_pct"] for a in arms},
         "Accuracy (%)",
+        errors=q_errors,
     )
 
 
@@ -306,12 +373,29 @@ def from_compaction() -> None:
             limit = float(limit_s)
             for arm, m in arms.items():
                 curves.setdefault(arm, []).append((limit, float(m.get(key, 0))))
+        errs: dict[str, list[tuple[float, float, float]]] | None = None
+        if metric == "probe":
+            # session-level strict-pass Wilson CIs per limit (pre-registered unit)
+            tmp: dict[str, list[tuple[float, float, float]]] = {}
+            for limit_s, _arms in sorted(by_limit.items(), key=lambda kv: int(kv[0])):
+                lim_dir = p.parent / f"c{limit_s}"
+                lim_rep_path = lim_dir / "report.json"
+                if not lim_rep_path.exists():
+                    continue
+                lim_rep = json.loads(lim_rep_path.read_text())
+                counts = lh_pass_counts(lim_dir / "cells", int(lim_rep.get("late_from_turn") or 0))
+                for arm, (k, n) in counts.items():
+                    lo, hi = wilson_ci(k, n)
+                    tmp.setdefault(arm, []).append((float(limit_s), 100 * lo, 100 * hi))
+            errs = tmp or None
         multi_line(
             FIG / f"compaction_{metric}_vs_limit.svg",
-            f"Long-horizon B (compaction): {ylabel} vs max context",
+            f"Long-horizon B (compaction): {ylabel} vs max context"
+            + (" (session-level Wilson 95% CI)" if errs else ""),
             curves,
             "Max context (tokens)",
             ylabel,
+            errors=errs,
         )
 
 
