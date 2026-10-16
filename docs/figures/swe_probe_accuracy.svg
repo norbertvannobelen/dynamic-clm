@@ -14,16 +14,16 @@
 <text x="62" y="264.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6b7280">25</text>
 <line x1="70" y1="330.0" x2="690" y2="330.0" stroke="#e5e7eb"/>
 <text x="62" y="334.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6b7280">0</text>
-<rect x="116.5" y="166.66666666666666" width="113.66666666666667" height="163.33333333333334" fill="#9ca3af" rx="3"/>
-<line x1="173.33333333333334" y1="240.53683248612606" x2="173.33333333333334" y2="104.11288782445183" stroke="#111827" stroke-width="1.5"/><line x1="167.33333333333334" y1="240.53683248612606" x2="179.33333333333334" y2="240.53683248612606" stroke="#111827" stroke-width="1.5"/><line x1="167.33333333333334" y1="104.11288782445183" x2="179.33333333333334" y2="104.11288782445183" stroke="#111827" stroke-width="1.5"/>
-<text x="173.33333333333334" y="160.66666666666666" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11">58</text>
+<rect x="116.5" y="221.11111111111114" width="113.66666666666667" height="108.88888888888887" fill="#9ca3af" rx="3"/>
+<line x1="173.33333333333334" y1="273.14530959794183" x2="173.33333333333334" y2="158.13331648626612" stroke="#111827" stroke-width="1.5"/><line x1="167.33333333333334" y1="273.14530959794183" x2="179.33333333333334" y2="273.14530959794183" stroke="#111827" stroke-width="1.5"/><line x1="167.33333333333334" y1="158.13331648626612" x2="179.33333333333334" y2="158.13331648626612" stroke="#111827" stroke-width="1.5"/>
+<text x="173.33333333333334" y="215.11111111111114" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11">39</text>
 <text x="173.33333333333334" y="350" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11">Baseline+compact</text>
 <rect x="323.16666666666663" y="96.66666666666669" width="113.66666666666667" height="233.33333333333331" fill="#2563eb" rx="3"/>
-<line x1="379.99999999999994" y1="175.4486414308325" x2="379.99999999999994" y2="63.15023981147908" stroke="#111827" stroke-width="1.5"/><line x1="373.99999999999994" y1="175.4486414308325" x2="385.99999999999994" y2="175.4486414308325" stroke="#111827" stroke-width="1.5"/><line x1="373.99999999999994" y1="63.15023981147908" x2="385.99999999999994" y2="63.15023981147908" stroke="#111827" stroke-width="1.5"/>
+<line x1="379.99999999999994" y1="159.821706690964" x2="379.99999999999994" y2="66.34241505641211" stroke="#111827" stroke-width="1.5"/><line x1="373.99999999999994" y1="159.821706690964" x2="385.99999999999994" y2="159.821706690964" stroke="#111827" stroke-width="1.5"/><line x1="373.99999999999994" y1="66.34241505641211" x2="385.99999999999994" y2="66.34241505641211" stroke="#111827" stroke-width="1.5"/>
 <text x="379.99999999999994" y="90.66666666666669" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11">83</text>
 <text x="379.99999999999994" y="350" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11">DynCLM</text>
 <rect x="529.8333333333333" y="50.0" width="113.66666666666667" height="280.0" fill="#dc2626" rx="3"/>
-<line x1="586.6666666666666" y1="117.89832186346743" x2="586.6666666666666" y2="50.0" stroke="#111827" stroke-width="1.5"/><line x1="580.6666666666666" y1="117.89832186346743" x2="592.6666666666666" y2="117.89832186346743" stroke="#111827" stroke-width="1.5"/><line x1="580.6666666666666" y1="50.0" x2="592.6666666666666" y2="50.0" stroke="#111827" stroke-width="1.5"/>
+<line x1="586.6666666666666" y1="99.24618262106412" x2="586.6666666666666" y2="50.0" stroke="#111827" stroke-width="1.5"/><line x1="580.6666666666666" y1="99.24618262106412" x2="592.6666666666666" y2="99.24618262106412" stroke="#111827" stroke-width="1.5"/><line x1="580.6666666666666" y1="50.0" x2="592.6666666666666" y2="50.0" stroke="#111827" stroke-width="1.5"/>
 <text x="586.6666666666666" y="44.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11">1e+02</text>
 <text x="586.6666666666666" y="350" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11">CLM</text>
 </svg>

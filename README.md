@@ -50,7 +50,7 @@ All headline numbers come from powered, pre-registered runs ([analysis plan](doc
 | Graded quality, 18 tasks | Raw | 94.4% -> 100% (+5.6 pp); ties CLM (parity check) |
 | Long-horizon A, 8 x 24 turns | Raw + recency | Late FACT probe 0/8 -> 8/8 (Fisher p = 7.8e-05); late context -70.8%; 1 vs 24 rewrites/session vs CLM |
 | Long-horizon B, 10 x 20 @ 16k/64k | Summarize compact | Late FACT probe 0/10 -> 10/10 at both limits (Fisher p = 5.4e-06 each); late wall beats the compact baseline (CI excludes 0) |
-| SWE-Distill, 12 tasks (extension to 18 in progress) | Summarize compact | Final probe 7/12 -> 10/12 (58.3% -> 83.3%; Fisher p = 0.185, inconclusive at n=12 - pre-registered extension running); `spec_survive` 100% on all arms |
+| SWE-Distill, 18 tasks (12 + 6 pre-registered extension, pooled) | Summarize compact | Final probe 7/18 -> 15/18 (38.9% -> 83.3%; Fisher p = 0.0076); `spec_survive` 100% on all arms; wall 1.91h -> 0.86h (CI excludes 0) |
 
 Suite write-ups: gate [6], quality [6], long-horizon A/B [6], SWE-Distill [6]; rolled-up tables in the decision report [5]; figures in [docs/figures/](docs/figures/).
 
@@ -58,16 +58,16 @@ Suite write-ups: gate [6], quality [6], long-horizon A/B [6], SWE-Distill [6]; r
 
 On the measured stack (M5 Max, oMLX, `Qwen3.8-27B-4bit`):
 
-- **H1 supported.** Rewrite prefill fell 71.5% vs CLM at the gate (5,010 vs 17,571 tokens/session, Welch one-sided p = 1.4e-16; 4.9 vs 17.1 rewrites), 94.8% in long-horizon A (1 vs 24 rewrites/session), and 85.4% in SWE-Distill (2 vs 28 rewrites/task). DynCLM carries a larger average context than CLM between rewrites, exactly as the session-load model predicts [2][3].
-- **H2 supported on gate and long-horizon; open on SWE-Distill.** Quality parity with CLM on gate, graded quality, and long-horizon A/B (100% ties); late FACT probes went 0% -> 100% against both raw and summarize-compact baselines with Holm-corrected Fisher p <= 7.8e-05. On SWE-Distill DynCLM beat the summarize baseline 10/12 vs 7/12 (p = 0.185, inconclusive at n=12; pre-registered 18-task extension in progress) and trailed CLM's 12/12 [3].
+- **H1 supported.** Rewrite prefill fell 71.5% vs CLM at the gate (5,010 vs 17,571 tokens/session, Welch one-sided p = 1.4e-16; 4.9 vs 17.1 rewrites), 94.8% in long-horizon A (1 vs 24 rewrites/session), and 89.1% in SWE-Distill (1,161 vs 10,687 tokens/task; 2 vs 28 rewrites). DynCLM carries a larger average context than CLM between rewrites, exactly as the session-load model predicts [2][3].
+- **H2 supported vs baselines; CLM keeps an edge on SWE-Distill.** DynCLM beat every reference baseline on every quality canary on the powered dataset: late FACT probes went 0% -> 100% against both raw and summarize-compact baselines (Holm-corrected Fisher p <= 7.8e-05), and SWE-Distill went 7/18 -> 15/18 vs the summarize baseline (pooled Fisher p = 0.0076 after the pre-registered extension). Quality parity with CLM holds on gate, graded quality, and long-horizon A/B (100% ties); on SWE-Distill, CLM's 18/18 beats DynCLM's 15/18 - the deferral window occasionally lets a soft-invalidated distractor win the probe [3].
 - **H3 partially supported.** `ρ` was measured on M5 Max and drives the shipped scheduler; transfer to M5 Pro and base M5 profiles remains open [3][7].
 - **Corollary resolved for this SKU.** Always-rewrite CLM ran without difficulty on M5 Max - it posted the fastest late-session wall-clock in every long-horizon suite - so a blanket "CLM is unsuitable for Mac" verdict is not supported here. DynCLM still removes about 71% of CLM's rewrite prefill at equal quality on the long-horizon canaries, and its per-device `ρ` profile is the lever for SKUs where the bandwidth ceiling may actually bind [3].
 
-**Verdict:** ship DynCLM reclaim for this local oMLX/M5 Max stack, conditional on the pre-registered SWE-Distill extension's pooled test (the gate and long-horizon claims are decisive on the powered dataset). Honest tradeoffs: reclaim prefill is an added cost versus raw append-only (raw pays none); CLM remains the fastest arm on late steady wall-clock; the gate session-wall difference favors DynCLM numerically but its confidence interval includes zero, so no wall-clock claim is made there [3].
+**Verdict:** ship DynCLM reclaim for this local oMLX/M5 Max stack. All four pre-registered primary endpoints are significant on the powered dataset after Holm correction (gate rewrite prefill p = 1.4e-16; LH-A p = 7.8e-05; LH-B p = 5.4e-06 at both limits; SWE-Distill pooled p = 0.0076). Honest tradeoffs: reclaim prefill is an added cost versus raw append-only (raw pays none); CLM remains the fastest arm on late steady wall-clock and the only arm at 100% on SWE-Distill; the gate session-wall difference favors DynCLM numerically but its confidence interval includes zero, so no wall-clock claim is made there [3].
 
 ## Limitations
 
-Single model and single machine for all ship evidence; M5 Pro / base M5 hardware profiles untested. Logical rather than physical cache accounting (no span-level KV API on oMLX). Canaries are not TerminalBench, BrowseComp-Plus, EdgeBench, or official SWE-Bench, and the CLM paper's numbers remain reproduction targets, not reproduced results [3][4]. The 900-cell policy-learning grid is paused at 207/900 and was not required for the verdict. The SWE-Distill primary endpoint is inconclusive at n=12 (p = 0.185) with its single pre-registered extension in progress. Gate session wall-clock is underpowered by ~6x for the observed effect, so wall-clock claims are limited to suites whose bootstrap CI excludes zero. Full gap list: [docs/report.md](docs/report.md) [3].
+Single model and single machine for all ship evidence; M5 Pro / base M5 hardware profiles untested. Logical rather than physical cache accounting (no span-level KV API on oMLX). Canaries are not TerminalBench, BrowseComp-Plus, EdgeBench, or official SWE-Bench, and the CLM paper's numbers remain reproduction targets, not reproduced results [3][4]. The 900-cell policy-learning grid is paused at 207/900 and was not required for the verdict. DynCLM trails CLM on SWE-Distill accuracy (15/18 vs 18/18). Gate session wall-clock is underpowered by ~6x for the observed effect, so wall-clock claims are limited to suites whose bootstrap CI excludes zero. Full gap list: [docs/report.md](docs/report.md) [3].
 
 ## Reproducing this study
 
@@ -103,7 +103,7 @@ Full command list and suite descriptions: [docs/method.md](docs/method.md#comman
 5. [docs/decision-report.md](docs/decision-report.md) - rolled-up 3-arm decision tables (gate, quality, long-horizon A/B).
 6. Suite reports: [interim-report](docs/interim-report.md) (gate + calibration), [quality-report](docs/quality-report.md), [longhorizon-report](docs/longhorizon-report.md) (A), [longhorizon-compaction-report](docs/longhorizon-compaction-report.md) (B), [swe-distill-report](docs/swe-distill-report.md).
 7. [configs/calibration/m5max-qwen38.json](configs/calibration/m5max-qwen38.json) - measured `r`, `k_d`, `C_fixed`, `ρ` for the ship stack.
-8. Raw artifacts: `results/runs/20261010T145959Z_decision` (gate, quality, LH-A), `results/runs/20261013T201630Z_lh_compaction_summary` (LH-B), `results/runs/20261013T190132Z_swe_distill_summary_baseline` (SWE-Distill).
+8. Raw artifacts (powered, pre-registered): `results/runs/20261015T165854Z_decision` (gate, quality, LH-A, LH-B), `results/runs/20261015T223506Z_swe_distill` (SWE tasks 1-12), `results/runs/20261016T005250Z_swe_distill_ext` (SWE tasks 13-18 + pooled report). Earlier Oct 10/13 runs are retained as a prior replication dataset. Pre-registration: [docs/analysis-plan.md](docs/analysis-plan.md).
 
 ---
 

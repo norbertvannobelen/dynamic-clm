@@ -27,7 +27,7 @@ Early work used a 900-cell policy grid (paused), then an efficient 3-arm decisio
 |---|---|---|
 | Gate, graded quality, long-horizon A, long-horizon B | `20261015T165854Z_decision` | 16 / 18 tasks / 8 / 10 |
 | SWE-Distill (tasks 1-12) | `20261015T223506Z_swe_distill` | 12 tasks |
-| SWE-Distill extension (tasks 13-18, pre-registered) | `20261016T005250Z_swe_distill_ext` | +6 tasks |
+| SWE-Distill extension (tasks 13-18, pre-registered, pooled) | `20261016T005250Z_swe_distill_ext` | +6 tasks |
 | Prior replication (not cited for claims) | `20261010T145959Z_decision`, `20261013T201630Z_lh_compaction_summary`, `20261013T190132Z_swe_distill_summary_baseline` | 8 / 2 / 6 |
 
 ---
@@ -54,7 +54,7 @@ Pre-registered in **[analysis-plan.md](analysis-plan.md)** before the powered ru
 - **Continuous (primary endpoint 4 + secondary):** Welch two-sample t-test plus percentile-bootstrap 95% CI (10,000 resamples) of the mean difference. Gate rewrite prefill vs CLM is one-sided (DynCLM < CLM), matching H1.
 - **Multiplicity:** the four primary endpoints are a confirmatory family with **Holm correction**; secondary endpoints are unadjusted and exploratory.
 - **Wall-clock discipline:** no wall-clock headline is claimed unless the 95% CI of the difference excludes 0.
-- **Extension rule:** exactly one pre-committed extension (SWE-Distill 12 → 18 tasks) if a primary endpoint lands at Fisher p ∈ (0.05, 0.20] with the point estimate favoring DynCLM. **This rule was invoked for SWE-Distill** (§ 6).
+- **Extension rule:** exactly one pre-committed extension (SWE-Distill 12 → 18 tasks) if a primary endpoint lands at Fisher p ∈ (0.05, 0.20] with the point estimate favoring DynCLM. **This rule was invoked for SWE-Distill and is complete** (§ 6); the pooled 18-task test is the decisive analysis.
 
 ## Executive summary
 
@@ -64,11 +64,11 @@ Pre-registered in **[analysis-plan.md](analysis-plan.md)** before the powered ru
 | Graded quality (18 tasks) | Raw (short; no window reclaim) | **94.4% → 100%** (+5.6 pp). Flat ~162-token context; parity check only |
 | Long-horizon A (8×24) | Raw + recency | Late FACT probe **0/8 → 8/8** (Fisher p = 7.8e-05); DynCLM late ctx **−70.8%**; late wall **−0.26 s/turn** vs raw (bootstrap CI excludes 0) |
 | Long-horizon B (10×20 @ 16k/64k) | Summarize + recency | Late FACT probe **0/10 → 10/10 at both limits** (Fisher p = 5.4e-06 each); DynCLM late wall beats compact baseline at both limits (CIs exclude 0) |
-| SWE-Distill (12 tasks; extension to 18 in progress) | Summarize + recency | Final probe **7/12 → 10/12** (58.3% → 83.3%; Fisher p = 0.185 - **inconclusive at n=12**, extension pre-registered); `spec_survive` 100% on all arms |
+| SWE-Distill (18 tasks, pooled) | Summarize + recency | Final probe **7/18 → 15/18** (38.9% → 83.3%; Fisher p = 0.0076); `spec_survive` 100% on all arms; wall 1.91h → 0.86h |
 
-**Bottom line.** Three of four pre-registered primary endpoints are decisive in DynCLM's favor after Holm correction: LH-A (p = 7.8e-05), LH-B at both limits (p = 5.4e-06), and gate rewrite prefill vs CLM (p = 1.4e-16). The SWE-Distill endpoint favors DynCLM (+25 pp) but is inconclusive at n=12 (p = 0.185); the pre-committed extension to 18 tasks is running and its pooled result is reported in § 6. Wall-clock headlines are limited to comparisons whose bootstrap CI excludes 0 (long-horizon late wall), per the pre-registered rule; the gate session-wall difference (−3.3%) is not claimed.
+**Bottom line.** All four pre-registered primary endpoints are decisive in DynCLM's favor after Holm correction: LH-A (p = 7.8e-05), LH-B at both limits (p = 5.4e-06), gate rewrite prefill vs CLM (p = 1.4e-16), and SWE-Distill (pooled 18-task p = 0.0076, after the 12-task run landed in the pre-committed extension band at p = 0.185). Wall-clock headlines are limited to comparisons whose bootstrap CI excludes 0 (long-horizon late wall, SWE suite wall), per the pre-registered rule; the gate session-wall difference (−3.3%) is not claimed. DynCLM still trails CLM's perfect 18/18 on SWE-Distill accuracy (15/18) - the deferral window costs three tasks that always-rewrite CLM saves.
 
-**Ship:** **yes, conditional on the SWE extension** - the gate/LH claims stand on the powered dataset; the SWE claim awaits the pooled 18-task analysis (§ 6). Standing tradeoffs: reclaim prefill vs raw baseline; CLM remains the fastest arm on late wall-clock; canaries are not TerminalBench / official SWE-Bench / paper FLOP claims.
+**Ship:** **yes** - every pre-registered primary endpoint is significant on the powered dataset. Standing tradeoffs: reclaim prefill vs raw baseline; CLM remains the fastest and, on SWE-Distill, the most accurate arm; canaries are not TerminalBench / official SWE-Bench / paper FLOP claims.
 
 ---
 
@@ -215,15 +215,17 @@ Details: [longhorizon-compaction-report.md](longhorizon-compaction-report.md).
 
 ## 6. SWE-Distill - coding-snippet reclaim under window pressure
 
-SWE-Bench-Lite-**inspired** distill (not official SWE-Bench / TerminalBench / Harbor). Plant correct `[SPEC]` at turn 1; flood wrong SPECs past shared `max_context=16384`; probe `ANSWER: <fragment>`. Baseline uses the same Codex-style summarize compact as LH-B. **12 tasks × 28 turns**, task-major round-robin; task success = final probe correct.
+SWE-Bench-Lite-**inspired** distill (not official SWE-Bench / TerminalBench / Harbor). Plant correct `[SPEC]` at turn 1; flood wrong SPECs past shared `max_context=16384`; probe `ANSWER: <fragment>`. Baseline uses the same Codex-style summarize compact as LH-B. **18 tasks × 28 turns** (12 + 6 pre-registered extension, pooled), task-major round-robin; task success = final probe correct.
 
 | Arm | Final-probe accuracy | Wilson 95% CI | Spec survive % | Avg final live ctx | Peak ctx | Avg prefill / task | Wall (h) |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Baseline+compact | **58.3%** (7/12) | [32.0, 80.7] | **100%** | 17699 | 16385 (cap) | 111497 | 1.26 |
-| DynCLM | **83.3%** (10/12) | [55.2, 95.3] | **100%** | 2173 | 2159 | 1292 | 0.57 |
-| CLM | **100.0%** (12/12) | [75.8, 100.0] | **100%** | 1270 | 2163 | 8837 | 0.45 |
+| Baseline+compact | **38.9%** (7/18) | [20.3, 61.4] | **100%** | 18037 | 16385 (cap) | 107715 | 1.91 |
+| DynCLM | **83.3%** (15/18) | [60.8, 94.2] | **100%** | 2114 | 2159 | 1161 | 0.86 |
+| CLM | **100.0%** (18/18) | [82.4, 100.0] | **100%** | 1557 | 2374 | 10687 | 0.71 |
 
-**Primary endpoint status: inconclusive at n = 12.** Fisher one-sided DynCLM > baseline **p = 0.185** - the point estimate favors DynCLM (+25 pp) but misses α = 0.05 (the pre-registered power analysis required baseline ≤ 8/12 with DynCLM 12/12; observed 7/12 vs 10/12). Per the [analysis plan](analysis-plan.md#extension-rule), exactly one extension is pre-committed in this band: **the suite was extended to 18 tasks** (6 new fixtures, same methodology and calibration), and the pooled 18-task Fisher test is the decisive analysis. Baseline failures (5/12) are recency/confusion with the fix still present (`spec_survive` 100% on all arms). DynCLM's 2/12 failures (`sqlalchemy-lazy-raise`, `scipy-solve-assume-pos`) are a subset of the baseline's failures; CLM passed all 12, so DynCLM **trails CLM** on this suite's accuracy at n=12 while using ~6.8x less rewrite prefill (1,292 vs 8,837 tokens/task).
+**Primary endpoint: decisive after the pre-registered extension.** The initial 12-task run landed at 10/12 vs 7/12, Fisher one-sided **p = 0.185** - inside the pre-committed extension band (0.05, 0.20] with the point estimate favoring DynCLM - so the suite was extended once to 18 tasks (6 new fixtures: pandas merge-validate, numpy unique-first-index, sqlalchemy selectinload, requests stream-download, pytest capfd, scipy minimize-bounds), exactly as [the plan](analysis-plan.md#extension-rule) allows. On the extension tasks the summarize baseline went 0/6 and DynCLM 5/6. **Pooled: 15/18 vs 7/18, Fisher one-sided p = 0.0076** (Holm-adjusted family p = 0.0076) - significant. No second extension is permitted by the plan; none was needed.
+
+Baseline failures (11/18) are recency/confusion with the fix still present (`spec_survive` 100% on all arms). **DynCLM trails CLM here:** its 3/18 failures (`sqlalchemy-lazy-raise`, `scipy-solve-assume-pos`, `numpy-unique-first-index`) are all tasks CLM passes - carrying soft-invalidated wrong SPECs across the deferral window occasionally lets a distractor win the final probe - while using ~9.2x less rewrite prefill than CLM (1,161 vs 10,687 tokens/task). **Secondary (wall):** DynCLM −209 s/task vs the compact baseline, bootstrap CI [−232, −185] excludes 0 (Welch p = 8.9e-18); CLM is +30 s/task faster than DynCLM, CI [+10, +50] (p = 0.0075).
 
 Full write-up: [swe-distill-report.md](swe-distill-report.md).
 
@@ -251,7 +253,7 @@ Paper ([arXiv:2609.37725](https://arxiv.org/abs/2609.37725)) coding-adjacent eva
 |---|---|
 | Late FACT probe ≥ baseline (LH-A) | **yes** - 0/8 → 8/8, Fisher p = 7.8e-05 (Holm-adj 1.6e-04) |
 | Late FACT probe ≥ summarize baseline (LH-B, both limits) | **yes** - 0/10 → 10/10 at 16k and 64k, Fisher p = 5.4e-06 each (Holm-adj 2.2e-05) |
-| SWE final probe ≥ summarize baseline | **inconclusive at n=12** (p = 0.185); pre-committed 18-task extension pooled test pending |
+| SWE final probe ≥ summarize baseline | **yes** - pooled 18-task 15/18 vs 7/18, Fisher p = 0.0076 (Holm-adj 0.0076), after the pre-committed extension |
 | Graded quality ≥ raw baseline | **yes** (100% vs 94.4%; parity check, underpowered by design) |
 | Late-session context ≤ baseline (A, B) | **yes** (−70.8% LH-A; −64.5% / −66.8% LH-B) |
 | Session wall (gate) ≤ raw baseline | **not claimed** (−3.3%, CI [−46.1, +21.8] s includes 0; secondary) |
@@ -263,13 +265,13 @@ Paper ([arXiv:2609.37725](https://arxiv.org/abs/2609.37725)) coding-adjacent eva
 | Paper TerminalBench / BrowseComp / EdgeBench | **not run** |
 | Physical SCR on oMLX | **not available** |
 
-**Ship** DynCLM reclaim for this local oMLX stack, **conditional on the SWE-Distill extension's pooled test**: the gate and long-horizon claims are decisive on the powered, pre-registered dataset (Holm-corrected); quality parity with CLM holds on gate and both long-horizon suites; SWE-Distill favors DynCLM over the summarize baseline (+25 pp) but must reach p < 0.05 on the pooled 18-task analysis to carry its headline, and DynCLM currently trails CLM's 12/12 on that suite.
+**Ship** DynCLM reclaim for this local oMLX stack: all four pre-registered primary endpoints are significant on the powered dataset (Holm-corrected), quality parity with CLM holds on gate and both long-horizon suites, and the SWE-Distill endpoint cleared its pre-committed extension (pooled p = 0.0076). Honest tradeoffs: reclaim prefill is an added cost vs raw (raw pays 0); CLM is the fastest arm on late wall and the only arm at 100% on SWE-Distill (DynCLM 15/18) - the deferral window is a real, measured accuracy cost on that suite, bought back at ~9x less rewrite prefill than CLM.
 
 ---
 
 ## Gaps
 
-- SWE-Distill primary endpoint inconclusive at n=12; extension pooled analysis pending (this section updates when it lands).
+- DynCLM trails CLM on SWE-Distill accuracy (15/18 vs 18/18); the three failures are deferral-window distractor wins, not mechanism failures.
 - Learning-900 incomplete (207/900; one model only).
 - Not TerminalBench / BrowseComp-Plus / EdgeBench / official SWE-Bench.
 - Logical cache accounting only; no hybrid recurrent-state SCR path.
@@ -286,8 +288,8 @@ Paper ([arXiv:2609.37725](https://arxiv.org/abs/2609.37725)) coding-adjacent eva
 | Method (premise + protocols + math) | [method.md](method.md) |
 | Pre-registration (endpoints, tests, n, extension rule) | [analysis-plan.md](analysis-plan.md) |
 | Powered gate / quality / LH-A / LH-B | `results/runs/20261015T165854Z_decision/` |
-| Powered SWE-Distill (tasks 1-12) | `results/runs/20261015T223506Z_swe_distill/` · [swe-distill-report.md](swe-distill-report.md) |
-| SWE-Distill extension (tasks 13-18) | `results/runs/20261016T005250Z_swe_distill_ext/` |
+| Powered SWE-Distill (tasks 1-12) | `results/runs/20261015T223506Z_swe_distill/` |
+| SWE-Distill extension + pooled 18-task report | `results/runs/20261016T005250Z_swe_distill_ext/` (`pooled-report.json`) · [swe-distill-report.md](swe-distill-report.md) |
 | Prior replication dataset | `results/runs/20261010T145959Z_decision/`, `results/runs/20261013T201630Z_lh_compaction_summary/`, `results/runs/20261013T190132Z_swe_distill_summary_baseline/` |
 | Figures | `docs/figures/*.svg` |
 | Decision tables | [decision-report.md](decision-report.md) |
